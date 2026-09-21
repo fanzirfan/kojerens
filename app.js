@@ -123,7 +123,7 @@
     customTexture: null,
     noiseCanvas: null,
     format: 'portrait_3_4',
-    mode: 'hero',
+    mode: 'circles',
     circles: [],
     connections: [],
     chainCircles: []
@@ -500,6 +500,312 @@
     }
   }
 
+  // --- MODE RENDERERS (Hero, Geo Tool, Studio) ---
+  function drawHeroMode(tCtx, tW, tH, palette, op) {
+    var strokeColor = palette.stroke;
+    var detailColor = palette.detail || '#555555';
+    var minDim = Math.min(tW, tH);
+    var margin = minDim * 0.08;
+    var gridW = tW - margin * 2;
+    var gridH = tH - margin * 2;
+    var density = 24;
+    var cellW = gridW / density;
+    var cellH = gridH / density;
+
+    tCtx.save();
+    // 1. Technical Fluid Coordinate Grid
+    tCtx.strokeStyle = detailColor;
+    tCtx.lineWidth = Math.max(0.4, minDim * 0.0005);
+    for (var i = 0; i <= density; i++) {
+      tCtx.globalAlpha = (i === 0 || i === density) ? 0.25 * op : 0.07 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(margin + i * cellW, margin);
+      tCtx.lineTo(margin + i * cellW, margin + gridH);
+      tCtx.stroke();
+
+      tCtx.beginPath();
+      tCtx.moveTo(margin, margin + i * cellH);
+      tCtx.lineTo(margin + gridW, margin + i * cellH);
+      tCtx.stroke();
+    }
+
+    // 2. Origin Center Marker
+    var ox = margin + gridW / 2;
+    var oy = margin + gridH / 2;
+    tCtx.globalAlpha = 0.8 * op;
+    tCtx.fillStyle = strokeColor;
+    tCtx.beginPath();
+    tCtx.arc(ox, oy, Math.max(3, minDim * 0.004), 0, Math.PI * 2);
+    tCtx.fill();
+
+    tCtx.globalAlpha = 0.5 * op;
+    tCtx.font = 'bold ' + Math.max(8, minDim * 0.01) + 'px "SF Mono", "Menlo", monospace';
+    tCtx.textAlign = 'left';
+    tCtx.textBaseline = 'bottom';
+    tCtx.fillText('ORIGIN [0,0]', ox + minDim * 0.01, oy - minDim * 0.008);
+
+    // 3. Generative Flow Vectors & Particles
+    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
+    var prng = lcgPRNG(seed);
+    var count = parseInt(maxCirclesSlider.value, 10) || 40;
+    count = Math.min(60, Math.max(16, count));
+
+    tCtx.lineCap = 'round';
+    for (var pIdx = 0; pIdx < count; pIdx++) {
+      var angle = prng() * Math.PI * 2;
+      var dist = (0.15 + prng() * 0.75) * (minDim * 0.42);
+      var px = ox + Math.cos(angle) * dist;
+      var py = oy + Math.sin(angle) * dist;
+      var isHeavy = pIdx % 4 === 0;
+
+      // Connecting ray from origin
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = isHeavy ? 1.5 : 0.8;
+      tCtx.globalAlpha = (isHeavy ? 0.6 : 0.25) * op;
+      tCtx.beginPath();
+      tCtx.moveTo(ox, oy);
+      tCtx.lineTo(px, py);
+      tCtx.stroke();
+
+      // Node point
+      tCtx.fillStyle = strokeColor;
+      tCtx.globalAlpha = (isHeavy ? 0.9 : 0.6) * op;
+      tCtx.beginPath();
+      tCtx.arc(px, py, isHeavy ? Math.max(4, minDim * 0.006) : Math.max(2, minDim * 0.003), 0, Math.PI * 2);
+      tCtx.fill();
+
+      // Dashed target ring for heavy nodes
+      if (isHeavy) {
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = Math.max(0.5, minDim * 0.0006);
+        tCtx.setLineDash([minDim * 0.004, minDim * 0.004]);
+        tCtx.globalAlpha = 0.25 * op;
+        tCtx.beginPath();
+        tCtx.arc(px, py, minDim * 0.025, 0, Math.PI * 2);
+        tCtx.stroke();
+        tCtx.setLineDash([]);
+
+        // Coordinate text
+        tCtx.globalAlpha = 0.45 * op;
+        tCtx.font = Math.max(7, minDim * 0.008) + 'px "SF Mono", "Menlo", monospace';
+        tCtx.textAlign = 'left';
+        tCtx.textBaseline = 'middle';
+        var deg = Math.round((angle * 180 / Math.PI + 360) % 360);
+        tCtx.fillText('V' + pIdx + ' ' + deg + '°', px + minDim * 0.03, py);
+      }
+    }
+    tCtx.restore();
+  }
+
+  function drawGeoMode(tCtx, tW, tH, palette, op) {
+    var strokeColor = palette.stroke;
+    var detailColor = palette.detail || '#555555';
+    var minDim = Math.min(tW, tH);
+    var cx = tW / 2;
+    var cy = tH / 2;
+
+    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
+    var strokeW = parseFloat(shapeStrokeSlider.value) || 1.0;
+
+    tCtx.save();
+    tCtx.lineCap = 'round';
+
+    // 1. Orbital Ellipses
+    var orbitCount = 5;
+    for (var oIdx = 0; oIdx < orbitCount; oIdx++) {
+      var rx = minDim * (0.12 + oIdx * 0.075);
+      var ry = rx * (0.65 + (oIdx % 2) * 0.15);
+      var tilt = (oIdx * 35 + (seed % 90)) * Math.PI / 180;
+
+      tCtx.save();
+      tCtx.translate(cx, cy);
+      tCtx.rotate(tilt);
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = strokeW;
+      tCtx.globalAlpha = (0.2 + oIdx * 0.12) * op;
+
+      if (oIdx % 2 === 1) {
+        tCtx.setLineDash([minDim * 0.006, minDim * 0.006]);
+      }
+      tCtx.beginPath();
+      tCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      tCtx.stroke();
+      tCtx.setLineDash([]);
+
+      // Marker point on orbit
+      var ptAng = (oIdx * 72) * Math.PI / 180;
+      var px = Math.cos(ptAng) * rx;
+      var py = Math.sin(ptAng) * ry;
+      tCtx.fillStyle = strokeColor;
+      tCtx.globalAlpha = 0.8 * op;
+      tCtx.beginPath();
+      tCtx.arc(px, py, Math.max(2.5, minDim * 0.0035), 0, Math.PI * 2);
+      tCtx.fill();
+
+      // Label
+      tCtx.globalAlpha = 0.5 * op;
+      tCtx.font = 'bold ' + Math.max(7, minDim * 0.009) + 'px "SF Mono", monospace';
+      tCtx.textAlign = 'left';
+      tCtx.textBaseline = 'middle';
+      tCtx.fillText(String.fromCharCode(65 + oIdx) + ' [' + Math.round(ptAng * 180 / Math.PI) + '°]', px + 8, py);
+      tCtx.restore();
+    }
+
+    // 2. Radial Spokes
+    var spokeCount = 12;
+    var spokeR = minDim * 0.44;
+    for (var s = 0; s < spokeCount; s++) {
+      var ang = s * (Math.PI * 2 / spokeCount);
+      var sx = cx + Math.cos(ang) * spokeR;
+      var sy = cy + Math.sin(ang) * spokeR;
+
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = 0.7;
+      tCtx.globalAlpha = 0.15 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(cx, cy);
+      tCtx.lineTo(sx, sy);
+      tCtx.stroke();
+
+      // Degree tick on outer circumference
+      tCtx.globalAlpha = 0.4 * op;
+      tCtx.fillStyle = strokeColor;
+      tCtx.font = Math.max(7, minDim * 0.007) + 'px "SF Mono", monospace';
+      tCtx.textAlign = 'center';
+      tCtx.textBaseline = 'middle';
+      tCtx.fillText(Math.round(s * (360 / spokeCount)) + '°', cx + Math.cos(ang) * (spokeR + 14), cy + Math.sin(ang) * (spokeR + 14));
+    }
+
+    // 3. Lissajous Harmonic Curve
+    tCtx.strokeStyle = strokeColor;
+    tCtx.lineWidth = strokeW * 1.2;
+    tCtx.globalAlpha = 0.6 * op;
+    tCtx.beginPath();
+    var freqA = 3, freqB = 2, delta = Math.PI / 4;
+    var lissScale = minDim * 0.35;
+    for (var t = 0; t <= 360; t += 2) {
+      var rad = t * Math.PI / 180;
+      var lx = cx + Math.sin(freqA * rad + delta) * lissScale;
+      var ly = cy + Math.sin(freqB * rad) * (lissScale * 0.75);
+      if (t === 0) tCtx.moveTo(lx, ly);
+      else tCtx.lineTo(lx, ly);
+    }
+    tCtx.stroke();
+
+    // 4. Center Origin Marker
+    tCtx.fillStyle = strokeColor;
+    tCtx.globalAlpha = 0.9 * op;
+    tCtx.beginPath();
+    tCtx.arc(cx, cy, Math.max(3, minDim * 0.004), 0, Math.PI * 2);
+    tCtx.fill();
+
+    tCtx.strokeStyle = strokeColor;
+    tCtx.lineWidth = 1;
+    tCtx.setLineDash([4, 4]);
+    tCtx.beginPath();
+    tCtx.arc(cx, cy, minDim * 0.02, 0, Math.PI * 2);
+    tCtx.stroke();
+    tCtx.setLineDash([]);
+
+    tCtx.globalAlpha = 0.6 * op;
+    tCtx.font = 'bold ' + Math.max(8, minDim * 0.01) + 'px "SF Mono", monospace';
+    tCtx.textAlign = 'left';
+    tCtx.fillText('O [ORIGIN]', cx + minDim * 0.025, cy);
+
+    tCtx.restore();
+  }
+
+  function drawStudioMode(tCtx, tW, tH, palette, op) {
+    var strokeColor = palette.stroke;
+    var detailColor = palette.detail || '#555555';
+    var minDim = Math.min(tW, tH);
+    var cx = tW / 2;
+    var cy = tH / 2;
+
+    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
+    var prng = lcgPRNG(seed);
+    var strokeW = parseFloat(shapeStrokeSlider.value) || 1.0;
+
+    tCtx.save();
+    tCtx.lineCap = 'round';
+
+    // Recursive Branching Fractal Network (Golden Ratio 0.618)
+    var generations = 3;
+    var ratio = 0.618;
+    var baseR = minDim * 0.28;
+
+    function renderBranch(bx, by, r, gen, parentAngle) {
+      if (gen > generations) return;
+
+      var alpha = (0.7 * Math.pow(0.72, gen)) * op;
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = Math.max(0.6, strokeW * (1 - gen * 0.2));
+      tCtx.globalAlpha = alpha;
+
+      // Circle at this node
+      tCtx.beginPath();
+      tCtx.arc(bx, by, r, 0, Math.PI * 2);
+      tCtx.stroke();
+
+      // Node center dot
+      tCtx.fillStyle = strokeColor;
+      tCtx.globalAlpha = (0.5 + 0.3 * (1 / (gen + 1))) * op;
+      tCtx.beginPath();
+      tCtx.arc(bx, by, Math.max(2, minDim * 0.003), 0, Math.PI * 2);
+      tCtx.fill();
+
+      // Generation tag
+      if (gen < 2) {
+        tCtx.globalAlpha = 0.4 * op;
+        tCtx.font = Math.max(7, minDim * 0.008) + 'px "SF Mono", monospace';
+        tCtx.textAlign = 'left';
+        tCtx.fillText('GEN.' + gen + ' [r=' + Math.round(r) + ']', bx + r + 6, by);
+      }
+
+      var numChildren = 3;
+      var childR = r * ratio;
+      for (var c = 0; c < numChildren; c++) {
+        var ang = parentAngle + (c - 1) * (Math.PI * 0.55) + (prng() - 0.5) * 0.2;
+        var dist = r + childR * 0.85;
+        var chX = bx + Math.cos(ang) * dist;
+        var chY = by + Math.sin(ang) * dist;
+
+        // Connecting line
+        tCtx.strokeStyle = detailColor;
+        tCtx.lineWidth = 0.7;
+        tCtx.globalAlpha = 0.25 * op;
+        tCtx.beginPath();
+        tCtx.moveTo(bx, by);
+        tCtx.lineTo(chX, chY);
+        tCtx.stroke();
+
+        renderBranch(chX, chY, childR, gen + 1, ang);
+      }
+    }
+
+    renderBranch(cx, cy, baseR, 0, -Math.PI / 2);
+
+    // 3D Contour Elevation Slices
+    tCtx.strokeStyle = detailColor;
+    tCtx.lineWidth = 0.5;
+    tCtx.setLineDash([minDim * 0.005, minDim * 0.005]);
+    for (var slice = -2; slice <= 2; slice++) {
+      var sy = cy + slice * (minDim * 0.14);
+      tCtx.globalAlpha = 0.12 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(cx - minDim * 0.4, sy);
+      tCtx.lineTo(cx + minDim * 0.4, sy);
+      tCtx.stroke();
+
+      tCtx.globalAlpha = 0.3 * op;
+      tCtx.font = Math.max(7, minDim * 0.007) + 'px "SF Mono", monospace';
+      tCtx.textAlign = 'right';
+      tCtx.fillText('ELEV ' + (slice * 50) + 'm', cx - minDim * 0.4 - 8, sy + 3);
+    }
+    tCtx.setLineDash([]);
+    tCtx.restore();
+  }
+
   // Render Pipeline
   function drawCanvas(tCtx, tW, tH) {
     var palette = state.palette;
@@ -706,55 +1012,63 @@
       tCtx.setLineDash([]);
     }
 
-    // 6. Connections
-    if (state.connections && state.connections.length > 0) {
-      var lWeight = parseFloat(lineWeightSlider.value) || 0.8;
-      tCtx.strokeStyle = strokeColor;
-      tCtx.lineWidth = lWeight;
-      tCtx.lineCap = 'round';
+    // 6 & 7. Generative Mode-Specific Rendering
+    if (state.mode === 'hero') {
+      drawHeroMode(tCtx, tW, tH, palette, op);
+    } else if (state.mode === 'geo') {
+      drawGeoMode(tCtx, tW, tH, palette, op);
+    } else if (state.mode === 'studio') {
+      drawStudioMode(tCtx, tW, tH, palette, op);
+    } else {
+      // Circles Mode: Connections and Detected Blobs
+      if (state.connections && state.connections.length > 0) {
+        var lWeight = parseFloat(lineWeightSlider.value) || 0.8;
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = lWeight;
+        tCtx.lineCap = 'round';
 
-      state.connections.forEach(function (conn) {
-        var p1 = state.circles[conn.a];
-        var p2 = state.circles[conn.b];
-        tCtx.globalAlpha = op;
+        state.connections.forEach(function (conn) {
+          var p1 = state.circles[conn.a];
+          var p2 = state.circles[conn.b];
+          tCtx.globalAlpha = op;
+          tCtx.beginPath();
+          tCtx.moveTo(p1.x, p1.y);
+          tCtx.lineTo(p2.x, p2.y);
+          tCtx.stroke();
+        });
+      }
+
+      var shapeStroke = parseFloat(shapeStrokeSlider.value) || 1.0;
+      var labelSize = parseInt(labelSizeSlider.value, 10) || 8;
+
+      state.circles.forEach(function (circle) {
+        tCtx.globalAlpha = (0.3 + 0.4 * circle.score) * op;
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = shapeStroke;
+
         tCtx.beginPath();
-        tCtx.moveTo(p1.x, p1.y);
-        tCtx.lineTo(p2.x, p2.y);
+        if (state.shape === 'square') {
+          tCtx.rect(circle.x - circle.r, circle.y - circle.r, circle.r * 2, circle.r * 2);
+        } else {
+          tCtx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
+        }
         tCtx.stroke();
+
+        tCtx.globalAlpha = (0.7 + 0.3 * circle.score) * op;
+        tCtx.fillStyle = strokeColor;
+        tCtx.beginPath();
+        tCtx.arc(circle.x, circle.y, 2.5, 0, Math.PI * 2);
+        tCtx.fill();
+
+        if (labelSize > 0) {
+          tCtx.globalAlpha = op;
+          tCtx.font = labelSize + 'px Telegraf, system-ui, sans-serif';
+          tCtx.textAlign = 'left';
+          tCtx.textBaseline = 'middle';
+          tCtx.fillText(Math.round(circle.x) + ',' + Math.round(circle.y), circle.x + circle.r + labelSize * 0.4, circle.y);
+        }
       });
     }
-
-    // 7. Detected Circles / Shapes
-    var shapeStroke = parseFloat(shapeStrokeSlider.value) || 1.0;
-    var labelSize = parseInt(labelSizeSlider.value, 10) || 8;
-
-    state.circles.forEach(function (circle) {
-      tCtx.globalAlpha = (0.3 + 0.4 * circle.score) * op;
-      tCtx.strokeStyle = strokeColor;
-      tCtx.lineWidth = shapeStroke;
-
-      tCtx.beginPath();
-      if (state.shape === 'square') {
-        tCtx.rect(circle.x - circle.r, circle.y - circle.r, circle.r * 2, circle.r * 2);
-      } else {
-        tCtx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
-      }
-      tCtx.stroke();
-
-      tCtx.globalAlpha = (0.7 + 0.3 * circle.score) * op;
-      tCtx.fillStyle = strokeColor;
-      tCtx.beginPath();
-      tCtx.arc(circle.x, circle.y, 2.5, 0, Math.PI * 2);
-      tCtx.fill();
-
-      if (labelSize > 0) {
-        tCtx.globalAlpha = op;
-        tCtx.font = labelSize + 'px Telegraf, system-ui, sans-serif';
-        tCtx.textAlign = 'left';
-        tCtx.textBaseline = 'middle';
-        tCtx.fillText(Math.round(circle.x) + ',' + Math.round(circle.y), circle.x + circle.r + labelSize * 0.4, circle.y);
-      }
-    });
 
     // 8. Teks 4 Pojok Kustom
     if (state.frameTextOn) {
