@@ -2597,8 +2597,9 @@
     resizeAndRender();
   });
 
-  // Dynamic Sidebar Panels Filter
+  // Dynamic Sidebar Panels + Rail Filter
   function updateDynamicSidebarPanels(currentMode) {
+    // 1. Show/hide sidebar panels
     var panels = document.querySelectorAll('.sidebar .panel');
     panels.forEach(function (panel) {
       var modes = (panel.dataset.modes || 'all').split(' ');
@@ -2606,6 +2607,24 @@
         panel.style.display = '';
       } else {
         panel.style.display = 'none';
+      }
+    });
+
+    // 2. Show/hide rail buttons by their data-modes
+    var enginePanelMap = {
+      circles: 'crosshair',
+      hero: 'telemetry',
+      geo: 'topography',
+      studio: 'viewfinder'
+    };
+    document.querySelectorAll('.rail-btn').forEach(function (btn) {
+      var modes = (btn.dataset.modes || 'all').split(' ');
+      var visible = modes.indexOf('all') !== -1 || modes.indexOf(currentMode) !== -1;
+      btn.style.display = visible ? '' : 'none';
+
+      // Swap Engine button target to the mode-specific section
+      if (btn.dataset.engine === 'true') {
+        btn.dataset.panel = enginePanelMap[currentMode] || 'crosshair';
       }
     });
   }
