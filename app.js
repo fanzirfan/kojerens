@@ -702,7 +702,7 @@
     }
 
     // 6. Connections
-    if (state.connections && state.connections.length > 0 && state.mode !== 'studio') {
+    if (state.connections && state.connections.length > 0) {
       var lWeight = parseFloat(lineWeightSlider.value) || 0.8;
       tCtx.strokeStyle = strokeColor;
       tCtx.lineWidth = lWeight;
@@ -742,7 +742,7 @@
       tCtx.arc(circle.x, circle.y, 2.5, 0, Math.PI * 2);
       tCtx.fill();
 
-      if (labelSize > 0 && state.mode !== 'geo') {
+      if (labelSize > 0) {
         tCtx.globalAlpha = op;
         tCtx.font = labelSize + 'px Telegraf, system-ui, sans-serif';
         tCtx.textAlign = 'left';
@@ -752,7 +752,7 @@
     });
 
     // 8. Teks 4 Pojok Kustom
-    if (state.mode !== 'geo' && state.frameTextOn) {
+    if (state.frameTextOn) {
       var fTextSize = parseInt(frameTextSizeSlider.value, 10) || 12;
       tCtx.globalAlpha = op;
       tCtx.fillStyle = strokeColor;
