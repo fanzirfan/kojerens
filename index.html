@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blob Tracker : Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -35,7 +38,7 @@
     <section class="panel" data-section="pixelate">
       <div class="panel-header">
         <span class="panel-title">PIXELATE</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <p class="hint intro">Click on the canvas to place pixelation zones</p>
@@ -45,7 +48,7 @@
             <label>PIXEL SIZE</label>
             <span class="val" id="pixelSizeVal">26</span>
           </div>
-          <p class="hint">Mosaic block size – larger = blockier</p>
+          <p class="hint">Mosaic block size: larger = blockier</p>
           <input type="range" id="pixelSize" min="4" max="60" value="26" />
         </div>
 
@@ -72,7 +75,7 @@
     <section class="panel" data-section="frametext">
       <div class="panel-header">
         <span class="panel-title">FRAME TEXT</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <button class="btn-toggle active" id="frameTextToggleBtn">Frame Text On</button>
@@ -120,7 +123,7 @@
     <section class="panel" data-section="crosshair">
       <div class="panel-header">
         <span class="panel-title">CROSSHAIR FRAME</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <button class="btn-toggle active" id="frameToggleBtn">Frame On</button>
@@ -157,7 +160,7 @@
             <label>STAR SIZE</label>
             <span class="val" id="starSizeVal">40</span>
           </div>
-          <p class="hint">Diameter of the center asterisk – 0 hides it</p>
+          <p class="hint">Diameter of the center asterisk (0 hides it)</p>
           <input type="range" id="starSize" min="0" max="150" value="40" />
         </div>
 
@@ -166,7 +169,7 @@
             <label>STAR POINTS</label>
             <span class="val" id="starPointsVal">4</span>
           </div>
-          <p class="hint">Number of crossing lines – 2 is a plus, 4 is an 8-pointed star</p>
+          <p class="hint">Number of crossing lines: 2 is a plus, 4 is an 8-pointed star</p>
           <input type="range" id="starPoints" min="1" max="8" value="4" />
         </div>
       </div>
@@ -176,7 +179,7 @@
     <section class="panel" data-section="chain">
       <div class="panel-header">
         <span class="panel-title">CHAIN</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <button class="btn-toggle active" id="chainToggleBtn">Chain On</button>
@@ -195,7 +198,7 @@
             <label>ANGLE</label>
             <span class="val" id="chainAngleVal">45</span>
           </div>
-          <p class="hint">Direction of chain – 0 vertical, 45 diagonal, 90 horizontal</p>
+          <p class="hint">Direction of chain: 0 vertical, 45 diagonal, 90 horizontal</p>
           <input type="range" id="chainAngle" min="0" max="180" value="45" />
         </div>
 
@@ -213,7 +216,7 @@
             <label>SIZE RATIO</label>
             <span class="val" id="chainSizeRatioVal">0.50</span>
           </div>
-          <p class="hint">Size multiplier per step – below 1 shrinks outward</p>
+          <p class="hint">Size multiplier per step: below 1 shrinks outward</p>
           <input type="range" id="chainSizeRatio" min="0.2" max="1.2" step="0.01" value="0.50" />
         </div>
 
@@ -234,7 +237,7 @@
     <section class="panel" data-section="detection">
       <div class="panel-header">
         <span class="panel-title">DETECTION</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <div class="segmented-group">
@@ -252,7 +255,7 @@
             <label>BLOCK SIZE</label>
             <span class="val" id="blockSizeVal">16</span>
           </div>
-          <p class="hint">Analysis grid resolution – smaller = more detail</p>
+          <p class="hint">Analysis grid resolution: smaller = more detail</p>
           <input type="range" id="blockSize" min="6" max="40" value="16" />
         </div>
 
@@ -261,7 +264,7 @@
             <label>THRESHOLD</label>
             <span class="val" id="thresholdVal">30</span>
           </div>
-          <p class="hint">Min score to place a circle – higher = fewer, stronger hits</p>
+          <p class="hint">Min score to place a circle: higher = fewer, stronger hits</p>
           <input type="range" id="threshold" min="0" max="100" value="30" />
         </div>
 
@@ -279,7 +282,7 @@
             <label>MIN DISTANCE</label>
             <span class="val" id="minDistanceVal">40</span>
           </div>
-          <p class="hint">Spacing between circle centers – prevents clustering</p>
+          <p class="hint">Spacing between circle centers: prevents clustering</p>
           <input type="range" id="minDistance" min="10" max="120" value="40" />
         </div>
       </div>
@@ -289,7 +292,7 @@
     <section class="panel" data-section="shapes">
       <div class="panel-header">
         <span class="panel-title">SHAPES</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <div class="segmented-group">
@@ -329,7 +332,7 @@
             <label>SIZE SEED</label>
             <span class="val" id="sizeSeedVal">42</span>
           </div>
-          <p class="hint">Random seed for size variation – change for different distributions</p>
+          <p class="hint">Random seed for size variation: change for different distributions</p>
           <input type="range" id="sizeSeed" min="1" max="9999" value="42" />
         </div>
 
@@ -357,7 +360,7 @@
     <section class="panel" data-section="connections">
       <div class="panel-header">
         <span class="panel-title">CONNECTIONS</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <div class="control-group">
@@ -365,7 +368,7 @@
             <label>MAX DISTANCE</label>
             <span class="val" id="maxDistanceVal">150</span>
           </div>
-          <p class="hint">Circles within this range get connected – 0 hides lines</p>
+          <p class="hint">Circles within this range get connected (0 hides lines)</p>
           <input type="range" id="maxDistance" min="0" max="400" value="150" />
         </div>
 
@@ -384,7 +387,7 @@
     <section class="panel" data-section="palette">
       <div class="panel-header">
         <span class="panel-title">PALETTE</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <div class="palette-grid" id="paletteGrid">
@@ -424,7 +427,7 @@
     <section class="panel" data-section="size">
       <div class="panel-header">
         <span class="panel-title">SIZE</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <div class="select-wrap">
@@ -443,7 +446,7 @@
     <section class="panel" data-section="texture">
       <div class="panel-header">
         <span class="panel-title">TEXTURE / NOISE</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <button class="btn-block-outline" id="replaceTextureBtn">Replace Texture</button>
@@ -465,7 +468,7 @@
     <section class="panel" data-section="export" style="border-bottom:none">
       <div class="panel-header">
         <span class="panel-title">EXPORT</span>
-        <button class="toggle-collapse">−</button>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
         <button class="btn-download" id="downloadBtn">Download PNG</button>

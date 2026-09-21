@@ -1067,7 +1067,7 @@
               tCtx.font = lblSize + 'px Telegraf, system-ui, sans-serif';
               tCtx.textAlign = 'left';
               tCtx.textBaseline = 'middle';
-              tCtx.fillText(pNum + ' → ' + Math.round(pt.x) + ' – ' + Math.round(pt.y), pt.x + mSize + lblSize * 0.5, pt.y);
+              tCtx.fillText(pNum + ' → ' + Math.round(pt.x) + ', ' + Math.round(pt.y), pt.x + mSize + lblSize * 0.5, pt.y);
               pNum++;
             }
           });
