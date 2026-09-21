@@ -118,7 +118,6 @@
     chainOn: true,
     chainIntersections: true,
     detectionMode: 'contrast',
-    detectionType: 'bright',
     shape: 'circle',
     palette: { bg: '#0a0a0a', color: '#ffffff', stroke: '#ffffff', name: 'White / Dark' },
     customTexture: null,
@@ -163,8 +162,8 @@
     exportStatusText.textContent = fmt.label + ' / ' + state.palette.name;
   }
 
-  // Block RMS Contrast & Luminance Analysis
-  function analyzeImage(img, targetW, targetH, bSize) {
+  // Enhanced Image Feature Detection with Edge Gradient & Salience-Weighted Centroid Snapping
+  function analyzeImage(img, targetW, targetH, bSize, mode) {
     var off = document.createElement('canvas');
     off.width = targetW;
     off.height = targetH;
@@ -194,31 +193,105 @@
     var rows = Math.floor(targetH / p);
     var blocks = [];
 
+    // Precompute grayscale luminance for ultra-fast gradient and variance calculation
+    var lum = new Float32Array(targetW * targetH);
+    for (var i = 0, j = 0; i < f.length; i += 4, j++) {
+      lum[j] = f[i] * 0.299 + f[i + 1] * 0.587 + f[i + 2] * 0.114;
+    }
+
+    var detMode = mode || 'contrast';
+
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
         var startX = c * p;
         var startY = r * p;
+        var endX = Math.min(targetW, startX + p);
+        var endY = Math.min(targetH, startY + p);
         var sumLum = 0, sumSq = 0, count = 0;
+        var sumGrad = 0;
 
-        for (var y = startY; y < startY + p && y < targetH; y++) {
-          for (var x = startX; x < startX + p && x < targetW; x++) {
-            var idx = (y * targetW + x) * 4;
-            var lum = f[idx] * 0.299 + f[idx + 1] * 0.587 + f[idx + 2] * 0.114;
-            sumLum += lum;
-            sumSq += lum * lum;
+        // Pass 1: Local statistics and spatial gradient calculation
+        for (var y = startY; y < endY; y++) {
+          var yOff = y * targetW;
+          var prevYOff = (y > 0 ? y - 1 : y) * targetW;
+          var nextYOff = (y < targetH - 1 ? y + 1 : y) * targetW;
+
+          for (var x = startX; x < endX; x++) {
+            var val = lum[yOff + x];
+            sumLum += val;
+            sumSq += val * val;
             count++;
+
+            var prevX = x > 0 ? x - 1 : x;
+            var nextX = x < targetW - 1 ? x + 1 : x;
+            var gx = lum[yOff + nextX] - lum[yOff + prevX];
+            var gy = lum[nextYOff + x] - lum[prevYOff + x];
+            sumGrad += Math.hypot(gx, gy);
           }
         }
 
+        if (count === 0) continue;
+
         var mean = sumLum / count;
-        var variance = sumSq / count - mean * mean;
-        var contrast = Math.sqrt(Math.max(0, variance));
+        var variance = Math.max(0, sumSq / count - mean * mean);
+        var rmsContrast = Math.sqrt(variance);
+        var meanGrad = sumGrad / count;
+
+        // Enhanced contrast blends intensity variance with edge gradient sharpness
+        var contrastScore = rmsContrast * 0.65 + meanGrad * 0.75;
+
+        // Pass 2: Feature Centroid Snapping
+        // Snaps circle center precisely to physical feature (pupils, glints, teeth, contours)
+        var candX = startX + p / 2;
+        var candY = startY + p / 2;
+        var sumW = 0, sumWX = 0, sumWY = 0;
+
+        for (var py = startY; py < endY; py++) {
+          var pyOff = py * targetW;
+          var pprevY = (py > 0 ? py - 1 : py) * targetW;
+          var pnextY = (py < targetH - 1 ? py + 1 : py) * targetW;
+
+          for (var px = startX; px < endX; px++) {
+            var lVal = lum[pyOff + px];
+            var ppx1 = px > 0 ? px - 1 : px;
+            var ppx2 = px < targetW - 1 ? px + 1 : px;
+            var pgx = lum[pyOff + ppx2] - lum[pyOff + ppx1];
+            var pgy = lum[pnextY + px] - lum[pprevY + px];
+            var pgrad = Math.hypot(pgx, pgy);
+
+            var w = 0;
+            if (detMode === 'bright') {
+              w = Math.pow(Math.max(0, lVal - 50) / 205, 2.5);
+            } else if (detMode === 'dark') {
+              w = Math.pow(Math.max(0, 205 - lVal) / 205, 2.5);
+            } else if (detMode === 'contrast') {
+              var diff = Math.abs(lVal - mean);
+              w = pgrad * 0.7 + diff * 0.3;
+            } else { // combined
+              var diffMid = Math.abs(lVal - 128);
+              w = (pgrad * 0.6 + Math.abs(lVal - mean) * 0.4) * (1 + diffMid / 128);
+            }
+
+            if (w > 0) {
+              sumW += w;
+              sumWX += px * w;
+              sumWY += py * w;
+            }
+          }
+        }
+
+        if (sumW > 0.001) {
+          candX = sumWX / sumW;
+          candY = sumWY / sumW;
+          candX = Math.max(startX + 1, Math.min(endX - 1, candX));
+          candY = Math.max(startY + 1, Math.min(endY - 1, candY));
+        }
 
         blocks.push({
-          x: startX + p / 2,
-          y: startY + p / 2,
+          x: candX,
+          y: candY,
           brightness: mean,
-          contrast: contrast
+          contrast: contrastScore
         });
       }
     }
@@ -228,7 +301,7 @@
   // Circle Placement
   function placeCircles(blocks, opts) {
     if (!blocks || blocks.length === 0) return [];
-    var mode = opts.mode;
+    var mode = opts.mode || 'contrast';
     var threshold = opts.threshold;
     var maxCircles = opts.maxCircles;
     var minRadius = opts.minRadius;
@@ -258,24 +331,30 @@
       };
     });
 
-    var maxScore = Math.max.apply(null, scored.map(function (b) { return b.score; })) || 1;
-    var filtered = scored
-      .map(function (b) {
-        return {
-          x: b.x,
-          y: b.y,
-          brightness: b.brightness,
-          contrast: b.contrast,
-          score: b.score,
-          normalizedScore: b.score / maxScore
-        };
-      })
-      .filter(function (b) {
-        return b.normalizedScore >= threshold / 100;
-      })
-      .sort(function (a, b) {
-        return b.normalizedScore - a.normalizedScore;
-      });
+    var maxScore = 1;
+    for (var k = 0; k < scored.length; k++) {
+      if (scored[k].score > maxScore) maxScore = scored[k].score;
+    }
+
+    var threshRatio = threshold / 100;
+    var filtered = [];
+    for (var m = 0; m < scored.length; m++) {
+      var norm = scored[m].score / maxScore;
+      if (norm >= threshRatio) {
+        filtered.push({
+          x: scored[m].x,
+          y: scored[m].y,
+          brightness: scored[m].brightness,
+          contrast: scored[m].contrast,
+          score: scored[m].score,
+          normalizedScore: norm
+        });
+      }
+    }
+
+    filtered.sort(function (a, b) {
+      return b.normalizedScore - a.normalizedScore;
+    });
 
     var placed = [];
     var minDistSq = minDistance * minDistance;
@@ -394,7 +473,7 @@
     var maxR = parseFloat(maxRadiusSlider.value) || 24;
     var seed = parseInt(sizeSeedSlider.value, 10) || 42;
 
-    var blocks = analyzeImage(state.image, w, h, bSize);
+    var blocks = analyzeImage(state.image, w, h, bSize, state.detectionMode);
     state.circles = placeCircles(blocks, {
       mode: state.detectionMode,
       threshold: thresh,
@@ -891,23 +970,12 @@
     render();
   });
 
-  // Segmented Buttons: Detection Mode (Combined vs Contrast)
+  // Segmented Buttons: Detection Mode (Combined, Contrast, Bright, Dark)
   document.querySelectorAll('[data-detection-mode]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       document.querySelectorAll('[data-detection-mode]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.detectionMode = btn.dataset.detectionMode;
-      recalculate();
-      render();
-    });
-  });
-
-  // Segmented Buttons: Detection Type (Bright vs Dark)
-  document.querySelectorAll('[data-detection-type]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('[data-detection-type]').forEach(function (b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      state.detectionType = btn.dataset.detectionType;
       recalculate();
       render();
     });
