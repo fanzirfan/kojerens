@@ -19,15 +19,6 @@
       <div class="panel-body">
         <button class="btn-block" id="replaceImageBtn">Replace Image</button>
         <input type="file" id="imageInput" accept="image/*" style="display:none" />
-        
-        <div class="select-wrap">
-          <select id="presetSelect">
-            <option value="">Select preset image..</option>
-            <option value="portrait">Portrait (Reference Model)</option>
-            <option value="cyberpunk">Cyberpunk Neon</option>
-            <option value="minimal">Minimal Sculpture</option>
-          </select>
-        </div>
 
         <div class="control-group">
           <div class="control-header">
@@ -74,6 +65,24 @@
           <button class="btn-action" id="clearPixelateBtn">Clear</button>
         </div>
         <p class="status-sub" id="pixelateStatus">0 zones placed</p>
+      </div>
+    </section>
+
+    <!-- SECTION: FRAME TEXT -->
+    <section class="panel" data-section="frametext">
+      <div class="panel-header">
+        <span class="panel-title">FRAME TEXT</span>
+        <button class="toggle-collapse">−</button>
+      </div>
+      <div class="panel-body">
+        <div class="control-group">
+          <div class="control-header">
+            <label>TEXT SIZE</label>
+            <span class="val" id="frameTextSizeVal">12</span>
+          </div>
+          <p class="hint">Font size of the 4 corner labels</p>
+          <input type="range" id="frameTextSize" min="6" max="40" step="1" value="12" />
+        </div>
       </div>
     </section>
 
@@ -163,22 +172,31 @@
         <div class="control-group">
           <div class="control-header">
             <label>BASE RADIUS</label>
-            <span class="val" id="chainBaseRadiusVal">250</span>
+            <span class="val" id="chainBaseRadiusVal">300</span>
           </div>
           <p class="hint">Size of the center circle</p>
-          <input type="range" id="chainBaseRadius" min="30" max="500" value="250" />
+          <input type="range" id="chainBaseRadius" min="30" max="600" value="300" />
         </div>
 
         <div class="control-group">
           <div class="control-header">
             <label>SIZE RATIO</label>
-            <span class="val" id="chainSizeRatioVal">0.79</span>
+            <span class="val" id="chainSizeRatioVal">0.50</span>
           </div>
           <p class="hint">Size multiplier per step – below 1 shrinks outward</p>
-          <input type="range" id="chainSizeRatio" min="0.3" max="1.2" step="0.01" value="0.79" />
+          <input type="range" id="chainSizeRatio" min="0.2" max="1.2" step="0.01" value="0.50" />
         </div>
 
         <button class="btn-toggle active" id="chainIntersectionsBtn">Intersections On</button>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>MARKER SIZE</label>
+            <span class="val" id="markerSizeVal">3.0</span>
+          </div>
+          <p class="hint">Dot size at each adjacent-circle intersection</p>
+          <input type="range" id="markerSize" min="0.5" max="10" step="0.5" value="3.0" />
+        </div>
       </div>
     </section>
 
@@ -190,8 +208,8 @@
       </div>
       <div class="panel-body">
         <div class="segmented-group">
-          <button class="seg-btn active" data-detection-mode="combined">Combined</button>
-          <button class="seg-btn" data-detection-mode="contrast">Contrast</button>
+          <button class="seg-btn" data-detection-mode="combined">Combined</button>
+          <button class="seg-btn active" data-detection-mode="contrast">Contrast</button>
         </div>
 
         <div class="segmented-group">
@@ -340,29 +358,29 @@
       </div>
       <div class="panel-body">
         <div class="palette-grid" id="paletteGrid">
-          <!-- Swatch 1: Dark bg / White line -->
-          <button class="palette-swatch" data-bg="#0a0a0a" data-color="#ffffff" title="White on Dark">
+          <!-- Swatch 1: Dark bg / White line (Active Default) -->
+          <button class="palette-swatch active" data-bg="#0a0a0a" data-color="#ffffff" title="White / Dark">
             <div class="swatch-bg" style="background:#0a0a0a">
               <div class="swatch-circle" style="border-color:#ffffff"></div>
               <div class="swatch-dot" style="background:#ffffff"></div>
             </div>
           </button>
           <!-- Swatch 2: Light bg / Dark line -->
-          <button class="palette-swatch" data-bg="#f4f4f4" data-color="#111111" title="Dark on Light">
+          <button class="palette-swatch" data-bg="#f4f4f4" data-color="#111111" title="Dark / Light">
             <div class="swatch-bg" style="background:#f4f4f4">
               <div class="swatch-circle" style="border-color:#111111"></div>
               <div class="swatch-dot" style="background:#111111"></div>
             </div>
           </button>
-          <!-- Swatch 3: Dark bg / Gold line (Default / Active) -->
-          <button class="palette-swatch active" data-bg="#0c0c0c" data-color="#d4a843" title="Gold on Dark">
+          <!-- Swatch 3: Dark bg / Gold line -->
+          <button class="palette-swatch" data-bg="#0c0c0c" data-color="#d4a843" title="Gold / Dark">
             <div class="swatch-bg" style="background:#0c0c0c">
               <div class="swatch-circle" style="border-color:#d4a843"></div>
               <div class="swatch-dot" style="background:#d4a843"></div>
             </div>
           </button>
           <!-- Swatch 4: Dark bg / Neon Green line -->
-          <button class="palette-swatch" data-bg="#08120a" data-color="#00ff66" title="Neon Green on Dark">
+          <button class="palette-swatch" data-bg="#08120a" data-color="#00ff66" title="Neon Green / Dark">
             <div class="swatch-bg" style="background:#08120a">
               <div class="swatch-circle" style="border-color:#00ff66"></div>
               <div class="swatch-dot" style="background:#00ff66"></div>
@@ -421,7 +439,7 @@
       </div>
       <div class="panel-body">
         <button class="btn-download" id="downloadBtn">Download PNG</button>
-        <p class="status-footer" id="exportStatusText">1200x1600 / Gold / Dark</p>
+        <p class="status-footer" id="exportStatusText">1200x1600 / White / Dark</p>
       </div>
     </section>
 
@@ -429,14 +447,22 @@
 
   <!-- MAIN STAGE -->
   <main class="stage">
+    <div class="stage-nav">
+      <button class="nav-tab active" data-mode="hero">Hero</button>
+      <button class="nav-tab" data-mode="geo">Geo Tool</button>
+      <button class="nav-tab" data-mode="studio">Studio</button>
+    </div>
+
     <div class="canvas-wrap" id="canvasWrap">
       <canvas id="canvas"></canvas>
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">◉</div>
         <h2>Click or Drag Image to Start</h2>
-        <p>Or pick a preset in the sidebar. 100% processed in your browser.</p>
+        <p>100% processed locally in your browser.</p>
       </div>
     </div>
+
+    <div class="stage-attribution">Tool created by <strong>Fanz Irfan</strong></div>
   </main>
 
 </div>

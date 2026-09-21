@@ -10,9 +10,12 @@
   var replaceImageBtn = document.getElementById('replaceImageBtn');
   var replaceTextureBtn = document.getElementById('replaceTextureBtn');
   var removeTextureBtn = document.getElementById('removeTextureBtn');
-  var presetSelect = document.getElementById('presetSelect');
   var downloadBtn = document.getElementById('downloadBtn');
   var exportStatusText = document.getElementById('exportStatusText');
+
+  // Frame Text Controls
+  var frameTextSizeSlider = document.getElementById('frameTextSize');
+  var frameTextSizeVal = document.getElementById('frameTextSizeVal');
 
   // Pixelate Controls
   var pixelSizeSlider = document.getElementById('pixelSize');
@@ -48,6 +51,8 @@
   var chainSizeRatioSlider = document.getElementById('chainSizeRatio');
   var chainSizeRatioVal = document.getElementById('chainSizeRatioVal');
   var chainIntersectionsBtn = document.getElementById('chainIntersectionsBtn');
+  var markerSizeSlider = document.getElementById('markerSize');
+  var markerSizeVal = document.getElementById('markerSizeVal');
 
   // Image & Detection Controls
   var imageOpacitySlider = document.getElementById('imageOpacity');
@@ -102,24 +107,25 @@
     frameOn: true,
     chainOn: true,
     chainIntersections: true,
-    detectionMode: 'combined',
+    detectionMode: 'contrast',
     detectionType: 'bright',
     shape: 'circle',
-    palette: { bg: '#0c0c0c', color: '#d4a843', name: 'Gold / Dark' },
+    palette: { bg: '#0a0a0a', color: '#ffffff', stroke: '#ffffff', name: 'White / Dark' },
     customTexture: null,
     noiseCanvas: null,
     format: 'portrait_3_4',
-    blobs: [],
-    focusBox: null
+    mode: 'hero',
+    circles: [],
+    connections: [],
+    chainCircles: []
   };
 
-  function mulberry32(seed) {
-    var a = seed >>> 0;
+  // Lehmer PRNG (LCG)
+  function lcgPRNG(seed) {
+    var t = Math.abs(seed) || 1;
     return function () {
-      a = (a + 0x6D2B79F5) | 0;
-      var t = Math.imul(a ^ (a >>> 15), 1 | a);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      t = (t * 16807) % 2147483647;
+      return (t - 1) / 2147483646;
     };
   }
 
@@ -147,541 +153,591 @@
     exportStatusText.textContent = fmt.label + ' / ' + state.palette.name;
   }
 
-  function extractFeatures() {
-    if (!state.image) return;
-    var img = state.image;
-    var maxDim = 380;
-    var imgW = img.naturalWidth || img.width;
-    var imgH = img.naturalHeight || img.height;
-    var scale = Math.min(1, maxDim / Math.max(imgW, imgH));
-    var aW = Math.max(40, Math.round(imgW * scale));
-    var aH = Math.max(40, Math.round(imgH * scale));
+  // Block RMS Contrast & Luminance Analysis
+  function analyzeImage(img, targetW, targetH, bSize) {
+    var off = document.createElement('canvas');
+    off.width = targetW;
+    off.height = targetH;
+    var actx = off.getContext('2d');
 
-    var aCanvas = document.createElement('canvas');
-    aCanvas.width = aW;
-    aCanvas.height = aH;
-    var aCtx = aCanvas.getContext('2d');
-    aCtx.drawImage(img, 0, 0, aW, aH);
+    var imgRatio = img.width / img.height;
+    var targetRatio = targetW / targetH;
+    var sx, sy, sw, sh;
 
-    var imgData = aCtx.getImageData(0, 0, aW, aH);
-    var data = imgData.data;
-
-    var lum = new Float32Array(aW * aH);
-    for (var i = 0, p = 0; i < data.length; i += 4, p++) {
-      lum[p] = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
+    if (imgRatio > targetRatio) {
+      sh = img.height;
+      sw = sh * targetRatio;
+      sx = (img.width - sw) / 2;
+      sy = 0;
+    } else {
+      sw = img.width;
+      sh = sw / targetRatio;
+      sx = 0;
+      sy = (img.height - sh) / 2;
     }
 
-    var saliency = new Float32Array(aW * aH);
-    var maxSal = 0.0001;
-    var isDark = state.detectionType === 'dark';
-    var isContrastOnly = state.detectionMode === 'contrast';
+    actx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+    var f = actx.getImageData(0, 0, targetW, targetH).data;
 
-    for (var y = 1; y < aH - 1; y++) {
-      var yPrev = (y - 1) * aW;
-      var yCurr = y * aW;
-      var yNext = (y + 1) * aW;
-      for (var x = 1; x < aW - 1; x++) {
-        var gx =
-          lum[yPrev + x + 1] + 2 * lum[yCurr + x + 1] + lum[yNext + x + 1] -
-          (lum[yPrev + x - 1] + 2 * lum[yCurr + x - 1] + lum[yNext + x - 1]);
-        var gy =
-          lum[yNext + x - 1] + 2 * lum[yNext + x] + lum[yNext + x + 1] -
-          (lum[yPrev + x - 1] + 2 * lum[yPrev + x] + lum[yPrev + x + 1]);
-        var grad = Math.sqrt(gx * gx + gy * gy);
+    var p = bSize || 16;
+    var cols = Math.floor(targetW / p);
+    var rows = Math.floor(targetH / p);
+    var blocks = [];
 
-        var center = lum[yCurr + x];
-        var lightVal = isDark ? 1 - center : center;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var startX = c * p;
+        var startY = r * p;
+        var sumLum = 0, sumSq = 0, count = 0;
 
-        var sal;
-        if (isContrastOnly) {
-          sal = grad;
-        } else {
-          var surround =
-            (lum[yPrev + x] + lum[yNext + x] + lum[yCurr + x - 1] + lum[yCurr + x + 1]) * 0.25;
-          var contrast = Math.abs(center - surround);
-          sal = grad * 0.55 + contrast * 0.25 + lightVal * 0.2;
-        }
-
-        saliency[yCurr + x] = sal;
-        if (sal > maxSal) maxSal = sal;
-      }
-    }
-
-    for (var k = 0; k < saliency.length; k++) {
-      saliency[k] /= maxSal;
-    }
-
-    var bSize = parseInt(blockSizeSlider.value, 10) || 16;
-    var cellW = Math.max(6, Math.round((bSize / 400) * aW));
-    var cellH = Math.max(6, Math.round((bSize / 400) * aH));
-    var gridX = Math.floor(aW / cellW);
-    var gridY = Math.floor(aH / cellH);
-
-    var thresh = (parseFloat(thresholdSlider.value) || 30) / 100;
-    var maxC = parseInt(maxCirclesSlider.value, 10) || 80;
-    var minDistNorm = (parseFloat(minDistanceSlider.value) || 40) / 1000;
-    var seedVal = parseInt(sizeSeedSlider.value, 10) || 42;
-    var rand = mulberry32(seedVal);
-
-    var candidates = [];
-    for (var gy = 0; gy < gridY; gy++) {
-      for (var gx = 0; gx < gridX; gx++) {
-        var startX = gx * cellW;
-        var endX = Math.min(aW - 1, (gx + 1) * cellW);
-        var startY = gy * cellH;
-        var endY = Math.min(aH - 1, (gy + 1) * cellH);
-
-        var bestX = startX;
-        var bestY = startY;
-        var bestScore = -1;
-
-        for (var cy = startY; cy < endY; cy++) {
-          var rowOff = cy * aW;
-          for (var cx = startX; cx < endX; cx++) {
-            var s = saliency[rowOff + cx];
-            if (s > bestScore) {
-              bestScore = s;
-              bestX = cx;
-              bestY = cy;
-            }
+        for (var y = startY; y < startY + p && y < targetH; y++) {
+          for (var x = startX; x < startX + p && x < targetW; x++) {
+            var idx = (y * targetW + x) * 4;
+            var lum = f[idx] * 0.299 + f[idx + 1] * 0.587 + f[idx + 2] * 0.114;
+            sumLum += lum;
+            sumSq += lum * lum;
+            count++;
           }
         }
 
-        if (bestScore >= thresh * 0.85) {
-          var weighted = bestScore * (0.8 + rand() * 0.4);
-          candidates.push({
-            nx: bestX / aW,
-            ny: bestY / aH,
-            rawScore: bestScore,
-            score: weighted,
-            brightness: lum[bestY * aW + bestX]
-          });
-        }
+        var mean = sumLum / count;
+        var variance = sumSq / count - mean * mean;
+        var contrast = Math.sqrt(Math.max(0, variance));
+
+        blocks.push({
+          x: startX + p / 2,
+          y: startY + p / 2,
+          brightness: mean,
+          contrast: contrast
+        });
       }
     }
+    return blocks;
+  }
 
-    candidates.sort(function (a, b) {
-      return b.score - a.score;
+  // Circle Placement
+  function placeCircles(blocks, opts) {
+    if (!blocks || blocks.length === 0) return [];
+    var mode = opts.mode;
+    var threshold = opts.threshold;
+    var maxCircles = opts.maxCircles;
+    var minRadius = opts.minRadius;
+    var maxRadius = opts.maxRadius;
+    var minDistance = opts.minDistance;
+    var sizeSeed = opts.sizeSeed;
+
+    var prng = lcgPRNG(sizeSeed);
+
+    var scored = blocks.map(function (b) {
+      var s;
+      if (mode === 'contrast') {
+        s = b.contrast;
+      } else if (mode === 'bright') {
+        s = b.brightness;
+      } else if (mode === 'dark') {
+        s = 255 - b.brightness;
+      } else { // combined
+        s = b.contrast * (1 + Math.abs(b.brightness - 128) / 128);
+      }
+      return {
+        x: b.x,
+        y: b.y,
+        brightness: b.brightness,
+        contrast: b.contrast,
+        score: s
+      };
     });
 
-    var selected = [];
-    for (var c = 0; c < candidates.length && selected.length < maxC; c++) {
-      var cand = candidates[c];
-      var tooClose = false;
-      for (var s = 0; s < selected.length; s++) {
-        var dx = cand.nx - selected[s].nx;
-        var dy = cand.ny - selected[s].ny;
-        if (Math.sqrt(dx * dx + dy * dy) < minDistNorm) {
-          tooClose = true;
+    var maxScore = Math.max.apply(null, scored.map(function (b) { return b.score; })) || 1;
+    var filtered = scored
+      .map(function (b) {
+        return {
+          x: b.x,
+          y: b.y,
+          brightness: b.brightness,
+          contrast: b.contrast,
+          score: b.score,
+          normalizedScore: b.score / maxScore
+        };
+      })
+      .filter(function (b) {
+        return b.normalizedScore >= threshold / 100;
+      })
+      .sort(function (a, b) {
+        return b.normalizedScore - a.normalizedScore;
+      });
+
+    var placed = [];
+    var minDistSq = minDistance * minDistance;
+
+    for (var i = 0; i < filtered.length; i++) {
+      if (placed.length >= maxCircles) break;
+      var candidate = filtered[i];
+      var ok = true;
+      for (var j = 0; j < placed.length; j++) {
+        var dx = placed[j].x - candidate.x;
+        var dy = placed[j].y - candidate.y;
+        if (dx * dx + dy * dy < minDistSq) {
+          ok = false;
           break;
         }
       }
-      if (!tooClose) {
-        selected.push(cand);
+      if (ok) {
+        var randScale = 0.5 + prng();
+        var radius = (minRadius + (maxRadius - minRadius) * candidate.normalizedScore) * randScale;
+        placed.push({
+          x: candidate.x,
+          y: candidate.y,
+          r: radius,
+          score: candidate.normalizedScore
+        });
       }
     }
+    return placed;
+  }
 
+  // Connections
+  function buildConnections(circles, maxDist) {
+    var lines = [];
+    if (maxDist <= 0) return lines;
+    for (var r = 0; r < circles.length; r++) {
+      for (var i = r + 1; i < circles.length; i++) {
+        var dist = Math.hypot(circles[i].x - circles[r].x, circles[i].y - circles[r].y);
+        if (dist < maxDist) {
+          lines.push({ a: r, b: i, dist: dist });
+        }
+      }
+    }
+    return lines;
+  }
+
+  // Chain Calculation
+  function buildChain(w, h, opts) {
+    var count = opts.chainCount;
+    var angle = opts.chainAngle;
+    var baseRadius = opts.chainBaseRadius;
+    var ratio = opts.chainSizeRatio;
+    if (count <= 0) return [];
+
+    var cx = w / 2;
+    var cy = h / 2;
+    var rad = (angle - 90) * Math.PI / 180;
+    var list = [];
+    list.push({ x: cx, y: cy, r: baseRadius });
+
+    var px = cx, py = cy, pr = baseRadius;
+    var forwardSteps = Math.floor((count - 1) / 2);
+    for (var i = 0; i < forwardSteps; i++) {
+      var nr = pr * ratio;
+      px += Math.cos(rad) * pr;
+      py += Math.sin(rad) * pr;
+      list.push({ x: px, y: py, r: nr });
+      pr = nr;
+    }
+
+    px = cx; py = cy; pr = baseRadius;
+    var backwardSteps = Math.ceil((count - 1) / 2);
+    for (var j = 0; j < backwardSteps; j++) {
+      var br = pr * ratio;
+      px -= Math.cos(rad) * pr;
+      py -= Math.sin(rad) * pr;
+      list.push({ x: px, y: py, r: br });
+      pr = br;
+    }
+    return list;
+  }
+
+  // Circle Intersections
+  function circleIntersections(c1, c2) {
+    var dx = c2.x - c1.x;
+    var dy = c2.y - c1.y;
+    var dist = Math.hypot(dx, dy);
+    if (dist > c1.r + c2.r || dist < Math.abs(c1.r - c2.r) || dist === 0) return [];
+
+    var a = (c1.r * c1.r - c2.r * c2.r + dist * dist) / (2 * dist);
+    var hSq = c1.r * c1.r - a * a;
+    if (hSq < 0) return [];
+
+    var h = Math.sqrt(hSq);
+    var midX = c1.x + a * dx / dist;
+    var midY = c1.y + a * dy / dist;
+    var rx = -dy * (h / dist);
+    var ry = dx * (h / dist);
+
+    return [
+      { x: midX + rx, y: midY + ry },
+      { x: midX - rx, y: midY - ry }
+    ];
+  }
+
+  function recalculate() {
+    if (!state.image) return;
+    var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
+    var w = fmt.w;
+    var h = fmt.h;
+
+    var bSize = parseInt(blockSizeSlider.value, 10) || 16;
+    var thresh = parseFloat(thresholdSlider.value) || 30;
+    var maxC = parseInt(maxCirclesSlider.value, 10) || 80;
+    var minDist = parseFloat(minDistanceSlider.value) || 40;
     var minR = parseFloat(minRadiusSlider.value) || 4;
     var maxR = parseFloat(maxRadiusSlider.value) || 24;
-    var blobs = [];
+    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
 
-    for (var b = 0; b < selected.length; b++) {
-      var item = selected[b];
-      var r = minR + item.rawScore * (maxR - minR);
-      var isMajor = b < 3;
-      if (isMajor) {
-        r = maxR * (1.5 + rand() * 0.8);
-      }
-      blobs.push({
-        nx: item.nx,
-        ny: item.ny,
-        r: r,
-        score: item.rawScore,
-        brightness: item.brightness,
-        isMajor: isMajor,
-        hasDouble: isMajor || (b % 4 === 0 && item.rawScore > 0.4),
-        hasGlow: item.brightness > 0.65 || (b < 2 && item.rawScore > 0.65),
-        hasLeader: b % 3 === 0,
-        leaderDir: rand() > 0.5 ? 1 : -1,
-        leaderVal: (item.rawScore * 99).toFixed(1) + '%',
-        id: Math.floor(rand() * 9000 + 1000)
-      });
-    }
+    var blocks = analyzeImage(state.image, w, h, bSize);
+    state.circles = placeCircles(blocks, {
+      mode: state.detectionMode,
+      threshold: thresh,
+      maxCircles: maxC,
+      minRadius: minR,
+      maxRadius: maxR,
+      minDistance: minDist,
+      sizeSeed: seed
+    });
 
-    state.blobs = blobs;
+    var connDist = parseFloat(maxDistanceSlider.value) || 150;
+    state.connections = buildConnections(state.circles, connDist);
+
+    state.chainCircles = buildChain(w, h, {
+      chainCount: parseInt(chainCountSlider.value, 10) || 11,
+      chainAngle: parseFloat(chainAngleSlider.value) || 45,
+      chainBaseRadius: parseFloat(chainBaseRadiusSlider.value) || 300,
+      chainSizeRatio: parseFloat(chainSizeRatioSlider.value) || 0.50
+    });
   }
 
-  function resizeCanvas() {
-    var rect = wrap.getBoundingClientRect();
-    var pad = 40;
-    var maxW = Math.max(200, rect.width - pad);
-    var maxH = Math.max(200, rect.height - pad);
-
-    var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
-    var ratio = fmt.w / fmt.h;
-
-    var w = maxW;
-    var h = w / ratio;
-    if (h > maxH) {
-      h = maxH;
-      w = h * ratio;
-    }
-
-    canvas.width = Math.round(w);
-    canvas.height = Math.round(h);
-    canvas.style.width = Math.round(w) + 'px';
-    canvas.style.height = Math.round(h) + 'px';
-  }
-
-  function drawScene(targetCtx, targetW, targetH, scale) {
-    scale = scale || 1;
+  // Render Pipeline
+  function drawCanvas(tCtx, tW, tH) {
     var palette = state.palette;
-    var color = palette.color;
+    var strokeColor = palette.stroke;
+    var op = parseFloat(overlayOpacitySlider.value);
+    if (isNaN(op)) op = 1;
 
-    targetCtx.clearRect(0, 0, targetW, targetH);
+    // 1. Background Fill
+    tCtx.fillStyle = palette.bg;
+    tCtx.fillRect(0, 0, tW, tH);
 
-    targetCtx.fillStyle = palette.bg;
-    targetCtx.fillRect(0, 0, targetW, targetH);
-
+    // 2. Background Image
     if (state.image) {
       var img = state.image;
-      var imgW = img.naturalWidth || img.width;
-      var imgH = img.naturalHeight || img.height;
-      var imgRatio = imgW / imgH;
-      var targetRatio = targetW / targetH;
+      var imgRatio = img.width / img.height;
+      var targetRatio = tW / tH;
+      var sx, sy, sw, sh;
 
-      var dw, dh, dx, dy;
       if (imgRatio > targetRatio) {
-        dh = targetH;
-        dw = dh * imgRatio;
-        dx = (targetW - dw) / 2;
-        dy = 0;
+        sh = img.height;
+        sw = sh * targetRatio;
+        sx = (img.width - sw) / 2;
+        sy = 0;
       } else {
-        dw = targetW;
-        dh = dw / imgRatio;
-        dx = 0;
-        dy = (targetH - dh) / 2;
+        sw = img.width;
+        sh = sw / targetRatio;
+        sx = 0;
+        sy = (img.height - sh) / 2;
       }
 
       var imgOp = parseFloat(imageOpacitySlider.value);
-      targetCtx.globalAlpha = isNaN(imgOp) ? 0.75 : imgOp;
-      targetCtx.drawImage(img, dx, dy, dw, dh);
-      targetCtx.globalAlpha = 1;
+      tCtx.globalAlpha = isNaN(imgOp) ? 0.75 : imgOp;
+      tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, tW, tH);
+      tCtx.globalAlpha = 1;
+    }
 
-      // 2. PIXELATE ZONES
-      if (state.pixelZones && state.pixelZones.length > 0) {
-        for (var pz = 0; pz < state.pixelZones.length; pz++) {
-          var zone = state.pixelZones[pz];
-          var zcx = zone.nx * targetW;
-          var zcy = zone.ny * targetH;
-          var zw = zone.zoneSize * 2 * scale;
-          var zh = zone.zoneSize * 2 * scale;
-          var zx1 = Math.max(0, Math.floor(zcx - zw / 2));
-          var zy1 = Math.max(0, Math.floor(zcy - zh / 2));
-          var zx2 = Math.min(targetW, Math.ceil(zcx + zw / 2));
-          var zy2 = Math.min(targetH, Math.ceil(zcy + zh / 2));
+    // 3. Pixelation Zones
+    if (state.pixelZones && state.pixelZones.length > 0 && parseInt(pixelSizeSlider.value, 10) > 1) {
+      var pSize = parseInt(pixelSizeSlider.value, 10) || 16;
+      var pRadius = parseInt(zoneSizeSlider.value, 10) || 90;
 
-          var pBlock = Math.max(4, Math.round(zone.pixelSize * scale));
-          var zWidth = zx2 - zx1;
-          var zHeight = zy2 - zy1;
+      state.pixelZones.forEach(function (zone) {
+        var zx = zone.x;
+        var zy = zone.y;
+        var minX = Math.max(0, Math.floor(zx - pRadius));
+        var minY = Math.max(0, Math.floor(zy - pRadius));
+        var zWidth = Math.min(tW, Math.ceil(zx + pRadius)) - minX;
+        var zHeight = Math.min(tH, Math.ceil(zy + pRadius)) - minY;
 
-          if (zWidth > 0 && zHeight > 0) {
-            try {
-              var zData = targetCtx.getImageData(zx1, zy1, zWidth, zHeight);
-              var zd = zData.data;
+        if (zWidth > 0 && zHeight > 0) {
+          tCtx.save();
+          tCtx.beginPath();
+          tCtx.rect(minX, minY, zWidth, zHeight);
+          tCtx.clip();
 
-              for (var py = 0; py < zHeight; py += pBlock) {
-                for (var px = 0; px < zWidth; px += pBlock) {
-                  var rSum = 0, gSum = 0, bSum = 0, count = 0;
-                  var maxBy = Math.min(zHeight, py + pBlock);
-                  var maxBx = Math.min(zWidth, px + pBlock);
-
-                  for (var by = py; by < maxBy; by++) {
-                    for (var bx = px; bx < maxBx; bx++) {
-                      var idx = (by * zWidth + bx) * 4;
-                      rSum += zd[idx];
-                      gSum += zd[idx + 1];
-                      bSum += zd[idx + 2];
-                      count++;
-                    }
-                  }
-
-                  var rAvg = Math.round(rSum / count);
-                  var gAvg = Math.round(gSum / count);
-                  var bAvg = Math.round(bSum / count);
-
-                  for (var by2 = py; by2 < maxBy; by2++) {
-                    for (var bx2 = px; bx2 < maxBx; bx2++) {
-                      var idx2 = (by2 * zWidth + bx2) * 4;
-                      zd[idx2] = rAvg;
-                      zd[idx2 + 1] = gAvg;
-                      zd[idx2 + 2] = bAvg;
-                    }
-                  }
+          var zData = tCtx.getImageData(minX, minY, zWidth, zHeight).data;
+          for (var py = 0; py < zHeight; py += pSize) {
+            for (var px = 0; px < zWidth; px += pSize) {
+              var rSum = 0, gSum = 0, bSum = 0, count = 0;
+              for (var by = 0; by < pSize && py + by < zHeight; by++) {
+                for (var bx = 0; bx < pSize && px + bx < zWidth; bx++) {
+                  var idx = ((py + by) * zWidth + (px + bx)) * 4;
+                  rSum += zData[idx];
+                  gSum += zData[idx + 1];
+                  bSum += zData[idx + 2];
+                  count++;
                 }
               }
-              targetCtx.putImageData(zData, zx1, zy1);
-
-              if (state.pixelStroke) {
-                targetCtx.save();
-                targetCtx.strokeStyle = color;
-                targetCtx.lineWidth = 1 * scale;
-                targetCtx.globalAlpha = 0.55;
-                targetCtx.strokeRect(zx1, zy1, zWidth, zHeight);
-                targetCtx.restore();
-              }
-            } catch (err) {
-              // Ignore cross-origin error if any
+              tCtx.fillStyle = 'rgb(' + ((rSum / count) | 0) + ',' + ((gSum / count) | 0) + ',' + ((bSum / count) | 0) + ')';
+              tCtx.fillRect(minX + px, minY + py, pSize, pSize);
             }
           }
+          tCtx.restore();
+
+          if (state.pixelStroke) {
+            tCtx.globalAlpha = 0.4;
+            tCtx.strokeStyle = strokeColor;
+            tCtx.lineWidth = 1;
+            tCtx.strokeRect(minX, minY, zWidth, zHeight);
+            tCtx.globalAlpha = 1;
+          }
+
+          var lblSz = parseInt(labelSizeSlider.value, 10) || 8;
+          tCtx.globalAlpha = op;
+          tCtx.fillStyle = strokeColor;
+          tCtx.font = lblSz + 'px Telegraf, system-ui, sans-serif';
+          tCtx.textAlign = 'center';
+          tCtx.textBaseline = 'middle';
+          tCtx.fillText(Math.round(zx) + ',' + Math.round(zy), minX + zWidth / 2, minY + zHeight / 2);
+          tCtx.globalAlpha = 1;
         }
-      }
+      });
     }
 
-    // 3. TEXTURE / NOISE OVERLAY
+    // 4. Crosshair Frame
+    if (state.frameOn) {
+      var cx = tW / 2;
+      var cy = tH / 2;
+      var fSizePct = parseFloat(frameSizeSlider.value) || 60;
+      var frameBox = Math.min(tW, tH) * (fSizePct / 100);
+      var dash = parseFloat(dashPatternSlider.value) || 8;
+      var fStroke = parseFloat(frameStrokeSlider.value) || 1.0;
+
+      tCtx.save();
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = fStroke;
+      tCtx.setLineDash([dash, dash]);
+      tCtx.globalAlpha = op;
+
+      tCtx.beginPath();
+      tCtx.moveTo(0, cy);
+      tCtx.lineTo(tW, cy);
+      tCtx.moveTo(cx, 0);
+      tCtx.lineTo(cx, tH);
+      tCtx.stroke();
+
+      tCtx.beginPath();
+      tCtx.rect(cx - frameBox / 2, cy - frameBox / 2, frameBox, frameBox);
+      tCtx.stroke();
+      tCtx.setLineDash([]);
+
+      var sRadius = (parseFloat(starSizeSlider.value) || 40) / 2;
+      var sPoints = parseInt(starPointsSlider.value, 10) || 4;
+      if (sRadius > 0) {
+        tCtx.beginPath();
+        for (var pIdx = 0; pIdx < sPoints; pIdx++) {
+          var ang = (pIdx / sPoints) * Math.PI;
+          var sxDist = Math.cos(ang) * sRadius;
+          var syDist = Math.sin(ang) * sRadius;
+          tCtx.moveTo(cx - sxDist, cy - syDist);
+          tCtx.lineTo(cx + sxDist, cy + syDist);
+        }
+        tCtx.stroke();
+      }
+      tCtx.restore();
+    }
+
+    // 5. Chain Circles & Intersections
+    if (state.chainOn && state.chainCircles && state.chainCircles.length > 0) {
+      var minDim = Math.min(tW, tH);
+      var cStroke = parseFloat(shapeStrokeSlider.value) || 1.0;
+      var lblSize = parseInt(labelSizeSlider.value, 10) || 8;
+
+      state.chainCircles.forEach(function (circ) {
+        tCtx.globalAlpha = 0.5 * op;
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = cStroke;
+        tCtx.beginPath();
+        tCtx.arc(circ.x, circ.y, circ.r, 0, Math.PI * 2);
+        tCtx.stroke();
+
+        var crossLen = Math.max(8, circ.r * 0.3);
+        tCtx.globalAlpha = 0.3 * op;
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = Math.max(0.5, minDim * 0.0006);
+        tCtx.setLineDash([minDim * 0.004, minDim * 0.004]);
+        tCtx.beginPath();
+        tCtx.moveTo(circ.x - crossLen, circ.y);
+        tCtx.lineTo(circ.x + crossLen, circ.y);
+        tCtx.moveTo(circ.x, circ.y - crossLen);
+        tCtx.lineTo(circ.x + crossLen, circ.y);
+        tCtx.stroke();
+        tCtx.setLineDash([]);
+
+        tCtx.globalAlpha = 0.6 * op;
+        tCtx.fillStyle = strokeColor;
+        tCtx.beginPath();
+        tCtx.arc(circ.x, circ.y, Math.max(1.5, minDim * 0.002), 0, Math.PI * 2);
+        tCtx.fill();
+
+        if (lblSize > 0) {
+          tCtx.globalAlpha = op;
+          tCtx.fillStyle = strokeColor;
+          tCtx.font = lblSize + 'px Telegraf, system-ui, sans-serif';
+          tCtx.textAlign = 'left';
+          tCtx.textBaseline = 'middle';
+          tCtx.fillText(Math.round(circ.x) + ',' + Math.round(circ.y), circ.x + crossLen + lblSize * 0.4, circ.y);
+        }
+      });
+
+      if (state.chainIntersections) {
+        var mSize = parseFloat(markerSizeSlider ? markerSizeSlider.value : 3.0) || 3.0;
+        var pNum = 1;
+        for (var cIdx = 0; cIdx < state.chainCircles.length - 1; cIdx++) {
+          var pts = circleIntersections(state.chainCircles[cIdx], state.chainCircles[cIdx + 1]);
+          pts.forEach(function (pt) {
+            tCtx.globalAlpha = op;
+            tCtx.fillStyle = strokeColor;
+            tCtx.beginPath();
+            tCtx.arc(pt.x, pt.y, mSize, 0, Math.PI * 2);
+            tCtx.fill();
+
+            if (lblSize > 0) {
+              tCtx.font = lblSize + 'px Telegraf, system-ui, sans-serif';
+              tCtx.textAlign = 'left';
+              tCtx.textBaseline = 'middle';
+              tCtx.fillText(pNum + ' → ' + Math.round(pt.x) + ' – ' + Math.round(pt.y), pt.x + mSize + lblSize * 0.5, pt.y);
+              pNum++;
+            }
+          });
+        }
+      }
+      tCtx.globalAlpha = 1;
+      tCtx.setLineDash([]);
+    }
+
+    // 6. Connections
+    if (state.connections && state.connections.length > 0 && state.mode !== 'studio') {
+      var lWeight = parseFloat(lineWeightSlider.value) || 0.8;
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = lWeight;
+      tCtx.lineCap = 'round';
+
+      state.connections.forEach(function (conn) {
+        var p1 = state.circles[conn.a];
+        var p2 = state.circles[conn.b];
+        tCtx.globalAlpha = op;
+        tCtx.beginPath();
+        tCtx.moveTo(p1.x, p1.y);
+        tCtx.lineTo(p2.x, p2.y);
+        tCtx.stroke();
+      });
+    }
+
+    // 7. Detected Circles / Shapes
+    var shapeStroke = parseFloat(shapeStrokeSlider.value) || 1.0;
+    var labelSize = parseInt(labelSizeSlider.value, 10) || 8;
+
+    state.circles.forEach(function (circle) {
+      tCtx.globalAlpha = (0.3 + 0.4 * circle.score) * op;
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = shapeStroke;
+
+      tCtx.beginPath();
+      if (state.shape === 'square') {
+        tCtx.rect(circle.x - circle.r, circle.y - circle.r, circle.r * 2, circle.r * 2);
+      } else {
+        tCtx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
+      }
+      tCtx.stroke();
+
+      tCtx.globalAlpha = (0.7 + 0.3 * circle.score) * op;
+      tCtx.fillStyle = strokeColor;
+      tCtx.beginPath();
+      tCtx.arc(circle.x, circle.y, 2.5, 0, Math.PI * 2);
+      tCtx.fill();
+
+      if (labelSize > 0 && state.mode !== 'geo') {
+        tCtx.globalAlpha = op;
+        tCtx.font = labelSize + 'px Telegraf, system-ui, sans-serif';
+        tCtx.textAlign = 'left';
+        tCtx.textBaseline = 'middle';
+        tCtx.fillText(Math.round(circle.x) + ',' + Math.round(circle.y), circle.x + circle.r + labelSize * 0.4, circle.y);
+      }
+    });
+
+    // 8. Teks 4 Pojok dengan Nama Fanz Irfan
+    if (state.mode !== 'geo') {
+      var fTextSize = parseInt(frameTextSizeSlider.value, 10) || 12;
+      tCtx.globalAlpha = op;
+      tCtx.fillStyle = strokeColor;
+      tCtx.font = fTextSize + 'px Telegraf, system-ui, sans-serif';
+
+      tCtx.textAlign = 'left';
+      tCtx.textBaseline = 'top';
+      tCtx.fillText('Design & Strategy', 40, 40);
+
+      tCtx.textAlign = 'right';
+      tCtx.textBaseline = 'top';
+      tCtx.fillText('Fanz Irfan', tW - 40, 40);
+
+      tCtx.textAlign = 'left';
+      tCtx.textBaseline = 'bottom';
+      tCtx.fillText('www.fanzirfan.id', 40, tH - 40);
+
+      tCtx.textAlign = 'right';
+      tCtx.textBaseline = 'bottom';
+      tCtx.fillText('Indonesia', tW - 40, tH - 40);
+    }
+
+    // 9. Texture / Noise
     var texOp = parseFloat(textureOpacitySlider.value);
     if (!isNaN(texOp) && texOp > 0) {
-      targetCtx.save();
-      targetCtx.globalAlpha = texOp * 0.45;
-      targetCtx.globalCompositeOperation = 'screen';
+      tCtx.save();
+      tCtx.globalCompositeOperation = 'screen';
+      tCtx.globalAlpha = texOp * 0.5;
       if (state.customTexture) {
-        targetCtx.drawImage(state.customTexture, 0, 0, targetW, targetH);
+        tCtx.drawImage(state.customTexture, 0, 0, tW, tH);
       } else if (state.noiseCanvas) {
-        var pattern = targetCtx.createPattern(state.noiseCanvas, 'repeat');
-        targetCtx.fillStyle = pattern;
-        targetCtx.fillRect(0, 0, targetW, targetH);
+        var pat = tCtx.createPattern(state.noiseCanvas, 'repeat');
+        tCtx.fillStyle = pat;
+        tCtx.fillRect(0, 0, tW, tH);
       }
-      targetCtx.restore();
+      tCtx.restore();
     }
 
-    var masterOp = parseFloat(overlayOpacitySlider.value);
-    if (isNaN(masterOp)) masterOp = 1;
+    tCtx.globalAlpha = 1;
+  }
 
-    // 4. CROSSHAIR FRAME
-    if (state.frameOn) {
-      var fSizePct = parseFloat(frameSizeSlider.value) || 60;
-      var fDash = (parseFloat(dashPatternSlider.value) || 8) * scale;
-      var fStroke = (parseFloat(frameStrokeSlider.value) || 1.0) * scale;
-      var sSize = (parseFloat(starSizeSlider.value) || 40) * scale;
-      var sPoints = parseInt(starPointsSlider.value, 10) || 4;
+  function resizeAndRender() {
+    var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
+    canvas.width = fmt.w;
+    canvas.height = fmt.h;
 
-      var shortSide = Math.min(targetW, targetH);
-      var frameBoxW = shortSide * (fSizePct / 100);
-      var fcx = targetW / 2;
-      var fcy = targetH / 2;
-      var fbx = fcx - frameBoxW / 2;
-      var fby = fcy - frameBoxW / 2;
+    var wrapRect = wrap.getBoundingClientRect();
+    var pad = 40;
+    var maxW = Math.max(200, wrapRect.width - pad);
+    var maxH = Math.max(200, wrapRect.height - pad);
+    var ratio = fmt.w / fmt.h;
 
-      targetCtx.save();
-      targetCtx.strokeStyle = color;
-      targetCtx.lineWidth = fStroke;
-      targetCtx.globalAlpha = masterOp * 0.8;
-      targetCtx.setLineDash([fDash, fDash]);
-      targetCtx.strokeRect(fbx, fby, frameBoxW, frameBoxW);
-      targetCtx.setLineDash([]);
-
-      if (sSize > 0) {
-        targetCtx.beginPath();
-        var numLines = sPoints;
-        for (var sp = 0; sp < numLines; sp++) {
-          var sAngle = (sp * Math.PI) / numLines;
-          var sdx = (Math.cos(sAngle) * sSize) / 2;
-          var sdy = (Math.sin(sAngle) * sSize) / 2;
-          targetCtx.moveTo(fcx - sdx, fcy - sdy);
-          targetCtx.lineTo(fcx + sdx, fcy + sdy);
-        }
-        targetCtx.stroke();
-      }
-      targetCtx.restore();
+    var dispW = maxW;
+    var dispH = dispW / ratio;
+    if (dispH > maxH) {
+      dispH = maxH;
+      dispW = dispH * ratio;
     }
 
-    // 5. CHAIN CIRCLES
-    if (state.chainOn) {
-      var cCount = parseInt(chainCountSlider.value, 10) || 11;
-      var cAngleDeg = parseFloat(chainAngleSlider.value) || 45;
-      var cRad = (parseFloat(chainBaseRadiusSlider.value) || 250) * scale;
-      var cRatio = parseFloat(chainSizeRatioSlider.value) || 0.79;
-      var cStroke = (parseFloat(shapeStrokeSlider.value) || 1.0) * scale;
+    canvas.style.width = Math.round(dispW) + 'px';
+    canvas.style.height = Math.round(dispH) + 'px';
 
-      var radAngle = (cAngleDeg * Math.PI) / 180;
-      var uX = Math.cos(radAngle);
-      var uY = Math.sin(radAngle);
-      var ccx = targetW / 2;
-      var ccy = targetH / 2;
-
-      targetCtx.save();
-      targetCtx.strokeStyle = color;
-      targetCtx.lineWidth = cStroke * 0.85;
-      targetCtx.globalAlpha = masterOp * 0.5;
-
-      var chainPoints = [];
-      var currRad = cRad;
-      var currDist = 0;
-
-      for (var ci = 0; ci < cCount; ci++) {
-        var offset = (ci - Math.floor(cCount / 2));
-        var sign = offset >= 0 ? 1 : -1;
-        var step = Math.abs(offset);
-        var rStep = cRad * Math.pow(cRatio, step);
-        var dStep = offset * (cRad * 0.45);
-
-        var cpx = ccx + uX * dStep;
-        var cpy = ccy + uY * dStep;
-        chainPoints.push({ x: cpx, y: cpy, r: rStep });
-
-        targetCtx.beginPath();
-        targetCtx.arc(cpx, cpy, rStep, 0, Math.PI * 2);
-        targetCtx.stroke();
-      }
-
-      if (state.chainIntersections && chainPoints.length > 1) {
-        targetCtx.fillStyle = color;
-        targetCtx.globalAlpha = masterOp * 0.8;
-        for (var cj = 0; cj < chainPoints.length - 1; cj++) {
-          var p1 = chainPoints[cj];
-          var p2 = chainPoints[cj + 1];
-          var midX = (p1.x + p2.x) / 2;
-          var midY = (p1.y + p2.y) / 2;
-          targetCtx.beginPath();
-          targetCtx.arc(midX, midY, 2 * scale, 0, Math.PI * 2);
-          targetCtx.fill();
-        }
-      }
-      targetCtx.restore();
-    }
-
-    // 6. CONNECTIONS
-    var maxD = (parseFloat(maxDistanceSlider.value) || 150) * scale;
-    var lineW = (parseFloat(lineWeightSlider.value) || 0.8) * scale;
-    var blobs = state.blobs;
-
-    if (maxD > 0 && blobs.length > 1) {
-      targetCtx.save();
-      targetCtx.strokeStyle = color;
-      targetCtx.lineWidth = lineW;
-
-      for (var i = 0; i < blobs.length; i++) {
-        for (var j = i + 1; j < blobs.length; j++) {
-          var b1 = blobs[i];
-          var b2 = blobs[j];
-          var ax = b1.nx * targetW;
-          var ay = b1.ny * targetH;
-          var bx = b2.nx * targetW;
-          var by = b2.ny * targetH;
-          var dist = Math.hypot(ax - bx, ay - by);
-
-          if (dist < maxD) {
-            var alpha = 1 - dist / maxD;
-            var isDashed = dist > maxD * 0.5;
-            targetCtx.globalAlpha = masterOp * (isDashed ? 0.35 : 0.55) * alpha;
-            if (isDashed) {
-              targetCtx.setLineDash([3 * scale, 4 * scale]);
-            } else {
-              targetCtx.setLineDash([]);
-            }
-            targetCtx.beginPath();
-            targetCtx.moveTo(ax, ay);
-            targetCtx.lineTo(bx, by);
-            targetCtx.stroke();
-          }
-        }
-      }
-      targetCtx.restore();
-    }
-
-    // 7. SHAPES & LABELS
-    var sStroke = (parseFloat(shapeStrokeSlider.value) || 1.0) * scale;
-    var lblSize = (parseFloat(labelSizeSlider.value) || 8) * scale;
-    var isCircle = state.shape === 'circle';
-
-    for (var k = 0; k < blobs.length; k++) {
-      var blob = blobs[k];
-      var bx = blob.nx * targetW;
-      var by = blob.ny * targetH;
-      var br = blob.r * scale;
-
-      targetCtx.save();
-      targetCtx.strokeStyle = color;
-      targetCtx.lineWidth = sStroke;
-      targetCtx.globalAlpha = masterOp * (blob.isMajor ? 0.9 : 0.7);
-
-      targetCtx.beginPath();
-      if (isCircle) {
-        targetCtx.arc(bx, by, br, 0, Math.PI * 2);
-      } else {
-        targetCtx.strokeRect(bx - br, by - br, br * 2, br * 2);
-      }
-      targetCtx.stroke();
-
-      if (blob.hasDouble) {
-        targetCtx.globalAlpha = masterOp * 0.45;
-        targetCtx.beginPath();
-        if (isCircle) {
-          targetCtx.arc(bx, by, br * 0.45, 0, Math.PI * 2);
-        } else {
-          targetCtx.strokeRect(bx - br * 0.45, by - br * 0.45, br * 0.9, br * 0.9);
-        }
-        targetCtx.stroke();
-      }
-
-      if (blob.hasGlow) {
-        targetCtx.fillStyle = '#ffffff';
-        targetCtx.globalAlpha = masterOp * 0.95;
-        targetCtx.beginPath();
-        targetCtx.arc(bx, by, Math.max(1.8 * scale, sStroke * 1.1), 0, Math.PI * 2);
-        targetCtx.fill();
-      } else {
-        targetCtx.fillStyle = color;
-        targetCtx.globalAlpha = masterOp * 0.8;
-        targetCtx.beginPath();
-        targetCtx.arc(bx, by, Math.max(1.2 * scale, sStroke * 0.75), 0, Math.PI * 2);
-        targetCtx.fill();
-      }
-      targetCtx.restore();
-
-      // Leader lines
-      if (blob.hasLeader && !blob.isMajor) {
-        targetCtx.save();
-        targetCtx.strokeStyle = color;
-        targetCtx.lineWidth = lineW * 0.7;
-        targetCtx.globalAlpha = masterOp * 0.5;
-        var dir = blob.leaderDir;
-        var lx1 = bx + dir * br;
-        var lx2 = lx1 + dir * 16 * scale;
-        targetCtx.beginPath();
-        targetCtx.moveTo(lx1, by);
-        targetCtx.lineTo(lx2, by);
-        targetCtx.stroke();
-
-        targetCtx.fillStyle = color;
-        targetCtx.font = Math.max(6 * scale, lblSize - 1 * scale) + "px 'SF Mono','Menlo',monospace";
-        targetCtx.textBaseline = 'bottom';
-        targetCtx.textAlign = dir > 0 ? 'left' : 'right';
-        targetCtx.fillText(blob.leaderVal, lx2 + dir * 3 * scale, by - 1 * scale);
-        targetCtx.restore();
-      }
-
-      // XY coordinate labels
-      if (lblSize > 0 && (blob.isMajor || blob.score > 0.4)) {
-        targetCtx.save();
-        targetCtx.fillStyle = color;
-        targetCtx.font = lblSize + "px 'SF Mono','Menlo',monospace";
-        targetCtx.textBaseline = 'middle';
-        targetCtx.globalAlpha = masterOp * 0.75;
-        var normX = (blob.nx * 100).toFixed(1);
-        var normY = (blob.ny * 100).toFixed(1);
-        targetCtx.fillText('x:' + normX, bx + br + 4 * scale, by - 4 * scale);
-        targetCtx.fillText('y:' + normY, bx + br + 4 * scale, by + 5 * scale);
-        targetCtx.restore();
-      }
-    }
+    drawCanvas(ctx, fmt.w, fmt.h);
   }
 
   function render() {
-    drawScene(ctx, canvas.width, canvas.height, 1);
+    var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
+    drawCanvas(ctx, fmt.w, fmt.h);
   }
 
   function syncValues() {
+    if (frameTextSizeVal && frameTextSizeSlider) {
+      frameTextSizeVal.textContent = frameTextSizeSlider.value;
+    }
     imageOpacityVal.textContent = parseFloat(imageOpacitySlider.value).toFixed(2);
     pixelSizeVal.textContent = pixelSizeSlider.value;
     zoneSizeVal.textContent = zoneSizeSlider.value;
@@ -694,6 +750,9 @@
     chainAngleVal.textContent = chainAngleSlider.value;
     chainBaseRadiusVal.textContent = chainBaseRadiusSlider.value;
     chainSizeRatioVal.textContent = parseFloat(chainSizeRatioSlider.value).toFixed(2);
+    if (markerSizeVal && markerSizeSlider) {
+      markerSizeVal.textContent = parseFloat(markerSizeSlider.value).toFixed(1);
+    }
     blockSizeVal.textContent = blockSizeSlider.value;
     thresholdVal.textContent = thresholdSlider.value;
     maxCirclesVal.textContent = maxCirclesSlider.value;
@@ -710,27 +769,31 @@
     pixelateStatus.textContent = state.pixelZones.length + ' zones placed';
   }
 
-  function bindSlider(slider, needsExtraction) {
+  function bindSlider(slider, triggersRecalc) {
     slider.addEventListener('input', function () {
       syncValues();
-      if (needsExtraction) {
-        extractFeatures();
-      }
+      if (triggersRecalc) recalculate();
       render();
     });
   }
 
-  // Bind Extraction Sliders
-  [blockSizeSlider, thresholdSlider, maxCirclesSlider, minDistanceSlider, minRadiusSlider, maxRadiusSlider, sizeSeedSlider].forEach(function (s) {
+  // Bind Recalculate Sliders
+  [blockSizeSlider, thresholdSlider, maxCirclesSlider, minDistanceSlider, minRadiusSlider, maxRadiusSlider, sizeSeedSlider, maxDistanceSlider, chainCountSlider, chainAngleSlider, chainBaseRadiusSlider, chainSizeRatioSlider].forEach(function (s) {
     bindSlider(s, true);
   });
 
-  // Bind Visual Sliders
-  [imageOpacitySlider, pixelSizeSlider, zoneSizeSlider, frameSizeSlider, dashPatternSlider, frameStrokeSlider, starSizeSlider, starPointsSlider, chainCountSlider, chainAngleSlider, chainBaseRadiusSlider, chainSizeRatioSlider, shapeStrokeSlider, labelSizeSlider, overlayOpacitySlider, maxDistanceSlider, lineWeightSlider, textureOpacitySlider].forEach(function (s) {
+  // Bind Fast Visual Sliders
+  [imageOpacitySlider, pixelSizeSlider, zoneSizeSlider, frameSizeSlider, dashPatternSlider, frameStrokeSlider, starSizeSlider, starPointsSlider, shapeStrokeSlider, labelSizeSlider, overlayOpacitySlider, lineWeightSlider, textureOpacitySlider].forEach(function (s) {
     bindSlider(s, false);
   });
+  if (markerSizeSlider) {
+    bindSlider(markerSizeSlider, false);
+  }
+  if (frameTextSizeSlider) {
+    bindSlider(frameTextSizeSlider, false);
+  }
 
-  // Toggle Buttons
+  // Toggles
   pixelateStrokeBtn.addEventListener('click', function () {
     state.pixelStroke = !state.pixelStroke;
     pixelateStrokeBtn.classList.toggle('active', state.pixelStroke);
@@ -777,19 +840,12 @@
   canvas.addEventListener('click', function (e) {
     if (!state.image) return;
     var rect = canvas.getBoundingClientRect();
-    var clickX = e.clientX - rect.left;
-    var clickY = e.clientY - rect.top;
-    var nx = clickX / canvas.width;
-    var ny = clickY / canvas.height;
-
-    var pSize = parseInt(pixelSizeSlider.value, 10) || 26;
-    var zSize = parseInt(zoneSizeSlider.value, 10) || 90;
+    var clickX = (e.clientX - rect.left) / rect.width * canvas.width;
+    var clickY = (e.clientY - rect.top) / rect.height * canvas.height;
 
     state.pixelZones.push({
-      nx: nx,
-      ny: ny,
-      pixelSize: pSize,
-      zoneSize: zSize
+      x: clickX,
+      y: clickY
     });
 
     syncValues();
@@ -799,12 +855,10 @@
   // Segmented Buttons: Detection Mode (Combined vs Contrast)
   document.querySelectorAll('[data-detection-mode]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.querySelectorAll('[data-detection-mode]').forEach(function (b) {
-        b.classList.remove('active');
-      });
+      document.querySelectorAll('[data-detection-mode]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.detectionMode = btn.dataset.detectionMode;
-      extractFeatures();
+      recalculate();
       render();
     });
   });
@@ -812,12 +866,10 @@
   // Segmented Buttons: Detection Type (Bright vs Dark)
   document.querySelectorAll('[data-detection-type]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.querySelectorAll('[data-detection-type]').forEach(function (b) {
-        b.classList.remove('active');
-      });
+      document.querySelectorAll('[data-detection-type]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.detectionType = btn.dataset.detectionType;
-      extractFeatures();
+      recalculate();
       render();
     });
   });
@@ -825,9 +877,7 @@
   // Segmented Buttons: Shapes (Circle vs Square)
   document.querySelectorAll('[data-shape]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.querySelectorAll('[data-shape]').forEach(function (b) {
-        b.classList.remove('active');
-      });
+      document.querySelectorAll('[data-shape]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.shape = btn.dataset.shape;
       render();
@@ -846,13 +896,12 @@
   paletteGrid.addEventListener('click', function (e) {
     var swatch = e.target.closest('.palette-swatch');
     if (!swatch) return;
-    document.querySelectorAll('.palette-swatch').forEach(function (s) {
-      s.classList.remove('active');
-    });
+    document.querySelectorAll('.palette-swatch').forEach(function (s) { s.classList.remove('active'); });
     swatch.classList.add('active');
     state.palette = {
       bg: swatch.dataset.bg,
       color: swatch.dataset.color,
+      stroke: swatch.dataset.color,
       name: swatch.title
     };
     updateStatusFooter();
@@ -863,8 +912,18 @@
   canvasSizeSelect.addEventListener('change', function () {
     state.format = canvasSizeSelect.value;
     updateStatusFooter();
-    resizeCanvas();
-    render();
+    recalculate();
+    resizeAndRender();
+  });
+
+  // Stage Navigation (Hero, Geo Tool, Studio)
+  document.querySelectorAll('.nav-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.nav-tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      state.mode = tab.dataset.mode;
+      render();
+    });
   });
 
   // Image Loading
@@ -872,9 +931,8 @@
     state.image = img;
     emptyState.classList.add('hidden');
     canvas.classList.add('visible');
-    resizeCanvas();
-    extractFeatures();
-    render();
+    recalculate();
+    resizeAndRender();
   }
 
   function loadFile(file) {
@@ -902,22 +960,6 @@
     }
   });
 
-  // Preset Selection
-  presetSelect.addEventListener('change', function () {
-    var val = presetSelect.value;
-    if (!val) return;
-    var img = new Image();
-    img.onload = function () {
-      applyLoadedImage(img);
-    };
-    if (val === 'portrait') {
-      img.src = 'assets/preset-portrait.png';
-    } else {
-      // Fallback to reference portrait
-      img.src = 'assets/preset-portrait.png';
-    }
-  });
-
   // Drag and Drop & Paste
   wrap.addEventListener('dragover', function (e) {
     e.preventDefault();
@@ -936,6 +978,7 @@
   emptyState.addEventListener('click', function () {
     imageInput.click();
   });
+
   window.addEventListener('paste', function (e) {
     var items = e.clipboardData && e.clipboardData.items;
     if (!items) return;
@@ -983,30 +1026,27 @@
     exportCanvas.width = fmt.w;
     exportCanvas.height = fmt.h;
     var expCtx = exportCanvas.getContext('2d');
-    var scale = fmt.w / canvas.width;
-    drawScene(expCtx, fmt.w, fmt.h, scale);
+    drawCanvas(expCtx, fmt.w, fmt.h);
 
     var link = document.createElement('a');
-    link.download = 'blob-tracker-' + state.format + '-' + Date.now() + '.png';
+    link.download = 'brand-asset-' + state.format + '-' + Date.now() + '.png';
     link.href = exportCanvas.toDataURL('image/png');
     link.click();
   });
 
   window.addEventListener('resize', function () {
     if (state.image) {
-      resizeCanvas();
-      render();
+      resizeAndRender();
     }
   });
 
   syncValues();
   updateStatusFooter();
 
-  // Load preset portrait automatically on init if exists
+  // Load preset portrait automatically on startup if file exists
   var autoImg = new Image();
   autoImg.onload = function () {
     applyLoadedImage(autoImg);
-    presetSelect.value = 'portrait';
   };
   autoImg.src = 'assets/preset-portrait.png';
 })();
