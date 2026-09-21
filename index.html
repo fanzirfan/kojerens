@@ -75,6 +75,8 @@
         <button class="toggle-collapse">−</button>
       </div>
       <div class="panel-body">
+        <button class="btn-toggle active" id="frameTextToggleBtn">Frame Text On</button>
+
         <div class="control-group">
           <div class="control-header">
             <label>TEXT SIZE</label>
@@ -82,6 +84,34 @@
           </div>
           <p class="hint">Font size of the 4 corner labels</p>
           <input type="range" id="frameTextSize" min="6" max="40" step="1" value="12" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>TOP LEFT</label>
+          </div>
+          <input type="text" id="frameTextTL" class="input-text" value="Design & Strategy" placeholder="Top Left text..." />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>TOP RIGHT</label>
+          </div>
+          <input type="text" id="frameTextTR" class="input-text" value="Fanz Irfan" placeholder="Top Right text..." />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>BOTTOM LEFT</label>
+          </div>
+          <input type="text" id="frameTextBL" class="input-text" value="www.fanzirfan.id" placeholder="Bottom Left text..." />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>BOTTOM RIGHT</label>
+          </div>
+          <input type="text" id="frameTextBR" class="input-text" value="Indonesia" placeholder="Bottom Right text..." />
         </div>
       </div>
     </section>

@@ -14,8 +14,13 @@
   var exportStatusText = document.getElementById('exportStatusText');
 
   // Frame Text Controls
+  var frameTextToggleBtn = document.getElementById('frameTextToggleBtn');
   var frameTextSizeSlider = document.getElementById('frameTextSize');
   var frameTextSizeVal = document.getElementById('frameTextSizeVal');
+  var frameTextTLInput = document.getElementById('frameTextTL');
+  var frameTextTRInput = document.getElementById('frameTextTR');
+  var frameTextBLInput = document.getElementById('frameTextBL');
+  var frameTextBRInput = document.getElementById('frameTextBR');
 
   // Pixelate Controls
   var pixelSizeSlider = document.getElementById('pixelSize');
@@ -105,6 +110,11 @@
     pixelZones: [],
     pixelStroke: true,
     frameOn: true,
+    frameTextOn: true,
+    frameTextTL: 'Design & Strategy',
+    frameTextTR: 'Fanz Irfan',
+    frameTextBL: 'www.fanzirfan.id',
+    frameTextBR: 'Indonesia',
     chainOn: true,
     chainIntersections: true,
     detectionMode: 'contrast',
@@ -662,28 +672,36 @@
       }
     });
 
-    // 8. Teks 4 Pojok dengan Nama Fanz Irfan
-    if (state.mode !== 'geo') {
+    // 8. Teks 4 Pojok Kustom
+    if (state.mode !== 'geo' && state.frameTextOn) {
       var fTextSize = parseInt(frameTextSizeSlider.value, 10) || 12;
       tCtx.globalAlpha = op;
       tCtx.fillStyle = strokeColor;
       tCtx.font = fTextSize + 'px Telegraf, system-ui, sans-serif';
 
-      tCtx.textAlign = 'left';
-      tCtx.textBaseline = 'top';
-      tCtx.fillText('Design & Strategy', 40, 40);
+      if (state.frameTextTL) {
+        tCtx.textAlign = 'left';
+        tCtx.textBaseline = 'top';
+        tCtx.fillText(state.frameTextTL, 40, 40);
+      }
 
-      tCtx.textAlign = 'right';
-      tCtx.textBaseline = 'top';
-      tCtx.fillText('Fanz Irfan', tW - 40, 40);
+      if (state.frameTextTR) {
+        tCtx.textAlign = 'right';
+        tCtx.textBaseline = 'top';
+        tCtx.fillText(state.frameTextTR, tW - 40, 40);
+      }
 
-      tCtx.textAlign = 'left';
-      tCtx.textBaseline = 'bottom';
-      tCtx.fillText('www.fanzirfan.id', 40, tH - 40);
+      if (state.frameTextBL) {
+        tCtx.textAlign = 'left';
+        tCtx.textBaseline = 'bottom';
+        tCtx.fillText(state.frameTextBL, 40, tH - 40);
+      }
 
-      tCtx.textAlign = 'right';
-      tCtx.textBaseline = 'bottom';
-      tCtx.fillText('Indonesia', tW - 40, tH - 40);
+      if (state.frameTextBR) {
+        tCtx.textAlign = 'right';
+        tCtx.textBaseline = 'bottom';
+        tCtx.fillText(state.frameTextBR, tW - 40, tH - 40);
+      }
     }
 
     // 9. Texture / Noise
@@ -820,6 +838,27 @@
     frameToggleBtn.classList.toggle('active', state.frameOn);
     frameToggleBtn.textContent = state.frameOn ? 'Frame On' : 'Frame Off';
     render();
+  });
+
+  if (frameTextToggleBtn) {
+    frameTextToggleBtn.addEventListener('click', function () {
+      state.frameTextOn = !state.frameTextOn;
+      frameTextToggleBtn.classList.toggle('active', state.frameTextOn);
+      frameTextToggleBtn.textContent = state.frameTextOn ? 'Frame Text On' : 'Frame Text Off';
+      render();
+    });
+  }
+
+  [frameTextTLInput, frameTextTRInput, frameTextBLInput, frameTextBRInput].forEach(function (inp) {
+    if (inp) {
+      inp.addEventListener('input', function () {
+        state.frameTextTL = frameTextTLInput.value;
+        state.frameTextTR = frameTextTRInput.value;
+        state.frameTextBL = frameTextBLInput.value;
+        state.frameTextBR = frameTextBRInput.value;
+        render();
+      });
+    }
   });
 
   chainToggleBtn.addEventListener('click', function () {

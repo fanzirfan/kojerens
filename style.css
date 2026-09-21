@@ -270,6 +270,23 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 4px;
 }
 
+/* TEXT INPUT */
+.input-text {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--btn-border);
+  color: #333333;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 6px 8px;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-text:focus {
+  border-color: #777777;
+}
+
 /* SELECT */
 .select-wrap {
   position: relative;
