@@ -63,28 +63,247 @@ body {
 }
 
 .app {
-  display: grid;
-  grid-template-columns: 310px 1fr;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
 }
 
 /* ==========================================================================
-   SIDEBAR (Frosted Midnight Cathedral Glass)
+   TOPBAR (Identity bar: brand + mode tabs + actions)
+   Why: single horizontal strip owns branding + navigation; canvas gets full height below
    ========================================================================== */
-.sidebar {
-  background: rgba(5, 6, 15, 0.94);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+.topbar {
+  flex-shrink: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(5, 6, 15, 0.96);
+  border-bottom: 1px solid var(--color-glass-edge);
+  box-shadow: 0 1px 0 rgba(186, 215, 247, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0 16px;
+  z-index: 30;
+  user-select: none;
+}
+
+.topbar-brand {
+  flex-shrink: 0;
+  width: 140px;
+}
+
+.topbar-wordmark {
+  font-family: var(--font-aeonikpro);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--color-frost-glow);
+}
+
+.topbar-wordmark-accent {
+  color: var(--color-void-violet);
+}
+
+.topbar-modes {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mode-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-fog-veil);
+  font-family: var(--font-untitled-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 5px 16px;
+  border-radius: var(--radius-buttons);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.mode-tab:hover {
+  color: var(--color-frost-glow);
+  background: var(--color-glass-fill);
+}
+.mode-tab.active {
+  background: var(--color-steel-plate);
+  border-color: rgba(186, 215, 247, 0.28);
+  color: var(--color-pure-white);
+  box-shadow: inset 0 1px 1px rgba(216, 236, 248, 0.22), 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.mode-tab:focus-visible {
+  outline: 2px solid var(--color-frost-glow) !important;
+  outline-offset: 2px !important;
+}
+
+.topbar-actions {
+  flex-shrink: 0;
+  width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.topbar-btn {
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  color: var(--color-moon-mist);
+  font-family: var(--font-untitled-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--radius-buttons);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+.topbar-btn:hover {
+  color: var(--color-pure-white);
+  background: var(--color-glass-fill-hover);
+  border-color: var(--color-glass-edge-active);
+}
+
+.topbar-cta {
+  background: var(--color-void-violet);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-pure-white);
+  font-family: var(--font-untitled-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 5px 14px;
+  border-radius: var(--radius-buttons);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-cta);
+}
+.topbar-cta:hover {
+  background: var(--color-void-violet-hover);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 0 20px rgba(102, 58, 243, 0.5);
+}
+
+/* ==========================================================================
+   WORKSPACE (rail + drawer + stage)
+   ========================================================================== */
+.workspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ==========================================================================
+   ICON RAIL (Vertical nav, 52px wide)
+   Why: rail gives icon-level access to all panels without eating canvas space
+   ========================================================================== */
+.rail {
+  flex-shrink: 0;
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 0;
+  background: rgba(5, 6, 15, 0.92);
   border-right: 1px solid var(--color-glass-edge);
   overflow-y: auto;
   overflow-x: hidden;
+  z-index: 20;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+
+.rail-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--color-fog-veil);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.rail-btn:hover {
+  background: var(--color-glass-fill);
+  color: var(--color-frost-glow);
+}
+.rail-btn.active {
+  background: rgba(102, 58, 243, 0.15);
+  border-color: rgba(102, 58, 243, 0.4);
+  color: var(--color-frost-glow);
+}
+.rail-btn:focus-visible {
+  outline: 2px solid var(--color-void-violet) !important;
+  outline-offset: 2px !important;
+}
+
+.rail-label {
+  font-family: var(--font-dotdigital);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  opacity: 0.7;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.rail-btn.active .rail-label { opacity: 1; }
+
+.rail-sep {
+  width: 28px;
+  height: 1px;
+  background: var(--color-glass-edge);
+  margin: 4px auto;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   PANEL DRAWER (slides in from left beside rail)
+   Why: overlay-style means canvas isn't permanently shrunk; closed = full canvas
+   ========================================================================== */
+.panel-drawer {
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 15;
+}
+.panel-drawer.open {
+  width: 290px;
+}
+
+.drawer-inner {
+  width: 290px;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* SIDEBAR inside drawer: same visual style but now inside drawer-inner */
+.sidebar {
+  background: rgba(5, 6, 15, 0.97);
+  border-right: 1px solid var(--color-glass-edge);
   display: flex;
   flex-direction: column;
   user-select: none;
-  z-index: 20;
+  height: 100%;
 }
+
 
 .sidebar::-webkit-scrollbar {
   width: 5px;
@@ -410,6 +629,56 @@ input[type="range"]::-moz-range-thumb:hover {
   color: var(--color-pure-white);
 }
 
+.size-wh-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.size-wh-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.size-wh-label {
+  position: absolute;
+  left: 8px;
+  font-family: var(--font-dotdigital);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-fog-veil);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.size-num {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  font-family: var(--font-dotdigital) !important;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px !important;
+  height: 32px;
+}
+
+.size-wh-unit {
+  position: absolute;
+  right: 8px;
+  font-family: var(--font-dotdigital);
+  font-size: 9px;
+  color: var(--color-fog-veil);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.size-wh-sep {
+  font-size: 14px;
+  color: var(--color-fog-veil);
+  user-select: none;
+}
+
 /* ==========================================================================
    SEGMENTED BUTTONS (Frosted Pill Capsule)
    ========================================================================== */
@@ -643,11 +912,12 @@ input[type="range"]::-moz-range-thumb:hover {
    ========================================================================== */
 .stage {
   flex: 1;
+  min-width: 0;
   background-color: var(--color-midnight-canvas);
   background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(124, 145, 182, 0.20) 0%, transparent 68%),
-    linear-gradient(rgba(186, 215, 247, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(186, 215, 247, 0.035) 1px, transparent 1px);
+    radial-gradient(ellipse at 50% 0%, rgba(124, 145, 182, 0.18) 0%, transparent 65%),
+    linear-gradient(rgba(186, 215, 247, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(186, 215, 247, 0.03) 1px, transparent 1px);
   background-size: 100% 100%, 64px 64px, 64px 64px;
   position: relative;
   display: flex;
@@ -655,6 +925,7 @@ input[type="range"]::-moz-range-thumb:hover {
   justify-content: center;
   overflow: hidden;
 }
+
 
 .canvas-wrap {
   width: 100%;
@@ -748,83 +1019,14 @@ canvas {
 }
 
 /* ==========================================================================
-   STAGE NAVIGATION & ATTRIBUTION (Pill Tab Bar & Telemetry Label)
+   STAGE ATTRIBUTION (Telemetry label bottom-left)
    ========================================================================== */
-.stage-nav {
-  position: absolute;
-  top: 20px;
-  right: 28px;
-  display: flex;
-  gap: 4px;
-  z-index: 15;
-  background: rgba(5, 6, 15, 0.82);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid var(--color-glass-edge);
-  border-radius: var(--radius-buttons);
-  padding: 4px;
-  box-shadow: inset 0 1px 1px rgba(216, 236, 248, 0.12), 0 8px 24px rgba(0, 0, 0, 0.45);
-}
-.nav-tab {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--color-fog-veil);
-  font-family: var(--font-untitled-sans);
-  font-size: 11.5px;
-  font-weight: 500;
-  padding: 5px 14px;
-  border-radius: var(--radius-buttons);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.nav-tab:hover {
-  color: var(--color-frost-glow);
-  background: var(--color-glass-fill);
-}
-.nav-tab.active {
-  background: var(--color-steel-plate);
-  border-color: rgba(186, 215, 247, 0.28);
-  color: var(--color-pure-white);
-  box-shadow: inset 0 1px 1px rgba(216, 236, 248, 0.22), 0 2px 6px rgba(0, 0, 0, 0.35);
-}
-
-.stage-nav-divider {
-  width: 1px;
-  background: var(--color-glass-edge);
-  margin: 3px 2px;
-}
-
-.nav-action-btn {
-  background: rgba(186, 214, 247, 0.06);
-  border: 1px solid var(--color-glass-edge);
-  color: var(--color-moon-mist);
-  font-family: var(--font-untitled-sans);
-  font-size: 11.5px;
-  font-weight: 500;
-  padding: 5px 12px;
-  border-radius: var(--radius-buttons);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.15s ease;
-}
-.nav-action-btn:hover {
-  color: var(--color-pure-white);
-  background: var(--color-glass-fill-hover);
-  border-color: var(--color-glass-edge-active);
-  box-shadow: 0 0 12px rgba(186, 207, 247, 0.2);
-}
-.nav-action-btn:active {
-  transform: scale(0.97);
-}
-
 .stage-attribution {
   position: absolute;
   bottom: 16px;
-  right: 28px;
+  left: 20px;
   font-family: var(--font-dotdigital);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-fog-veil);
   z-index: 15;
   letter-spacing: 0.06em;
@@ -833,7 +1035,6 @@ canvas {
 .stage-attribution strong {
   color: var(--color-frost-glow);
   font-weight: 500;
-  border-bottom: 1px dotted rgba(186, 215, 247, 0.35);
 }
 
 /* ==========================================================================
@@ -858,7 +1059,9 @@ canvas {
   outline-offset: 2px !important;
 }
 
-.nav-tab:focus-visible {
+.mode-tab:focus-visible,
+.topbar-btn:focus-visible,
+.topbar-cta:focus-visible {
   outline: 2px solid var(--color-frost-glow) !important;
   outline-offset: 2px !important;
 }
@@ -878,53 +1081,79 @@ input[type="range"]:focus-visible {
     overflow-x: hidden;
   }
   .app {
-    display: flex;
-    flex-direction: column;
     height: auto;
-    min-height: 100vh;
-    width: 100%;
-    overflow: visible;
+    min-height: 100dvh;
   }
-  .stage {
-    order: 1;
-    min-height: 480px;
-    height: 55vh;
-    width: 100%;
-    position: relative;
-    border-bottom: 1px solid var(--color-glass-edge);
-  }
-  .sidebar {
-    order: 2;
-    width: 100%;
-    min-width: 100%;
+  .topbar {
     height: auto;
-    overflow: visible;
-    border-right: none;
-    padding-bottom: 48px;
+    min-height: 48px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
   }
-  .stage-nav {
-    top: 14px;
-    right: 14px;
-    left: 14px;
+  .topbar-brand { width: auto; }
+  .topbar-actions { width: auto; }
+  .topbar-modes {
+    order: 3;
+    flex-basis: 100%;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
+    padding-bottom: 4px;
   }
-  .nav-tab {
-    min-height: 40px;
-    padding: 6px 14px;
-    font-size: 11.5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .mode-tab {
+    min-height: 36px;
+    padding: 6px 12px;
   }
-  .stage-attribution {
+  .workspace {
+    flex-direction: column;
+    min-height: 0;
+  }
+  .rail {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 6px 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--color-glass-edge);
+  }
+  .rail-btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+  }
+  .rail-sep {
+    width: 1px;
+    height: 28px;
+    margin: 0 4px;
+  }
+  .panel-drawer {
+    width: 100% !important;
+    height: auto;
+    overflow: visible;
+  }
+  .panel-drawer:not(.open) {
     display: none;
   }
-  .canvas-wrap {
-    padding: 16px;
+  .drawer-inner {
+    width: 100%;
+    height: auto;
   }
-  /* Ensure min 44px tap targets on mobile (R-03) */
+  .sidebar {
+    height: auto;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+  .stage {
+    min-height: 380px;
+    height: 50vmax;
+    width: 100%;
+  }
+  .stage-attribution { display: none; }
+  .canvas-wrap { padding: 12px; }
+  /* 44px tap targets (R-03) */
   .btn-block,
   .btn-toggle,
   .btn-action,
@@ -950,19 +1179,9 @@ input[type="range"]:focus-visible {
 }
 
 @media (max-width: 480px) {
-  .stage {
-    min-height: 380px;
-    height: 50vh;
-  }
-  .stage-nav {
-    gap: 4px;
-    padding: 3px;
-  }
-  .nav-tab {
-    padding: 4px 10px;
-    font-size: 10.5px;
-  }
-  .empty-state {
-    padding: 24px 28px;
-  }
+  .topbar-wordmark { font-size: 12px; }
+  .mode-tab { font-size: 10.5px; padding: 5px 10px; }
+  .stage { min-height: 320px; }
+  .empty-state { padding: 24px 28px; }
 }
+

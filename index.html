@@ -12,7 +12,80 @@
 <body>
 <div class="app">
 
-  <aside class="sidebar">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="topbar-wordmark">BLOB<span class="topbar-wordmark-accent">.</span>TRACKER</span>
+    </div>
+    <nav class="topbar-modes" role="tablist" aria-label="Visual engine">
+      <button class="mode-tab active" data-mode="circles" role="tab" aria-selected="true">Sensor</button>
+      <button class="mode-tab" data-mode="hero" role="tab" aria-selected="false">Telemetry</button>
+      <button class="mode-tab" data-mode="geo" role="tab" aria-selected="false">Topography</button>
+      <button class="mode-tab" data-mode="studio" role="tab" aria-selected="false">Viewfinder</button>
+    </nav>
+    <div class="topbar-actions">
+      <button class="topbar-btn" id="randomizeBtn" title="Randomize style and settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        Randomize
+      </button>
+      <button class="topbar-cta" id="downloadBtn">Export PNG</button>
+    </div>
+  </header>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+
+    <nav class="rail" aria-label="Panel navigation">
+      <button class="rail-btn active" data-panel="image" data-modes="all" title="Image" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span class="rail-label">Image</span>
+      </button>
+      <button class="rail-btn" data-panel="gradientmap" data-modes="all" title="Gradient Map" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor"/><line x1="8" y1="7" x2="8" y2="17" stroke="currentColor" stroke-opacity=".4"/><line x1="13" y1="7" x2="13" y2="17" stroke="currentColor" stroke-opacity=".4"/></svg>
+        <span class="rail-label">Map</span>
+      </button>
+      <button class="rail-btn" data-panel="pixelate" data-modes="all" title="Pixelate" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/></svg>
+        <span class="rail-label">Pixel</span>
+      </button>
+      <button class="rail-btn" data-panel="frametext" data-modes="all" title="Frame Text" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="rail-label">Text</span>
+      </button>
+      <button class="rail-btn" data-panel="detection" data-modes="circles" title="Detection" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><circle cx="11" cy="11" r="3"/></svg>
+        <span class="rail-label">Detect</span>
+      </button>
+      <button class="rail-btn" data-panel="shapes" data-modes="circles" title="Visual Style" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        <span class="rail-label">Visual</span>
+      </button>
+      <button class="rail-btn" data-panel="palette" data-modes="all" title="Palette" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
+        <span class="rail-label">Palette</span>
+      </button>
+      <button class="rail-btn" data-panel="crosshair" data-modes="all" data-engine="true" title="Engine Settings" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="rail-label">Engine</span>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="rail-btn" data-panel="size" data-modes="all" title="Canvas Size" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        <span class="rail-label">Size</span>
+      </button>
+      <button class="rail-btn" data-panel="texture" data-modes="all" title="Texture / Noise" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z"/></svg>
+        <span class="rail-label">Noise</span>
+      </button>
+      <button class="rail-btn" data-panel="export" data-modes="all" title="Export &amp; Actions" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="rail-label">Export</span>
+      </button>
+    </nav>
+
+    <!-- PANEL DRAWER -->
+    <aside class="panel-drawer open" id="panelDrawer">
+      <div class="drawer-inner sidebar">
     <!-- SECTION 1: IMAGE -->
     <section class="panel" data-section="image" data-modes="all">
       <div class="panel-header">
@@ -181,11 +254,20 @@
 
         <div class="control-group">
           <div class="control-header">
-            <label>FRAME SIZE</label>
-            <span class="val" id="frameSizeVal">60</span>
+            <label>FRAME WIDTH</label>
+            <span class="val" id="frameWidthVal">60</span>
           </div>
-          <p class="hint">Square size as % of canvas short side</p>
-          <input type="range" id="frameSize" min="10" max="100" value="60" />
+          <p class="hint">Frame width as % of canvas width</p>
+          <input type="range" id="frameWidth" min="10" max="100" value="60" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>FRAME HEIGHT</label>
+            <span class="val" id="frameHeightVal">60</span>
+          </div>
+          <p class="hint">Frame height as % of canvas height</p>
+          <input type="range" id="frameHeight" min="10" max="100" value="60" />
         </div>
 
         <div class="control-group">
@@ -632,7 +714,25 @@
             <option value="landscape_16_9">Landscape 16:9 (1920x1080)</option>
             <option value="instagram_story">Instagram Story (1080x1920)</option>
             <option value="poster">Poster (1400x2000)</option>
+            <option value="custom">Custom</option>
           </select>
+        </div>
+
+        <div class="control-group size-custom-inputs">
+          <div class="size-wh-row">
+            <div class="size-wh-field">
+              <label class="size-wh-label">W</label>
+              <input type="number" id="customWidth" class="input-text size-num" min="400" max="4000" step="10" value="1200" aria-label="Canvas width in pixels" />
+              <span class="size-wh-unit">px</span>
+            </div>
+            <div class="size-wh-sep">×</div>
+            <div class="size-wh-field">
+              <label class="size-wh-label">H</label>
+              <input type="number" id="customHeight" class="input-text size-num" min="400" max="4000" step="10" value="1600" aria-label="Canvas height in pixels" />
+              <span class="size-wh-unit">px</span>
+            </div>
+          </div>
+          <p class="hint" style="margin-top:6px">400 – 4000 px per side</p>
         </div>
       </div>
     </section>
@@ -676,35 +776,25 @@
       </div>
     </section>
 
-  </aside>
+      </div><!-- /.drawer-inner.sidebar -->
+    </aside><!-- /.panel-drawer -->
 
-  <!-- MAIN STAGE -->
-  <main class="stage">
-    <div class="stage-nav">
-      <button class="nav-tab active" data-mode="circles">Sensor</button>
-      <button class="nav-tab" data-mode="hero">Telemetry</button>
-      <button class="nav-tab" data-mode="geo">Topography</button>
-      <button class="nav-tab" data-mode="studio">Viewfinder</button>
-      <div class="stage-nav-divider"></div>
-      <button class="nav-action-btn" id="randomizeBtn" title="Randomize style and settings">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
-        Randomize
-      </button>
-    </div>
-
-    <div class="canvas-wrap" id="canvasWrap">
-      <canvas id="canvas"></canvas>
-      <div class="empty-state" id="emptyState">
-        <div class="empty-icon">◉</div>
-        <h2>Click or Drag Image to Start</h2>
-        <p>100% processed locally in your browser.</p>
+    <!-- MAIN STAGE -->
+    <main class="stage">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="canvas"></canvas>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">◉</div>
+          <h2>Drop an image to start</h2>
+          <p>Processed locally. Nothing leaves your browser.</p>
+        </div>
       </div>
-    </div>
+      <div class="stage-attribution"><strong>Fanz Irfan</strong> / blog.fan.my.id</div>
+    </main>
 
-    <div class="stage-attribution">Tool created by <strong>Fanz Irfan</strong></div>
-  </main>
+  </div><!-- /.workspace -->
 
-</div>
+</div><!-- /.app -->
 
 <script src="gradients.js"></script>
 <script src="app.js"></script>
