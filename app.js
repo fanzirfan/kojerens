@@ -670,121 +670,494 @@
     tCtx.restore();
   }
 
+  // --- TOPOGRAPHIC SURVEY & CONTOUR MAPPING ENGINE ---
+  var topoCache = {
+    image: null,
+    targetW: 0,
+    targetH: 0,
+    gridW: 0,
+    gridH: 0,
+    elev: null,
+    minVal: 0,
+    maxVal: 0,
+    peaks: []
+  };
+
+  function getTopoElevationGrid(img, tW, tH) {
+    var gridW = 96;
+    var gridH = Math.max(48, Math.round(96 * (tH / tW)));
+
+    if (
+      topoCache.elev &&
+      topoCache.image === img &&
+      topoCache.targetW === tW &&
+      topoCache.targetH === tH
+    ) {
+      return topoCache;
+    }
+
+    var raw = new Float32Array(gridW * gridH);
+
+    if (img) {
+      var sCanvas = document.createElement('canvas');
+      sCanvas.width = gridW;
+      sCanvas.height = gridH;
+      var sCtx = sCanvas.getContext('2d', { willReadFrequently: true });
+      try {
+        var imgRatio = img.width / img.height;
+        var targetRatio = tW / tH;
+        var sx, sy, sw, sh;
+        if (imgRatio > targetRatio) {
+          sh = img.height;
+          sw = sh * targetRatio;
+          sx = (img.width - sw) / 2;
+          sy = 0;
+        } else {
+          sw = img.width;
+          sh = sw / targetRatio;
+          sx = 0;
+          sy = (img.height - sh) / 2;
+        }
+        sCtx.drawImage(img, sx, sy, sw, sh, 0, 0, gridW, gridH);
+        var idata = sCtx.getImageData(0, 0, gridW, gridH).data;
+        for (var i = 0, j = 0; i < idata.length; i += 4, j++) {
+          raw[j] = idata[i] * 0.299 + idata[i + 1] * 0.587 + idata[i + 2] * 0.114;
+        }
+      } catch (e) {
+        console.warn('Topo grid sampling fallback:', e);
+      }
+    } else {
+      // Procedural synthetic terrain (alpine ridges, valleys, and saddles)
+      for (var r = 0; r < gridH; r++) {
+        var ny = r / gridH;
+        for (var c = 0; c < gridW; c++) {
+          var nx = c / gridW;
+          var v = Math.sin(nx * Math.PI * 3) * Math.cos(ny * Math.PI * 2.5) * 50 +
+                  Math.sin(nx * 7.5 + ny * 6.2) * 28 +
+                  Math.cos(nx * 14.1 - ny * 11.3) * 14 +
+                  128;
+          raw[r * gridW + c] = v;
+        }
+      }
+    }
+
+    // 2-pass 3x3 gaussian smoothing for organic, continuous contour lines
+    var smoothed = new Float32Array(gridW * gridH);
+    for (var pass = 0; pass < 2; pass++) {
+      var src = pass === 0 ? raw : smoothed;
+      var dst = pass === 0 ? smoothed : raw;
+      for (var r = 0; r < gridH; r++) {
+        var r0 = r > 0 ? r - 1 : r;
+        var r1 = r < gridH - 1 ? r + 1 : r;
+        for (var c = 0; c < gridW; c++) {
+          var c0 = c > 0 ? c - 1 : c;
+          var c1 = c < gridW - 1 ? c + 1 : c;
+          var sum =
+            src[r0 * gridW + c0] + 2 * src[r0 * gridW + c] + src[r0 * gridW + c1] +
+            2 * src[r * gridW + c0]  + 4 * src[r * gridW + c]  + 2 * src[r * gridW + c1] +
+            src[r1 * gridW + c0] + 2 * src[r1 * gridW + c] + src[r1 * gridW + c1];
+          dst[r * gridW + c] = sum / 16;
+        }
+      }
+    }
+    var elev = raw;
+
+    var minVal = Infinity, maxVal = -Infinity;
+    for (var k = 0; k < elev.length; k++) {
+      var val = elev[k];
+      if (val < minVal) minVal = val;
+      if (val > maxVal) maxVal = val;
+    }
+    if (maxVal - minVal < 20) {
+      maxVal = minVal + 20;
+    }
+
+    // Detect mountain peaks and summits (local elevation maxima)
+    var peaks = [];
+    var minPeakVal = minVal + (maxVal - minVal) * 0.65;
+    for (var pr = 2; pr < gridH - 2; pr++) {
+      for (var pc = 2; pc < gridW - 2; pc++) {
+        var pval = elev[pr * gridW + pc];
+        if (pval > minPeakVal) {
+          var isPeak = true;
+          for (var dr = -1; dr <= 1 && isPeak; dr++) {
+            for (var dc = -1; dc <= 1; dc++) {
+              if (dr === 0 && dc === 0) continue;
+              if (elev[(pr + dr) * gridW + (pc + dc)] >= pval) {
+                isPeak = false;
+                break;
+              }
+            }
+          }
+          if (isPeak) {
+            peaks.push({
+              gx: pc,
+              gy: pr,
+              x: (pc / (gridW - 1)) * tW,
+              y: (pr / (gridH - 1)) * tH,
+              val: pval
+            });
+          }
+        }
+      }
+    }
+
+    peaks.sort(function (a, b) { return b.val - a.val; });
+    var filteredPeaks = [];
+    var minDim = Math.min(tW, tH);
+    var minPeakDist = minDim * 0.16;
+    for (var pk = 0; pk < peaks.length && filteredPeaks.length < 5; pk++) {
+      var cand = peaks[pk];
+      var tooClose = false;
+      for (var fk = 0; fk < filteredPeaks.length; fk++) {
+        var dx = cand.x - filteredPeaks[fk].x;
+        var dy = cand.y - filteredPeaks[fk].y;
+        if (Math.sqrt(dx * dx + dy * dy) < minPeakDist) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (!tooClose) {
+        filteredPeaks.push(cand);
+      }
+    }
+
+    topoCache.image = img;
+    topoCache.targetW = tW;
+    topoCache.targetH = tH;
+    topoCache.gridW = gridW;
+    topoCache.gridH = gridH;
+    topoCache.elev = elev;
+    topoCache.minVal = minVal;
+    topoCache.maxVal = maxVal;
+    topoCache.peaks = filteredPeaks;
+
+    return topoCache;
+  }
+
   function drawGeoMode(tCtx, tW, tH, palette, op) {
     var strokeColor = palette.stroke;
     var detailColor = palette.detail || '#555555';
     var minDim = Math.min(tW, tH);
-    var cx = tW / 2;
-    var cy = tH / 2;
-
-    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
     var strokeW = parseFloat(shapeStrokeSlider.value) || 1.0;
+    var lblSize = parseInt(labelSizeSlider.value, 10) || 8;
+
+    var topo = getTopoElevationGrid(state.image, tW, tH);
+    var gridW = topo.gridW;
+    var gridH = topo.gridH;
+    var elev = topo.elev;
+    var minVal = topo.minVal;
+    var maxVal = topo.maxVal;
+    var span = maxVal - minVal;
+
+    var cellW = tW / (gridW - 1);
+    var cellH = tH / (gridH - 1);
 
     tCtx.save();
     tCtx.lineCap = 'round';
+    tCtx.lineJoin = 'round';
 
-    // 1. Orbital Ellipses
-    var orbitCount = 5;
-    for (var oIdx = 0; oIdx < orbitCount; oIdx++) {
-      var rx = minDim * (0.12 + oIdx * 0.075);
-      var ry = rx * (0.65 + (oIdx % 2) * 0.15);
-      var tilt = (oIdx * 35 + (seed % 90)) * Math.PI / 180;
+    // 1. Geodetic Neatline / Cartographic Double Border
+    var neatlineMargin = minDim * 0.035;
+    var innerW = tW - neatlineMargin * 2;
+    var innerH = tH - neatlineMargin * 2;
 
-      tCtx.save();
-      tCtx.translate(cx, cy);
-      tCtx.rotate(tilt);
-      tCtx.strokeStyle = strokeColor;
-      tCtx.lineWidth = strokeW;
-      tCtx.globalAlpha = (0.2 + oIdx * 0.12) * op;
+    tCtx.strokeStyle = strokeColor;
+    tCtx.lineWidth = Math.max(0.6, minDim * 0.0006);
+    tCtx.globalAlpha = 0.45 * op;
+    tCtx.strokeRect(neatlineMargin, neatlineMargin, innerW, innerH);
 
-      if (oIdx % 2 === 1) {
-        tCtx.setLineDash([minDim * 0.006, minDim * 0.006]);
-      }
+    var innerInset = Math.max(3, minDim * 0.004);
+    tCtx.lineWidth = 0.5;
+    tCtx.globalAlpha = 0.22 * op;
+    tCtx.strokeRect(neatlineMargin + innerInset, neatlineMargin + innerInset, innerW - innerInset * 2, innerH - innerInset * 2);
+
+    // 2. Geodetic Coordinate Ticks on Neatline
+    var tickSpacing = minDim * 0.08;
+    var numTicksX = Math.floor(innerW / tickSpacing);
+    var numTicksY = Math.floor(innerH / tickSpacing);
+
+    tCtx.font = Math.max(7, minDim * 0.007) + 'px "JetBrains Mono", "SF Mono", monospace';
+    tCtx.fillStyle = strokeColor;
+    tCtx.textAlign = 'center';
+    tCtx.textBaseline = 'bottom';
+
+    for (var tx = 1; tx < numTicksX; tx++) {
+      var tickX = neatlineMargin + (tx / numTicksX) * innerW;
+      tCtx.globalAlpha = 0.35 * op;
       tCtx.beginPath();
-      tCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      tCtx.moveTo(tickX, neatlineMargin);
+      tCtx.lineTo(tickX, neatlineMargin + 5);
       tCtx.stroke();
-      tCtx.setLineDash([]);
-
-      // Marker point on orbit
-      var ptAng = (oIdx * 72) * Math.PI / 180;
-      var px = Math.cos(ptAng) * rx;
-      var py = Math.sin(ptAng) * ry;
-      tCtx.fillStyle = strokeColor;
-      tCtx.globalAlpha = 0.8 * op;
       tCtx.beginPath();
-      tCtx.arc(px, py, Math.max(2.5, minDim * 0.0035), 0, Math.PI * 2);
-      tCtx.fill();
+      tCtx.moveTo(tickX, tH - neatlineMargin);
+      tCtx.lineTo(tickX, tH - neatlineMargin - 5);
+      tCtx.stroke();
 
-      // Label
-      tCtx.globalAlpha = 0.5 * op;
-      tCtx.font = 'bold ' + Math.max(7, minDim * 0.009) + 'px "SF Mono", monospace';
-      tCtx.textAlign = 'left';
-      tCtx.textBaseline = 'middle';
-      tCtx.fillText(String.fromCharCode(65 + oIdx) + ' [' + Math.round(ptAng * 180 / Math.PI) + '°]', px + 8, py);
-      tCtx.restore();
+      if (tx % 2 === 0) {
+        var lonMin = 10 + tx * 2;
+        tCtx.fillText('08°' + lonMin + "'E", tickX, neatlineMargin - 3);
+      }
     }
 
-    // 2. Radial Spokes
-    var spokeCount = 12;
-    var spokeR = minDim * 0.44;
-    for (var s = 0; s < spokeCount; s++) {
-      var ang = s * (Math.PI * 2 / spokeCount);
-      var sx = cx + Math.cos(ang) * spokeR;
-      var sy = cy + Math.sin(ang) * spokeR;
+    tCtx.textAlign = 'right';
+    tCtx.textBaseline = 'middle';
+    for (var ty = 1; ty < numTicksY; ty++) {
+      var tickY = neatlineMargin + (ty / numTicksY) * innerH;
+      tCtx.globalAlpha = 0.35 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(neatlineMargin, tickY);
+      tCtx.lineTo(neatlineMargin + 5, tickY);
+      tCtx.stroke();
+      tCtx.beginPath();
+      tCtx.moveTo(tW - neatlineMargin, tickY);
+      tCtx.lineTo(tW - neatlineMargin - 5, tickY);
+      tCtx.stroke();
+
+      if (ty % 2 === 0) {
+        var latMin = 40 - ty * 2;
+        tCtx.fillText('46°' + latMin + "'N", neatlineMargin - 4, tickY);
+      }
+    }
+
+    // 3. Marching Squares Isoline Contours (14 Elevation Levels)
+    var numLevels = 14;
+    var baseMeters = 800;
+    var peakMeters = 3200;
+    var meterSpan = peakMeters - baseMeters;
+
+    for (var lIdx = 1; lIdx <= numLevels; lIdx++) {
+      var frac = lIdx / (numLevels + 1);
+      var iso = minVal + frac * span;
+      var isIndex = (lIdx % 3 === 0);
+      var currentMeters = Math.round(baseMeters + frac * meterSpan);
+
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = isIndex ? Math.max(1.2, strokeW * 1.5) : Math.max(0.6, strokeW * 0.75);
+      tCtx.globalAlpha = (isIndex ? 0.85 : 0.40) * op;
+
+      tCtx.beginPath();
+      var labelCandidate = null;
+      var candidateLen = 0;
+
+      for (var r = 0; r < gridH - 1; r++) {
+        var rIdx = r * gridW;
+        var rNextIdx = (r + 1) * gridW;
+        var y0 = r * cellH;
+        var y1 = (r + 1) * cellH;
+
+        for (var c = 0; c < gridW - 1; c++) {
+          var v0 = elev[rIdx + c];
+          var v1 = elev[rIdx + c + 1];
+          var v2 = elev[rNextIdx + c + 1];
+          var v3 = elev[rNextIdx + c];
+
+          var caseId = 0;
+          if (v0 >= iso) caseId |= 8;
+          if (v1 >= iso) caseId |= 4;
+          if (v2 >= iso) caseId |= 2;
+          if (v3 >= iso) caseId |= 1;
+
+          if (caseId === 0 || caseId === 15) continue;
+
+          var x0 = c * cellW;
+          var x1 = (c + 1) * cellW;
+
+          var topX = x0 + (cellW * (iso - v0)) / (v1 - v0);
+          var topY = y0;
+          var rightX = x1;
+          var rightY = y0 + (cellH * (iso - v1)) / (v2 - v1);
+          var botX = x0 + (cellW * (iso - v3)) / (v2 - v3);
+          var botY = y1;
+          var leftX = x0;
+          var leftY = y0 + (cellH * (iso - v0)) / (v3 - v0);
+
+          switch (caseId) {
+            case 1:
+            case 14:
+              tCtx.moveTo(botX, botY);
+              tCtx.lineTo(leftX, leftY);
+              break;
+            case 2:
+            case 13:
+              tCtx.moveTo(rightX, rightY);
+              tCtx.lineTo(botX, botY);
+              break;
+            case 3:
+            case 12:
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(rightX, rightY);
+              break;
+            case 4:
+            case 11:
+              tCtx.moveTo(topX, topY);
+              tCtx.lineTo(rightX, rightY);
+              break;
+            case 5:
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(topX, topY);
+              tCtx.moveTo(botX, botY);
+              tCtx.lineTo(rightX, rightY);
+              break;
+            case 6:
+            case 9:
+              tCtx.moveTo(topX, topY);
+              tCtx.lineTo(botX, botY);
+              break;
+            case 7:
+            case 8:
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(topX, topY);
+              break;
+            case 10:
+              tCtx.moveTo(topX, topY);
+              tCtx.lineTo(rightX, rightY);
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(botX, botY);
+              break;
+          }
+
+          if (isIndex && c > gridW * 0.25 && c < gridW * 0.75 && r > gridH * 0.2 && r < gridH * 0.8) {
+            var distFromCenter = Math.abs(c - gridW * 0.5) + Math.abs(r - gridH * 0.5);
+            if (!labelCandidate || distFromCenter < candidateLen) {
+              labelCandidate = { x: (x0 + x1) * 0.5, y: (y0 + y1) * 0.5 };
+              candidateLen = distFromCenter;
+            }
+          }
+        }
+      }
+      tCtx.stroke();
+
+      if (isIndex && labelCandidate && lblSize > 0) {
+        var elevText = currentMeters + 'm';
+        var tFont = 'bold ' + Math.max(7, minDim * 0.0075) + 'px "JetBrains Mono", "SF Mono", monospace';
+        tCtx.save();
+        tCtx.font = tFont;
+        tCtx.textAlign = 'center';
+        tCtx.textBaseline = 'middle';
+        var mWidth = tCtx.measureText(elevText).width + 6;
+        var mHeight = Math.max(9, minDim * 0.009);
+
+        tCtx.fillStyle = palette.bg || '#05060f';
+        tCtx.globalAlpha = 0.85 * op;
+        tCtx.fillRect(labelCandidate.x - mWidth / 2, labelCandidate.y - mHeight / 2, mWidth, mHeight);
+
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = 0.6;
+        tCtx.globalAlpha = 0.4 * op;
+        tCtx.strokeRect(labelCandidate.x - mWidth / 2, labelCandidate.y - mHeight / 2, mWidth, mHeight);
+
+        tCtx.fillStyle = strokeColor;
+        tCtx.globalAlpha = 0.9 * op;
+        tCtx.fillText(elevText, labelCandidate.x, labelCandidate.y);
+        tCtx.restore();
+      }
+    }
+
+    // 4. Peak Summit Benchmarks (Spot Heights)
+    topo.peaks.forEach(function (peak, pIdx) {
+      var peakM = Math.round(baseMeters + ((peak.val - minVal) / span) * meterSpan);
+      var triSize = Math.max(4, minDim * 0.007);
+
+      tCtx.save();
+      tCtx.fillStyle = strokeColor;
+      tCtx.globalAlpha = 0.95 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(peak.x, peak.y - triSize * 1.3);
+      tCtx.lineTo(peak.x - triSize, peak.y + triSize * 0.7);
+      tCtx.lineTo(peak.x + triSize, peak.y + triSize * 0.7);
+      tCtx.closePath();
+      tCtx.fill();
+
+      tCtx.fillStyle = palette.bg || '#05060f';
+      tCtx.beginPath();
+      tCtx.arc(peak.x, peak.y, Math.max(1, triSize * 0.25), 0, Math.PI * 2);
+      tCtx.fill();
 
       tCtx.strokeStyle = strokeColor;
       tCtx.lineWidth = 0.7;
-      tCtx.globalAlpha = 0.15 * op;
-      tCtx.beginPath();
-      tCtx.moveTo(cx, cy);
-      tCtx.lineTo(sx, sy);
-      tCtx.stroke();
-
-      // Degree tick on outer circumference
       tCtx.globalAlpha = 0.4 * op;
-      tCtx.fillStyle = strokeColor;
-      tCtx.font = Math.max(7, minDim * 0.007) + 'px "SF Mono", monospace';
-      tCtx.textAlign = 'center';
+      tCtx.setLineDash([2, 3]);
+      tCtx.beginPath();
+      tCtx.moveTo(peak.x - triSize * 2.5, peak.y);
+      tCtx.lineTo(peak.x + triSize * 2.5, peak.y);
+      tCtx.moveTo(peak.x, peak.y - triSize * 2.5);
+      tCtx.lineTo(peak.x, peak.y + triSize * 2.5);
+      tCtx.stroke();
+      tCtx.setLineDash([]);
+
+      var pLbl = '▲ PEAK ' + (pIdx + 1) + ' [' + peakM + 'm]';
+      tCtx.font = 'bold ' + Math.max(8, minDim * 0.0085) + 'px "JetBrains Mono", "SF Mono", monospace';
+      tCtx.textAlign = 'left';
       tCtx.textBaseline = 'middle';
-      tCtx.fillText(Math.round(s * (360 / spokeCount)) + '°', cx + Math.cos(ang) * (spokeR + 14), cy + Math.sin(ang) * (spokeR + 14));
-    }
+      tCtx.fillStyle = strokeColor;
+      tCtx.globalAlpha = 0.9 * op;
+      tCtx.fillText(pLbl, peak.x + triSize * 1.6, peak.y - 1);
 
-    // 3. Lissajous Harmonic Curve
+      var latSub = '46°' + Math.round(30 + (peak.y / tH) * 10) + "'N " + '08°' + Math.round(12 + (peak.x / tW) * 10) + "'E";
+      tCtx.font = Math.max(6.5, minDim * 0.007) + 'px "JetBrains Mono", "SF Mono", monospace';
+      tCtx.globalAlpha = 0.55 * op;
+      tCtx.fillText(latSub, peak.x + triSize * 1.6, peak.y + triSize * 1.3);
+
+      tCtx.restore();
+    });
+
+    // 5. Cartographic Legend Block (Marginalia)
+    var legW = Math.min(220, minDim * 0.38);
+    var legH = Math.min(65, minDim * 0.12);
+    var legX = neatlineMargin + 14;
+    var legY = tH - neatlineMargin - legH - 14;
+
+    tCtx.save();
+    tCtx.fillStyle = palette.bg || '#05060f';
+    tCtx.globalAlpha = 0.85 * op;
+    tCtx.fillRect(legX, legY, legW, legH);
+
     tCtx.strokeStyle = strokeColor;
-    tCtx.lineWidth = strokeW * 1.2;
-    tCtx.globalAlpha = 0.6 * op;
-    tCtx.beginPath();
-    var freqA = 3, freqB = 2, delta = Math.PI / 4;
-    var lissScale = minDim * 0.35;
-    for (var t = 0; t <= 360; t += 2) {
-      var rad = t * Math.PI / 180;
-      var lx = cx + Math.sin(freqA * rad + delta) * lissScale;
-      var ly = cy + Math.sin(freqB * rad) * (lissScale * 0.75);
-      if (t === 0) tCtx.moveTo(lx, ly);
-      else tCtx.lineTo(lx, ly);
-    }
-    tCtx.stroke();
+    tCtx.lineWidth = 0.8;
+    tCtx.globalAlpha = 0.35 * op;
+    tCtx.strokeRect(legX, legY, legW, legH);
 
-    // 4. Center Origin Marker
     tCtx.fillStyle = strokeColor;
     tCtx.globalAlpha = 0.9 * op;
-    tCtx.beginPath();
-    tCtx.arc(cx, cy, Math.max(3, minDim * 0.004), 0, Math.PI * 2);
-    tCtx.fill();
+    tCtx.font = 'bold ' + Math.max(7.5, minDim * 0.0085) + 'px "JetBrains Mono", "SF Mono", monospace';
+    tCtx.textAlign = 'left';
+    tCtx.textBaseline = 'top';
+    tCtx.fillText('TOPOGRAPHIC ELEVATION SURVEY', legX + 8, legY + 8);
+
+    tCtx.font = Math.max(6.5, minDim * 0.007) + 'px "JetBrains Mono", "SF Mono", monospace';
+    tCtx.globalAlpha = 0.6 * op;
+    tCtx.fillText('CONTOUR INTERVAL: 100m // WGS-84', legX + 8, legY + 22);
+    tCtx.fillText('ELEVATION: ' + baseMeters + 'm - ' + peakMeters + 'm MSL', legX + 8, legY + 34);
+    tCtx.fillText('GRID: GEODETIC WGS84 // SCALE 1:25,000', legX + 8, legY + 46);
+
+    // 6. Cartographic True North Indicator
+    var northX = tW - neatlineMargin - 28;
+    var northY = neatlineMargin + 32;
+    var arrowLen = Math.max(14, minDim * 0.025);
 
     tCtx.strokeStyle = strokeColor;
     tCtx.lineWidth = 1;
-    tCtx.setLineDash([4, 4]);
+    tCtx.globalAlpha = 0.7 * op;
     tCtx.beginPath();
-    tCtx.arc(cx, cy, minDim * 0.02, 0, Math.PI * 2);
+    tCtx.moveTo(northX, northY + arrowLen);
+    tCtx.lineTo(northX, northY - arrowLen);
+    tCtx.lineTo(northX - 4, northY - arrowLen + 8);
     tCtx.stroke();
-    tCtx.setLineDash([]);
 
-    tCtx.globalAlpha = 0.6 * op;
-    tCtx.font = 'bold ' + Math.max(8, minDim * 0.01) + 'px "SF Mono", monospace';
-    tCtx.textAlign = 'left';
-    tCtx.fillText('O [ORIGIN]', cx + minDim * 0.025, cy);
+    tCtx.fillStyle = strokeColor;
+    tCtx.beginPath();
+    tCtx.moveTo(northX, northY - arrowLen);
+    tCtx.lineTo(northX + 4, northY - arrowLen + 8);
+    tCtx.lineTo(northX, northY - arrowLen + 6);
+    tCtx.closePath();
+    tCtx.fill();
 
+    tCtx.font = 'bold ' + Math.max(7, minDim * 0.008) + 'px "JetBrains Mono", monospace';
+    tCtx.textAlign = 'center';
+    tCtx.fillText('TN', northX, northY - arrowLen - 3);
+
+    tCtx.restore();
     tCtx.restore();
   }
 
@@ -965,8 +1338,8 @@
       });
     }
 
-    // 4. Crosshair Frame
-    if (state.frameOn) {
+    // 4. Crosshair Frame (for Sensor and Telemetry modes)
+    if (state.frameOn && state.mode !== 'geo') {
       var cx = tW / 2;
       var cy = tH / 2;
       var fSizePct = parseFloat(frameSizeSlider.value) || 60;
@@ -1008,8 +1381,8 @@
       tCtx.restore();
     }
 
-    // 5. Chain Circles & Intersections
-    if (state.chainOn && state.chainCircles && state.chainCircles.length > 0) {
+    // 5. Chain Circles & Intersections (exclusive to Sensor mode)
+    if (state.mode === 'circles' && state.chainOn && state.chainCircles && state.chainCircles.length > 0) {
       var minDim = Math.min(tW, tH);
       var cStroke = parseFloat(shapeStrokeSlider.value) || 1.0;
       var lblSize = parseInt(labelSizeSlider.value, 10) || 8;
