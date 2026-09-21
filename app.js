@@ -11,7 +11,23 @@
   var replaceTextureBtn = document.getElementById('replaceTextureBtn');
   var removeTextureBtn = document.getElementById('removeTextureBtn');
   var downloadBtn = document.getElementById('downloadBtn');
+  var downloadOverlayBtn = document.getElementById('downloadOverlayBtn');
+  var randomizeBtn = document.getElementById('randomizeBtn');
+  var randomizeSettingsBtn = document.getElementById('randomizeSettingsBtn');
   var exportStatusText = document.getElementById('exportStatusText');
+
+  // Gradient Map Controls
+  var gradientMapToggleBtn = document.getElementById('gradientMapToggleBtn');
+  var gradientMapSelect = document.getElementById('gradientMapSelect');
+  var gradientMapPresetVal = document.getElementById('gradientMapPresetVal');
+  var gradientMapStrip = document.getElementById('gradientMapStrip');
+  var gradientSwatchesGrid = document.getElementById('gradientSwatchesGrid');
+  var gradientMapOpacitySlider = document.getElementById('gradientMapOpacity');
+  var gradientMapOpacityVal = document.getElementById('gradientMapOpacityVal');
+  var gradientMapInvertBtn = document.getElementById('gradientMapInvertBtn');
+  var randomizeGradientBtn = document.getElementById('randomizeGradientBtn');
+  var importGrdBtn = document.getElementById('importGrdBtn');
+  var grdFileInput = document.getElementById('grdFileInput');
 
   // Frame Text Controls
   var frameTextToggleBtn = document.getElementById('frameTextToggleBtn');
@@ -91,6 +107,39 @@
   var lineWeightSlider = document.getElementById('lineWeight');
   var lineWeightVal = document.getElementById('lineWeightVal');
 
+  // Telemetry HUD Controls
+  var telemetryGridSlider = document.getElementById('telemetryGrid');
+  var telemetryGridVal = document.getElementById('telemetryGridVal');
+  var telemetryNodesSlider = document.getElementById('telemetryNodes');
+  var telemetryNodesVal = document.getElementById('telemetryNodesVal');
+  var telemetryStrokeSlider = document.getElementById('telemetryStroke');
+  var telemetryStrokeVal = document.getElementById('telemetryStrokeVal');
+  var telemetryRadarBtn = document.getElementById('telemetryRadarBtn');
+  var telemetryBracketsBtn = document.getElementById('telemetryBracketsBtn');
+  var telemetryDataBtn = document.getElementById('telemetryDataBtn');
+
+  // Topography Controls
+  var topoLevelsSlider = document.getElementById('topoLevels');
+  var topoLevelsVal = document.getElementById('topoLevelsVal');
+  var topoSmoothingSlider = document.getElementById('topoSmoothing');
+  var topoSmoothingVal = document.getElementById('topoSmoothingVal');
+  var topoStrokeSlider = document.getElementById('topoStroke');
+  var topoStrokeVal = document.getElementById('topoStrokeVal');
+  var topoPeakElevationSlider = document.getElementById('topoPeakElevation');
+  var topoPeakElevationVal = document.getElementById('topoPeakElevationVal');
+  var topoLabelsBtn = document.getElementById('topoLabelsBtn');
+  var topoPeaksBtn = document.getElementById('topoPeaksBtn');
+  var topoNeatlineBtn = document.getElementById('topoNeatlineBtn');
+  var topoLegendBtn = document.getElementById('topoLegendBtn');
+
+  // Viewfinder Controls
+  var studioFrameInsetSlider = document.getElementById('studioFrameInset');
+  var studioFrameInsetVal = document.getElementById('studioFrameInsetVal');
+  var studioStrokeSlider = document.getElementById('studioStroke');
+  var studioStrokeVal = document.getElementById('studioStrokeVal');
+  var studioBracketsBtn = document.getElementById('studioBracketsBtn');
+  var studioTelemetryBtn = document.getElementById('studioTelemetryBtn');
+
   // Texture & Format Controls
   var textureOpacitySlider = document.getElementById('textureOpacity');
   var textureOpacityVal = document.getElementById('textureOpacityVal');
@@ -127,7 +176,22 @@
     mode: 'circles',
     circles: [],
     connections: [],
-    chainCircles: []
+    chainCircles: [],
+    telemetryRadar: true,
+    telemetryBrackets: true,
+    telemetryData: true,
+    topoLabels: true,
+    topoPeaks: true,
+    topoNeatline: true,
+    topoLegend: true,
+    studioGuideMode: 'thirds',
+    studioReticleMode: 'circle',
+    studioBrackets: true,
+    studioTelemetry: true,
+    gradientMapOn: false,
+    gradientMapIndex: 0,
+    gradientMapOpacity: 1.0,
+    gradientMapInvert: false
   };
 
   // Lehmer PRNG (LCG)
@@ -188,6 +252,291 @@
       pixelScratchCtx = pixelScratchCanvas.getContext('2d');
     }
     return { canvas: pixelScratchCanvas, ctx: pixelScratchCtx };
+  }
+
+  // Gradient Map System & Presets
+  var gradientPresets = (typeof window !== 'undefined' && window.GRADIENT_MAP_PRESETS) ? window.GRADIENT_MAP_PRESETS : [];
+
+  function getGradientLUT(index, inverted) {
+    var grad = gradientPresets[index] || gradientPresets[0];
+    if (!grad || !grad.stops || grad.stops.length === 0) {
+      var fallback = new Uint8Array(256 * 3);
+      for (var k = 0; k < 256; k++) {
+        fallback[k * 3] = k;
+        fallback[k * 3 + 1] = k;
+        fallback[k * 3 + 2] = k;
+      }
+      return fallback;
+    }
+
+    var stops = grad.stops.map(function (s) {
+      return { r: s.r, g: s.g, b: s.b, pos: inverted ? (1 - s.pos) : s.pos };
+    }).sort(function (a, b) { return a.pos - b.pos; });
+
+    if (stops[0].pos > 0) {
+      stops.unshift({ r: stops[0].r, g: stops[0].g, b: stops[0].b, pos: 0 });
+    }
+    if (stops[stops.length - 1].pos < 1) {
+      var last = stops[stops.length - 1];
+      stops.push({ r: last.r, g: last.g, b: last.b, pos: 1 });
+    }
+
+    var lut = new Uint8Array(256 * 3);
+    for (var i = 0; i < 256; i++) {
+      var t = i / 255;
+      var s0 = stops[0];
+      var s1 = stops[stops.length - 1];
+      for (var j = 0; j < stops.length - 1; j++) {
+        if (t >= stops[j].pos && t <= stops[j + 1].pos) {
+          s0 = stops[j];
+          s1 = stops[j + 1];
+          break;
+        }
+      }
+      var span = s1.pos - s0.pos;
+      var factor = span > 0.0001 ? (t - s0.pos) / span : 0;
+      lut[i * 3] = Math.round(s0.r + (s1.r - s0.r) * factor);
+      lut[i * 3 + 1] = Math.round(s0.g + (s1.g - s0.g) * factor);
+      lut[i * 3 + 2] = Math.round(s0.b + (s1.b - s0.b) * factor);
+    }
+    return lut;
+  }
+
+  function getGradientCss(grad, inverted) {
+    if (!grad || !grad.stops || grad.stops.length === 0) return '#000';
+    var stops = grad.stops.map(function (s) {
+      return { hex: s.hex, pos: inverted ? (1 - s.pos) : s.pos };
+    }).sort(function (a, b) { return a.pos - b.pos; });
+    var stopStrs = stops.map(function (s) {
+      return s.hex + ' ' + (s.pos * 100).toFixed(1) + '%';
+    });
+    return 'linear-gradient(to right, ' + stopStrs.join(', ') + ')';
+  }
+
+  var gradientMapCache = {
+    key: null,
+    canvas: null,
+    ctx: null
+  };
+
+  function getGradientMappedCanvas(img, tW, tH, sx, sy, sw, sh) {
+    var opVal = gradientMapOpacitySlider ? parseFloat(gradientMapOpacitySlider.value) : state.gradientMapOpacity;
+    if (isNaN(opVal)) opVal = 1.0;
+    var key = [
+      img.src ? img.src.slice(-32) : 'img',
+      tW,
+      tH,
+      state.gradientMapIndex,
+      opVal.toFixed(2),
+      state.gradientMapInvert ? 1 : 0
+    ].join('_');
+
+    if (gradientMapCache.key === key && gradientMapCache.canvas) {
+      return gradientMapCache.canvas;
+    }
+
+    if (!gradientMapCache.canvas) {
+      gradientMapCache.canvas = document.createElement('canvas');
+      gradientMapCache.ctx = gradientMapCache.canvas.getContext('2d', { willReadFrequently: true });
+    }
+    var oc = gradientMapCache.canvas;
+    var oCtx = gradientMapCache.ctx;
+    if (oc.width !== tW || oc.height !== tH) {
+      oc.width = tW;
+      oc.height = tH;
+    }
+
+    oCtx.drawImage(img, sx, sy, sw, sh, 0, 0, tW, tH);
+    var imgData = oCtx.getImageData(0, 0, tW, tH);
+    var data = imgData.data;
+    var len = data.length;
+    var lut = getGradientLUT(state.gradientMapIndex, state.gradientMapInvert);
+    var blend = opVal;
+
+    for (var i = 0; i < len; i += 4) {
+      var r = data[i];
+      var g = data[i + 1];
+      var b = data[i + 2];
+      var lum = (r * 77 + g * 151 + b * 28) >> 8;
+      var lr = lut[lum * 3];
+      var lg = lut[lum * 3 + 1];
+      var lb = lut[lum * 3 + 2];
+      if (blend < 1) {
+        data[i] = Math.round(r + (lr - r) * blend);
+        data[i + 1] = Math.round(g + (lg - g) * blend);
+        data[i + 2] = Math.round(b + (lb - b) * blend);
+      } else {
+        data[i] = lr;
+        data[i + 1] = lg;
+        data[i + 2] = lb;
+      }
+    }
+    oCtx.putImageData(imgData, 0, 0);
+    gradientMapCache.key = key;
+    return oc;
+  }
+
+  function updateGradientMapPreview() {
+    var grad = gradientPresets[state.gradientMapIndex] || gradientPresets[0];
+    if (!grad) return;
+    var css = getGradientCss(grad, state.gradientMapInvert);
+    if (gradientMapStrip) gradientMapStrip.style.background = css;
+    if (gradientMapPresetVal) gradientMapPresetVal.textContent = grad.name;
+    if (gradientMapSelect) gradientMapSelect.value = state.gradientMapIndex;
+
+    if (gradientSwatchesGrid) {
+      var items = gradientSwatchesGrid.querySelectorAll('.gradient-swatch-item');
+      items.forEach(function (el, idx) {
+        el.classList.toggle('active', idx === state.gradientMapIndex);
+        var g = gradientPresets[idx];
+        if (g) el.style.background = getGradientCss(g, state.gradientMapInvert);
+      });
+    }
+  }
+
+  function populateGradientMapControls() {
+    if (!gradientMapSelect || !gradientSwatchesGrid) return;
+    gradientMapSelect.innerHTML = '';
+    gradientSwatchesGrid.innerHTML = '';
+
+    gradientPresets.forEach(function (grad, idx) {
+      var opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = grad.name;
+      gradientMapSelect.appendChild(opt);
+
+      var swatch = document.createElement('div');
+      swatch.className = 'gradient-swatch-item' + (idx === state.gradientMapIndex ? ' active' : '');
+      swatch.title = grad.name;
+      swatch.style.background = getGradientCss(grad, state.gradientMapInvert);
+      swatch.setAttribute('data-index', idx);
+      swatch.setAttribute('role', 'button');
+      swatch.setAttribute('tabindex', '0');
+      swatch.setAttribute('aria-label', grad.name);
+
+      swatch.addEventListener('click', function () {
+        state.gradientMapIndex = idx;
+        updateGradientMapPreview();
+        scheduleUpdate(1);
+      });
+      swatch.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          state.gradientMapIndex = idx;
+          updateGradientMapPreview();
+          scheduleUpdate(1);
+        }
+      });
+
+      gradientSwatchesGrid.appendChild(swatch);
+    });
+
+    updateGradientMapPreview();
+  }
+
+  function parseGrdBuffer(arrayBuffer) {
+    var view = new DataView(arrayBuffer);
+    var uint8 = new Uint8Array(arrayBuffer);
+    var grads = [];
+    var len = arrayBuffer.byteLength;
+
+    function getAscii(offset, count) {
+      var res = '';
+      for (var i = 0; i < count; i++) {
+        res += String.fromCharCode(uint8[offset + i]);
+      }
+      return res;
+    }
+
+    function readUtf16BE(start, charCount) {
+      var res = '';
+      for (var i = 0; i < charCount; i++) {
+        var code = view.getUint16(start + i * 2, false);
+        if (code === 0) break;
+        res += String.fromCharCode(code);
+      }
+      return res;
+    }
+
+    var offset = 0;
+    while (offset < len - 8) {
+      if (getAscii(offset, 4) === 'Nm  ' && getAscii(offset + 4, 4) === 'TEXT') {
+        var nameLen = view.getUint32(offset + 8, false);
+        var origName = readUtf16BE(offset + 12, nameLen);
+        var gradStart = offset;
+
+        var nextGrad = len;
+        for (var j = offset + 12 + nameLen * 2; j < len - 8; j++) {
+          if (getAscii(j, 4) === 'Nm  ' && getAscii(j + 4, 4) === 'TEXT') {
+            nextGrad = j;
+            break;
+          }
+        }
+
+        var colorStops = [];
+        var p = gradStart;
+        while (p < nextGrad - 8) {
+          if (getAscii(p, 4) === 'Rd  ') {
+            var rIdx = -1, gIdx = -1, bIdx = -1, lctnIdx = -1;
+            for (var k = p; k < Math.min(nextGrad, p + 200); k++) {
+              if (rIdx === -1 && getAscii(k, 4) === 'doub') rIdx = k + 4;
+              else if (gIdx === -1 && getAscii(k, 4) === 'Grn ') {
+                for (var k2 = k; k2 < k + 20; k2++) {
+                  if (getAscii(k2, 4) === 'doub') { gIdx = k2 + 4; break; }
+                }
+              } else if (bIdx === -1 && getAscii(k, 4) === 'Bl  ') {
+                for (var k3 = k; k3 < k + 20; k3++) {
+                  if (getAscii(k3, 4) === 'doub') { bIdx = k3 + 4; break; }
+                }
+              } else if (lctnIdx === -1 && getAscii(k, 4) === 'Lctn') {
+                for (var k4 = k; k4 < k + 20; k4++) {
+                  if (getAscii(k4, 4) === 'long') { lctnIdx = k4 + 4; break; }
+                }
+              }
+              if (rIdx !== -1 && gIdx !== -1 && bIdx !== -1 && lctnIdx !== -1) break;
+            }
+
+            if (rIdx !== -1 && gIdx !== -1 && bIdx !== -1 && lctnIdx !== -1) {
+              var r = Math.round(view.getFloat64(rIdx, false));
+              var g = Math.round(view.getFloat64(gIdx, false));
+              var b = Math.round(view.getFloat64(bIdx, false));
+              var lctn = view.getInt32(lctnIdx, false);
+              var pos = Math.max(0, Math.min(1, lctn / 4096));
+              colorStops.push({
+                r: r, g: g, b: b,
+                pos: parseFloat(pos.toFixed(4)),
+                hex: '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
+              });
+              p = lctnIdx + 4;
+              continue;
+            }
+          }
+          p++;
+        }
+
+        colorStops.sort(function (a, b) { return a.pos - b.pos; });
+        var uniqueStops = [];
+        colorStops.forEach(function (s) {
+          if (uniqueStops.length === 0 || Math.abs(uniqueStops[uniqueStops.length - 1].pos - s.pos) > 0.001) {
+            uniqueStops.push(s);
+          }
+        });
+
+        var numStr = (grads.length + 1 < 10 ? '0' : '') + (grads.length + 1);
+        var cleanName = 'Gradient ' + numStr;
+
+        grads.push({
+          id: 'custom_grad_' + (grads.length + 1),
+          name: cleanName,
+          stops: uniqueStops
+        });
+
+        offset = nextGrad;
+      } else {
+        offset++;
+      }
+    }
+    return grads;
   }
 
   // Block Analysis Cache: avoids re-analyzing 2M pixels on circle placement/visual slider drags
@@ -576,21 +925,25 @@
   // --- MODE RENDERERS (Hero, Geo Tool, Studio) ---
   function drawHeroMode(tCtx, tW, tH, palette, op) {
     var strokeColor = palette.stroke;
-    var detailColor = palette.detail || '#555555';
     var minDim = Math.min(tW, tH);
     var margin = minDim * 0.08;
     var gridW = tW - margin * 2;
     var gridH = tH - margin * 2;
-    var density = 24;
+    var density = parseInt(telemetryGridSlider ? telemetryGridSlider.value : 24, 10) || 24;
+    var count = parseInt(telemetryNodesSlider ? telemetryNodesSlider.value : 40, 10) || 40;
+    var strokeW = parseFloat(telemetryStrokeSlider ? telemetryStrokeSlider.value : 1.0) || 1.0;
     var cellW = gridW / density;
     var cellH = gridH / density;
+    var ox = margin + gridW / 2;
+    var oy = margin + gridH / 2;
 
     tCtx.save();
-    // 1. Technical Fluid Coordinate Grid
-    tCtx.strokeStyle = detailColor;
-    tCtx.lineWidth = Math.max(0.4, minDim * 0.0005);
+
+    // 1. Perspective / Technical Coordinate Grid
+    tCtx.strokeStyle = strokeColor;
+    tCtx.lineWidth = Math.max(0.4, strokeW * 0.5);
     for (var i = 0; i <= density; i++) {
-      tCtx.globalAlpha = (i === 0 || i === density) ? 0.25 * op : 0.07 * op;
+      tCtx.globalAlpha = (i === 0 || i === density) ? 0.3 * op : 0.08 * op;
       tCtx.beginPath();
       tCtx.moveTo(margin + i * cellW, margin);
       tCtx.lineTo(margin + i * cellW, margin + gridH);
@@ -602,39 +955,125 @@
       tCtx.stroke();
     }
 
-    // 2. Origin Center Marker
-    var ox = margin + gridW / 2;
-    var oy = margin + gridH / 2;
-    tCtx.globalAlpha = 0.8 * op;
+    // 2. Corner Target Brackets
+    if (state.telemetryBrackets) {
+      var bLen = Math.max(16, minDim * 0.04);
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = Math.max(1.0, strokeW * 1.5);
+      tCtx.globalAlpha = 0.8 * op;
+
+      // Top-Left
+      tCtx.beginPath();
+      tCtx.moveTo(margin, margin + bLen);
+      tCtx.lineTo(margin, margin);
+      tCtx.lineTo(margin + bLen, margin);
+      tCtx.stroke();
+
+      // Top-Right
+      tCtx.beginPath();
+      tCtx.moveTo(margin + gridW - bLen, margin);
+      tCtx.lineTo(margin + gridW, margin);
+      tCtx.lineTo(margin + gridW, margin + bLen);
+      tCtx.stroke();
+
+      // Bottom-Left
+      tCtx.beginPath();
+      tCtx.moveTo(margin, margin + gridH - bLen);
+      tCtx.lineTo(margin, margin + gridH);
+      tCtx.lineTo(margin + bLen, margin + gridH);
+      tCtx.stroke();
+
+      // Bottom-Right
+      tCtx.beginPath();
+      tCtx.moveTo(margin + gridW - bLen, margin + gridH);
+      tCtx.lineTo(margin + gridW, margin + gridH);
+      tCtx.lineTo(margin + gridW, margin + gridH - bLen);
+      tCtx.stroke();
+    }
+
+    // 3. Radar Dial & Compass Rings
+    if (state.telemetryRadar) {
+      var maxRadarR = minDim * 0.36;
+      var numRings = 3;
+      tCtx.strokeStyle = strokeColor;
+      for (var rIdx = 1; rIdx <= numRings; rIdx++) {
+        var ringR = (rIdx / numRings) * maxRadarR;
+        tCtx.lineWidth = Math.max(0.5, strokeW * 0.6);
+        tCtx.globalAlpha = (rIdx === numRings ? 0.45 : 0.18) * op;
+        tCtx.beginPath();
+        tCtx.arc(ox, oy, ringR, 0, Math.PI * 2);
+        tCtx.stroke();
+      }
+
+      tCtx.font = Math.max(7, minDim * 0.0075) + 'px "JetBrains Mono", "SF Mono", monospace';
+      tCtx.fillStyle = strokeColor;
+      tCtx.textAlign = 'center';
+      tCtx.textBaseline = 'middle';
+      for (var deg = 0; deg < 360; deg += 10) {
+        var rad = (deg * Math.PI) / 180;
+        var isCardinal = (deg % 90 === 0);
+        var isMajor = (deg % 30 === 0);
+        var tLen = isCardinal ? 10 : (isMajor ? 6 : 3);
+        var innerR = maxRadarR;
+        var outerR = maxRadarR + tLen;
+
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = isCardinal ? Math.max(1, strokeW) : 0.6;
+        tCtx.globalAlpha = (isCardinal ? 0.7 : (isMajor ? 0.4 : 0.2)) * op;
+        tCtx.beginPath();
+        tCtx.moveTo(ox + Math.cos(rad) * innerR, oy + Math.sin(rad) * innerR);
+        tCtx.lineTo(ox + Math.cos(rad) * outerR, oy + Math.sin(rad) * outerR);
+        tCtx.stroke();
+
+        if (isMajor) {
+          var lblR = maxRadarR + 16;
+          var lblText = isCardinal ? (deg === 0 ? '000°' : deg === 90 ? '090°' : deg === 180 ? '180°' : '270°') : deg + '°';
+          tCtx.globalAlpha = 0.55 * op;
+          tCtx.fillText(lblText, ox + Math.cos(rad) * lblR, oy + Math.sin(rad) * lblR);
+        }
+      }
+    }
+
+    // 4. Origin Center Marker & Reticle
+    tCtx.globalAlpha = 0.85 * op;
     tCtx.fillStyle = strokeColor;
     tCtx.beginPath();
     tCtx.arc(ox, oy, Math.max(3, minDim * 0.004), 0, Math.PI * 2);
     tCtx.fill();
 
+    tCtx.strokeStyle = strokeColor;
+    tCtx.lineWidth = Math.max(0.6, strokeW * 0.8);
     tCtx.globalAlpha = 0.5 * op;
-    tCtx.font = 'bold ' + Math.max(8, minDim * 0.01) + 'px "SF Mono", "Menlo", monospace';
+    var chLen = minDim * 0.04;
+    tCtx.beginPath();
+    tCtx.moveTo(ox - chLen, oy);
+    tCtx.lineTo(ox + chLen, oy);
+    tCtx.moveTo(ox, oy - chLen);
+    tCtx.lineTo(ox, oy + chLen);
+    tCtx.stroke();
+
+    tCtx.globalAlpha = 0.6 * op;
+    tCtx.font = 'bold ' + Math.max(8, minDim * 0.009) + 'px "JetBrains Mono", monospace';
     tCtx.textAlign = 'left';
     tCtx.textBaseline = 'bottom';
-    tCtx.fillText('ORIGIN [0,0]', ox + minDim * 0.01, oy - minDim * 0.008);
+    tCtx.fillText('ORIGIN [0,0]', ox + minDim * 0.012, oy - minDim * 0.008);
 
-    // 3. Generative Flow Vectors & Particles
-    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
+    // 5. Generative Flow Vectors & Ray Nodes
+    var seed = parseInt(sizeSeedSlider ? sizeSeedSlider.value : 42, 10) || 42;
     var prng = lcgPRNG(seed);
-    var count = parseInt(maxCirclesSlider.value, 10) || 40;
-    count = Math.min(60, Math.max(16, count));
-
     tCtx.lineCap = 'round';
+
     for (var pIdx = 0; pIdx < count; pIdx++) {
       var angle = prng() * Math.PI * 2;
-      var dist = (0.15 + prng() * 0.75) * (minDim * 0.42);
+      var dist = (0.15 + prng() * 0.75) * (minDim * 0.40);
       var px = ox + Math.cos(angle) * dist;
       var py = oy + Math.sin(angle) * dist;
       var isHeavy = pIdx % 4 === 0;
 
-      // Connecting ray from origin
+      // Ray from origin
       tCtx.strokeStyle = strokeColor;
-      tCtx.lineWidth = isHeavy ? 1.5 : 0.8;
-      tCtx.globalAlpha = (isHeavy ? 0.6 : 0.25) * op;
+      tCtx.lineWidth = isHeavy ? Math.max(1.2, strokeW * 1.4) : Math.max(0.6, strokeW * 0.7);
+      tCtx.globalAlpha = (isHeavy ? 0.65 : 0.22) * op;
       tCtx.beginPath();
       tCtx.moveTo(ox, oy);
       tCtx.lineTo(px, py);
@@ -642,256 +1081,823 @@
 
       // Node point
       tCtx.fillStyle = strokeColor;
-      tCtx.globalAlpha = (isHeavy ? 0.9 : 0.6) * op;
+      tCtx.globalAlpha = (isHeavy ? 0.95 : 0.6) * op;
       tCtx.beginPath();
-      tCtx.arc(px, py, isHeavy ? Math.max(4, minDim * 0.006) : Math.max(2, minDim * 0.003), 0, Math.PI * 2);
+      tCtx.arc(px, py, isHeavy ? Math.max(3.5, minDim * 0.005) : Math.max(2, minDim * 0.003), 0, Math.PI * 2);
       tCtx.fill();
 
-      // Dashed target ring for heavy nodes
+      // Dashed target ring and coordinates for heavy nodes
       if (isHeavy) {
         tCtx.strokeStyle = strokeColor;
-        tCtx.lineWidth = Math.max(0.5, minDim * 0.0006);
+        tCtx.lineWidth = Math.max(0.5, strokeW * 0.6);
         tCtx.setLineDash([minDim * 0.004, minDim * 0.004]);
-        tCtx.globalAlpha = 0.25 * op;
+        tCtx.globalAlpha = 0.3 * op;
         tCtx.beginPath();
-        tCtx.arc(px, py, minDim * 0.025, 0, Math.PI * 2);
+        tCtx.arc(px, py, minDim * 0.022, 0, Math.PI * 2);
         tCtx.stroke();
         tCtx.setLineDash([]);
 
-        // Coordinate text
-        tCtx.globalAlpha = 0.45 * op;
-        tCtx.font = Math.max(7, minDim * 0.008) + 'px "SF Mono", "Menlo", monospace';
+        tCtx.fillStyle = strokeColor;
+        tCtx.globalAlpha = 0.6 * op;
+        tCtx.font = Math.max(7, minDim * 0.0075) + 'px "JetBrains Mono", monospace';
         tCtx.textAlign = 'left';
         tCtx.textBaseline = 'middle';
-        var deg = Math.round((angle * 180 / Math.PI + 360) % 360);
-        tCtx.fillText('V' + pIdx + ' ' + deg + '°', px + minDim * 0.03, py);
+        var degVal = Math.round((angle * 180 / Math.PI + 360) % 360);
+        tCtx.fillText('V' + pIdx + ' ' + degVal + '°', px + minDim * 0.028, py);
       }
     }
+
+    // 6. Telemetry Data Readout
+    if (state.telemetryData) {
+      tCtx.fillStyle = strokeColor;
+      tCtx.font = 'bold ' + Math.max(7.5, minDim * 0.0085) + 'px "JetBrains Mono", monospace';
+      tCtx.textAlign = 'left';
+      tCtx.textBaseline = 'top';
+      tCtx.globalAlpha = 0.75 * op;
+
+      var hudX = margin + 8;
+      var hudY = margin + 8;
+      tCtx.fillText('SYS.TRK // HUD TELEMETRY', hudX, hudY);
+      tCtx.font = Math.max(6.5, minDim * 0.007) + 'px "JetBrains Mono", monospace';
+      tCtx.globalAlpha = 0.55 * op;
+      tCtx.fillText('AZ: 048.2° // EL: +18.4° // RNG: 1840M', hudX, hudY + 14);
+      tCtx.fillText('VECTORS: ' + count + ' NODES // GRID: ' + density + 'x' + density, hudX, hudY + 26);
+      tCtx.fillText('LOCK: NOMINAL // SNR: 98.4dB', hudX, hudY + 38);
+    }
+
     tCtx.restore();
+  }
+
+  // --- TOPOGRAPHIC SURVEY & CONTOUR MAPPING ENGINE ---
+  var topoCache = {
+    image: null,
+    targetW: 0,
+    targetH: 0,
+    gridW: 0,
+    gridH: 0,
+    smoothing: 2,
+    rawOriginal: null,
+    elev: null,
+    minVal: 0,
+    maxVal: 0,
+    peaks: []
+  };
+
+  function getTopoElevationGrid(img, tW, tH) {
+    var passes = parseInt(topoSmoothingSlider ? topoSmoothingSlider.value : 2, 10) || 2;
+    var gridW = 96;
+    var gridH = Math.max(48, Math.round(96 * (tH / tW)));
+
+    if (
+      topoCache.elev &&
+      topoCache.image === img &&
+      topoCache.targetW === tW &&
+      topoCache.targetH === tH &&
+      topoCache.smoothing === passes
+    ) {
+      return topoCache;
+    }
+
+    var raw;
+    if (topoCache.rawOriginal && topoCache.image === img && topoCache.targetW === tW && topoCache.targetH === tH) {
+      raw = new Float32Array(topoCache.rawOriginal);
+    } else {
+      raw = new Float32Array(gridW * gridH);
+      if (img) {
+        var sCanvas = document.createElement('canvas');
+        sCanvas.width = gridW;
+        sCanvas.height = gridH;
+        var sCtx = sCanvas.getContext('2d', { willReadFrequently: true });
+        try {
+          var imgRatio = img.width / img.height;
+          var targetRatio = tW / tH;
+          var sx, sy, sw, sh;
+          if (imgRatio > targetRatio) {
+            sh = img.height;
+            sw = sh * targetRatio;
+            sx = (img.width - sw) / 2;
+            sy = 0;
+          } else {
+            sw = img.width;
+            sh = sw / targetRatio;
+            sx = 0;
+            sy = (img.height - sh) / 2;
+          }
+          sCtx.drawImage(img, sx, sy, sw, sh, 0, 0, gridW, gridH);
+          var idata = sCtx.getImageData(0, 0, gridW, gridH).data;
+          for (var i = 0, j = 0; i < idata.length; i += 4, j++) {
+            raw[j] = idata[i] * 0.299 + idata[i + 1] * 0.587 + idata[i + 2] * 0.114;
+          }
+        } catch (e) {
+          console.warn('Topo grid sampling fallback:', e);
+        }
+      } else {
+        for (var r = 0; r < gridH; r++) {
+          var ny = r / gridH;
+          for (var c = 0; c < gridW; c++) {
+            var nx = c / gridW;
+            var v = Math.sin(nx * Math.PI * 3) * Math.cos(ny * Math.PI * 2.5) * 50 +
+                    Math.sin(nx * 7.5 + ny * 6.2) * 28 +
+                    Math.cos(nx * 14.1 - ny * 11.3) * 14 +
+                    128;
+            raw[r * gridW + c] = v;
+          }
+        }
+      }
+      topoCache.rawOriginal = new Float32Array(raw);
+    }
+
+    var smoothed = new Float32Array(gridW * gridH);
+    var currentSrc = raw;
+    var currentDst = smoothed;
+
+    for (var pass = 0; pass < passes; pass++) {
+      for (var gr = 0; gr < gridH; gr++) {
+        var r0 = gr > 0 ? gr - 1 : gr;
+        var r1 = gr < gridH - 1 ? gr + 1 : gr;
+        for (var gc = 0; gc < gridW; gc++) {
+          var c0 = gc > 0 ? gc - 1 : gc;
+          var c1 = gc < gridW - 1 ? gc + 1 : gc;
+          var sum =
+            currentSrc[r0 * gridW + c0] + 2 * currentSrc[r0 * gridW + gc] + currentSrc[r0 * gridW + c1] +
+            2 * currentSrc[gr * gridW + c0]  + 4 * currentSrc[gr * gridW + gc]  + 2 * currentSrc[gr * gridW + c1] +
+            currentSrc[r1 * gridW + c0] + 2 * currentSrc[r1 * gridW + gc] + currentSrc[r1 * gridW + c1];
+          currentDst[gr * gridW + gc] = sum / 16;
+        }
+      }
+      var temp = currentSrc;
+      currentSrc = currentDst;
+      currentDst = temp;
+    }
+    var elev = currentSrc;
+
+    var minVal = Infinity, maxVal = -Infinity;
+    for (var k = 0; k < elev.length; k++) {
+      var val = elev[k];
+      if (val < minVal) minVal = val;
+      if (val > maxVal) maxVal = val;
+    }
+    if (maxVal - minVal < 20) {
+      maxVal = minVal + 20;
+    }
+
+    // Detect mountain peaks and summits
+    var peaks = [];
+    var minPeakVal = minVal + (maxVal - minVal) * 0.65;
+    for (var pr = 2; pr < gridH - 2; pr++) {
+      for (var pc = 2; pc < gridW - 2; pc++) {
+        var pval = elev[pr * gridW + pc];
+        if (pval > minPeakVal) {
+          var isPeak = true;
+          for (var dr = -1; dr <= 1 && isPeak; dr++) {
+            for (var dc = -1; dc <= 1; dc++) {
+              if (dr === 0 && dc === 0) continue;
+              if (elev[(pr + dr) * gridW + (pc + dc)] >= pval) {
+                isPeak = false;
+                break;
+              }
+            }
+          }
+          if (isPeak) {
+            peaks.push({
+              gx: pc,
+              gy: pr,
+              x: (pc / (gridW - 1)) * tW,
+              y: (pr / (gridH - 1)) * tH,
+              val: pval
+            });
+          }
+        }
+      }
+    }
+
+    peaks.sort(function (a, b) { return b.val - a.val; });
+    var filteredPeaks = [];
+    var minDim = Math.min(tW, tH);
+    var minPeakDist = minDim * 0.16;
+    for (var pk = 0; pk < peaks.length && filteredPeaks.length < 5; pk++) {
+      var cand = peaks[pk];
+      var tooClose = false;
+      for (var fk = 0; fk < filteredPeaks.length; fk++) {
+        var dX = cand.x - filteredPeaks[fk].x;
+        var dY = cand.y - filteredPeaks[fk].y;
+        if (Math.sqrt(dX * dX + dY * dY) < minPeakDist) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (!tooClose) {
+        filteredPeaks.push(cand);
+      }
+    }
+
+    topoCache.image = img;
+    topoCache.targetW = tW;
+    topoCache.targetH = tH;
+    topoCache.gridW = gridW;
+    topoCache.gridH = gridH;
+    topoCache.smoothing = passes;
+    topoCache.elev = elev;
+    topoCache.minVal = minVal;
+    topoCache.maxVal = maxVal;
+    topoCache.peaks = filteredPeaks;
+
+    return topoCache;
   }
 
   function drawGeoMode(tCtx, tW, tH, palette, op) {
     var strokeColor = palette.stroke;
-    var detailColor = palette.detail || '#555555';
     var minDim = Math.min(tW, tH);
-    var cx = tW / 2;
-    var cy = tH / 2;
+    var strokeW = parseFloat(topoStrokeSlider ? topoStrokeSlider.value : 1.0) || 1.0;
+    var lblSize = parseInt(labelSizeSlider ? labelSizeSlider.value : 8, 10) || 8;
 
-    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
-    var strokeW = parseFloat(shapeStrokeSlider.value) || 1.0;
+    var topo = getTopoElevationGrid(state.image, tW, tH);
+    var gridW = topo.gridW;
+    var gridH = topo.gridH;
+    var elev = topo.elev;
+    var minVal = topo.minVal;
+    var maxVal = topo.maxVal;
+    var span = maxVal - minVal;
+
+    var cellW = tW / (gridW - 1);
+    var cellH = tH / (gridH - 1);
 
     tCtx.save();
     tCtx.lineCap = 'round';
+    tCtx.lineJoin = 'round';
 
-    // 1. Orbital Ellipses
-    var orbitCount = 5;
-    for (var oIdx = 0; oIdx < orbitCount; oIdx++) {
-      var rx = minDim * (0.12 + oIdx * 0.075);
-      var ry = rx * (0.65 + (oIdx % 2) * 0.15);
-      var tilt = (oIdx * 35 + (seed % 90)) * Math.PI / 180;
+    var neatlineMargin = minDim * 0.035;
+    var innerW = tW - neatlineMargin * 2;
+    var innerH = tH - neatlineMargin * 2;
+
+    // 1. Geodetic Neatline / Cartographic Double Border
+    if (state.topoNeatline) {
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = Math.max(0.6, minDim * 0.0006);
+      tCtx.globalAlpha = 0.45 * op;
+      tCtx.strokeRect(neatlineMargin, neatlineMargin, innerW, innerH);
+
+      var innerInset = Math.max(3, minDim * 0.004);
+      tCtx.lineWidth = 0.5;
+      tCtx.globalAlpha = 0.22 * op;
+      tCtx.strokeRect(neatlineMargin + innerInset, neatlineMargin + innerInset, innerW - innerInset * 2, innerH - innerInset * 2);
+
+      // 2. Geodetic Coordinate Ticks on Neatline
+      var tickSpacing = minDim * 0.08;
+      var numTicksX = Math.floor(innerW / tickSpacing);
+      var numTicksY = Math.floor(innerH / tickSpacing);
+
+      tCtx.font = Math.max(7, minDim * 0.007) + 'px "JetBrains Mono", "SF Mono", monospace';
+      tCtx.fillStyle = strokeColor;
+      tCtx.textAlign = 'center';
+      tCtx.textBaseline = 'bottom';
+
+      for (var tx = 1; tx < numTicksX; tx++) {
+        var tickX = neatlineMargin + (tx / numTicksX) * innerW;
+        tCtx.globalAlpha = 0.35 * op;
+        tCtx.beginPath();
+        tCtx.moveTo(tickX, neatlineMargin);
+        tCtx.lineTo(tickX, neatlineMargin + 5);
+        tCtx.stroke();
+        tCtx.beginPath();
+        tCtx.moveTo(tickX, tH - neatlineMargin);
+        tCtx.lineTo(tickX, tH - neatlineMargin - 5);
+        tCtx.stroke();
+
+        if (tx % 2 === 0) {
+          var lonMin = 10 + tx * 2;
+          tCtx.fillText('08°' + lonMin + "'E", tickX, neatlineMargin - 3);
+        }
+      }
+
+      tCtx.textAlign = 'right';
+      tCtx.textBaseline = 'middle';
+      for (var ty = 1; ty < numTicksY; ty++) {
+        var tickY = neatlineMargin + (ty / numTicksY) * innerH;
+        tCtx.globalAlpha = 0.35 * op;
+        tCtx.beginPath();
+        tCtx.moveTo(neatlineMargin, tickY);
+        tCtx.lineTo(neatlineMargin + 5, tickY);
+        tCtx.stroke();
+        tCtx.beginPath();
+        tCtx.moveTo(tW - neatlineMargin, tickY);
+        tCtx.lineTo(tW - neatlineMargin - 5, tickY);
+        tCtx.stroke();
+
+        if (ty % 2 === 0) {
+          var latMin = 40 - ty * 2;
+          tCtx.fillText('46°' + latMin + "'N", neatlineMargin - 4, tickY);
+        }
+      }
+    }
+
+    // 3. Marching Squares Isoline Contours
+    var numLevels = parseInt(topoLevelsSlider ? topoLevelsSlider.value : 14, 10) || 14;
+    var baseMeters = 800;
+    var peakMeters = parseInt(topoPeakElevationSlider ? topoPeakElevationSlider.value : 3200, 10) || 3200;
+    var meterSpan = peakMeters - baseMeters;
+
+    for (var lIdx = 1; lIdx <= numLevels; lIdx++) {
+      var frac = lIdx / (numLevels + 1);
+      var iso = minVal + frac * span;
+      var isIndex = (lIdx % 3 === 0);
+      var currentMeters = Math.round(baseMeters + frac * meterSpan);
+
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = isIndex ? Math.max(1.2, strokeW * 1.5) : Math.max(0.6, strokeW * 0.75);
+      tCtx.globalAlpha = (isIndex ? 0.85 : 0.40) * op;
+
+      tCtx.beginPath();
+      var labelCandidate = null;
+      var candidateLen = 0;
+
+      for (var r = 0; r < gridH - 1; r++) {
+        var rIdx = r * gridW;
+        var rNextIdx = (r + 1) * gridW;
+        var y0 = r * cellH;
+        var y1 = (r + 1) * cellH;
+
+        for (var c = 0; c < gridW - 1; c++) {
+          var v0 = elev[rIdx + c];
+          var v1 = elev[rIdx + c + 1];
+          var v2 = elev[rNextIdx + c + 1];
+          var v3 = elev[rNextIdx + c];
+
+          var caseId = 0;
+          if (v0 >= iso) caseId |= 8;
+          if (v1 >= iso) caseId |= 4;
+          if (v2 >= iso) caseId |= 2;
+          if (v3 >= iso) caseId |= 1;
+
+          if (caseId === 0 || caseId === 15) continue;
+
+          var x0 = c * cellW;
+          var x1 = (c + 1) * cellW;
+
+          var topX = x0 + (cellW * (iso - v0)) / (v1 - v0);
+          var topY = y0;
+          var rightX = x1;
+          var rightY = y0 + (cellH * (iso - v1)) / (v2 - v1);
+          var botX = x0 + (cellW * (iso - v3)) / (v2 - v3);
+          var botY = y1;
+          var leftX = x0;
+          var leftY = y0 + (cellH * (iso - v0)) / (v3 - v0);
+
+          switch (caseId) {
+            case 1:
+            case 14:
+              tCtx.moveTo(botX, botY);
+              tCtx.lineTo(leftX, leftY);
+              break;
+            case 2:
+            case 13:
+              tCtx.moveTo(rightX, rightY);
+              tCtx.lineTo(botX, botY);
+              break;
+            case 3:
+            case 12:
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(rightX, rightY);
+              break;
+            case 4:
+            case 11:
+              tCtx.moveTo(topX, topY);
+              tCtx.lineTo(rightX, rightY);
+              break;
+            case 5:
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(topX, topY);
+              tCtx.moveTo(botX, botY);
+              tCtx.lineTo(rightX, rightY);
+              break;
+            case 6:
+            case 9:
+              tCtx.moveTo(topX, topY);
+              tCtx.lineTo(botX, botY);
+              break;
+            case 7:
+            case 8:
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(topX, topY);
+              break;
+            case 10:
+              tCtx.moveTo(topX, topY);
+              tCtx.lineTo(rightX, rightY);
+              tCtx.moveTo(leftX, leftY);
+              tCtx.lineTo(botX, botY);
+              break;
+          }
+
+          if (isIndex && c > gridW * 0.25 && c < gridW * 0.75 && r > gridH * 0.2 && r < gridH * 0.8) {
+            var distFromCenter = Math.abs(c - gridW * 0.5) + Math.abs(r - gridH * 0.5);
+            if (!labelCandidate || distFromCenter < candidateLen) {
+              labelCandidate = { x: (x0 + x1) * 0.5, y: (y0 + y1) * 0.5 };
+              candidateLen = distFromCenter;
+            }
+          }
+        }
+      }
+      tCtx.stroke();
+
+      if (state.topoLabels && isIndex && labelCandidate && lblSize > 0) {
+        var elevText = currentMeters + 'm';
+        var tFont = 'bold ' + Math.max(7, minDim * 0.0075) + 'px "JetBrains Mono", "SF Mono", monospace';
+        tCtx.save();
+        tCtx.font = tFont;
+        tCtx.textAlign = 'center';
+        tCtx.textBaseline = 'middle';
+        var mWidth = tCtx.measureText(elevText).width + 6;
+        var mHeight = Math.max(9, minDim * 0.009);
+
+        tCtx.fillStyle = palette.bg || '#05060f';
+        tCtx.globalAlpha = 0.85 * op;
+        tCtx.fillRect(labelCandidate.x - mWidth / 2, labelCandidate.y - mHeight / 2, mWidth, mHeight);
+
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = 0.6;
+        tCtx.globalAlpha = 0.4 * op;
+        tCtx.strokeRect(labelCandidate.x - mWidth / 2, labelCandidate.y - mHeight / 2, mWidth, mHeight);
+
+        tCtx.fillStyle = strokeColor;
+        tCtx.globalAlpha = 0.9 * op;
+        tCtx.fillText(elevText, labelCandidate.x, labelCandidate.y);
+        tCtx.restore();
+      }
+    }
+
+    // 4. Peak Summit Benchmarks
+    if (state.topoPeaks) {
+      topo.peaks.forEach(function (peak, pIdx) {
+        var peakM = Math.round(baseMeters + ((peak.val - minVal) / span) * meterSpan);
+        var triSize = Math.max(4, minDim * 0.007);
+
+        tCtx.save();
+        tCtx.fillStyle = strokeColor;
+        tCtx.globalAlpha = 0.95 * op;
+        tCtx.beginPath();
+        tCtx.moveTo(peak.x, peak.y - triSize * 1.3);
+        tCtx.lineTo(peak.x - triSize, peak.y + triSize * 0.7);
+        tCtx.lineTo(peak.x + triSize, peak.y + triSize * 0.7);
+        tCtx.closePath();
+        tCtx.fill();
+
+        tCtx.fillStyle = palette.bg || '#05060f';
+        tCtx.beginPath();
+        tCtx.arc(peak.x, peak.y, Math.max(1, triSize * 0.25), 0, Math.PI * 2);
+        tCtx.fill();
+
+        tCtx.strokeStyle = strokeColor;
+        tCtx.lineWidth = 0.7;
+        tCtx.globalAlpha = 0.4 * op;
+        tCtx.setLineDash([2, 3]);
+        tCtx.beginPath();
+        tCtx.moveTo(peak.x - triSize * 2.5, peak.y);
+        tCtx.lineTo(peak.x + triSize * 2.5, peak.y);
+        tCtx.moveTo(peak.x, peak.y - triSize * 2.5);
+        tCtx.lineTo(peak.x, peak.y + triSize * 2.5);
+        tCtx.stroke();
+        tCtx.setLineDash([]);
+
+        var pLbl = '▲ PEAK ' + (pIdx + 1) + ' [' + peakM + 'm]';
+        tCtx.font = 'bold ' + Math.max(8, minDim * 0.0085) + 'px "JetBrains Mono", "SF Mono", monospace';
+        tCtx.textAlign = 'left';
+        tCtx.textBaseline = 'middle';
+        tCtx.fillStyle = strokeColor;
+        tCtx.globalAlpha = 0.9 * op;
+        tCtx.fillText(pLbl, peak.x + triSize * 1.6, peak.y - 1);
+
+        var latSub = '46°' + Math.round(30 + (peak.y / tH) * 10) + "'N " + '08°' + Math.round(12 + (peak.x / tW) * 10) + "'E";
+        tCtx.font = Math.max(6.5, minDim * 0.007) + 'px "JetBrains Mono", "SF Mono", monospace';
+        tCtx.globalAlpha = 0.55 * op;
+        tCtx.fillText(latSub, peak.x + triSize * 1.6, peak.y + triSize * 1.3);
+
+        tCtx.restore();
+      });
+    }
+
+    // 5. Cartographic Legend Block
+    if (state.topoLegend) {
+      var legW = Math.min(220, minDim * 0.38);
+      var legH = Math.min(65, minDim * 0.12);
+      var legX = neatlineMargin + 14;
+      var legY = tH - neatlineMargin - legH - 14;
 
       tCtx.save();
-      tCtx.translate(cx, cy);
-      tCtx.rotate(tilt);
+      tCtx.fillStyle = palette.bg || '#05060f';
+      tCtx.globalAlpha = 0.85 * op;
+      tCtx.fillRect(legX, legY, legW, legH);
+
       tCtx.strokeStyle = strokeColor;
-      tCtx.lineWidth = strokeW;
-      tCtx.globalAlpha = (0.2 + oIdx * 0.12) * op;
+      tCtx.lineWidth = 0.8;
+      tCtx.globalAlpha = 0.35 * op;
+      tCtx.strokeRect(legX, legY, legW, legH);
 
-      if (oIdx % 2 === 1) {
-        tCtx.setLineDash([minDim * 0.006, minDim * 0.006]);
-      }
-      tCtx.beginPath();
-      tCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-      tCtx.stroke();
-      tCtx.setLineDash([]);
-
-      // Marker point on orbit
-      var ptAng = (oIdx * 72) * Math.PI / 180;
-      var px = Math.cos(ptAng) * rx;
-      var py = Math.sin(ptAng) * ry;
       tCtx.fillStyle = strokeColor;
-      tCtx.globalAlpha = 0.8 * op;
+      tCtx.globalAlpha = 0.9 * op;
+      tCtx.font = 'bold ' + Math.max(7.5, minDim * 0.0085) + 'px "JetBrains Mono", "SF Mono", monospace';
+      tCtx.textAlign = 'left';
+      tCtx.textBaseline = 'top';
+      tCtx.fillText('TOPOGRAPHIC ELEVATION SURVEY', legX + 8, legY + 8);
+
+      tCtx.font = Math.max(6.5, minDim * 0.007) + 'px "JetBrains Mono", "SF Mono", monospace';
+      tCtx.globalAlpha = 0.6 * op;
+      tCtx.fillText('CONTOUR INTERVAL: 100m // WGS-84', legX + 8, legY + 22);
+      tCtx.fillText('ELEVATION: ' + baseMeters + 'm - ' + peakMeters + 'm MSL', legX + 8, legY + 34);
+      tCtx.fillText('GRID: GEODETIC WGS84 // SCALE 1:25,000', legX + 8, legY + 46);
+
+      // 6. Cartographic True North Indicator
+      var northX = tW - neatlineMargin - 28;
+      var northY = neatlineMargin + 32;
+      var arrowLen = Math.max(14, minDim * 0.025);
+
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = 1;
+      tCtx.globalAlpha = 0.7 * op;
       tCtx.beginPath();
-      tCtx.arc(px, py, Math.max(2.5, minDim * 0.0035), 0, Math.PI * 2);
+      tCtx.moveTo(northX, northY + arrowLen);
+      tCtx.lineTo(northX, northY - arrowLen);
+      tCtx.lineTo(northX - 4, northY - arrowLen + 8);
+      tCtx.stroke();
+
+      tCtx.fillStyle = strokeColor;
+      tCtx.beginPath();
+      tCtx.moveTo(northX, northY - arrowLen);
+      tCtx.lineTo(northX + 4, northY - arrowLen + 8);
+      tCtx.lineTo(northX, northY - arrowLen + 6);
+      tCtx.closePath();
       tCtx.fill();
 
-      // Label
-      tCtx.globalAlpha = 0.5 * op;
-      tCtx.font = 'bold ' + Math.max(7, minDim * 0.009) + 'px "SF Mono", monospace';
-      tCtx.textAlign = 'left';
-      tCtx.textBaseline = 'middle';
-      tCtx.fillText(String.fromCharCode(65 + oIdx) + ' [' + Math.round(ptAng * 180 / Math.PI) + '°]', px + 8, py);
+      tCtx.font = 'bold ' + Math.max(7, minDim * 0.008) + 'px "JetBrains Mono", monospace';
+      tCtx.textAlign = 'center';
+      tCtx.fillText('TN', northX, northY - arrowLen - 3);
+
       tCtx.restore();
     }
-
-    // 2. Radial Spokes
-    var spokeCount = 12;
-    var spokeR = minDim * 0.44;
-    for (var s = 0; s < spokeCount; s++) {
-      var ang = s * (Math.PI * 2 / spokeCount);
-      var sx = cx + Math.cos(ang) * spokeR;
-      var sy = cy + Math.sin(ang) * spokeR;
-
-      tCtx.strokeStyle = strokeColor;
-      tCtx.lineWidth = 0.7;
-      tCtx.globalAlpha = 0.15 * op;
-      tCtx.beginPath();
-      tCtx.moveTo(cx, cy);
-      tCtx.lineTo(sx, sy);
-      tCtx.stroke();
-
-      // Degree tick on outer circumference
-      tCtx.globalAlpha = 0.4 * op;
-      tCtx.fillStyle = strokeColor;
-      tCtx.font = Math.max(7, minDim * 0.007) + 'px "SF Mono", monospace';
-      tCtx.textAlign = 'center';
-      tCtx.textBaseline = 'middle';
-      tCtx.fillText(Math.round(s * (360 / spokeCount)) + '°', cx + Math.cos(ang) * (spokeR + 14), cy + Math.sin(ang) * (spokeR + 14));
-    }
-
-    // 3. Lissajous Harmonic Curve
-    tCtx.strokeStyle = strokeColor;
-    tCtx.lineWidth = strokeW * 1.2;
-    tCtx.globalAlpha = 0.6 * op;
-    tCtx.beginPath();
-    var freqA = 3, freqB = 2, delta = Math.PI / 4;
-    var lissScale = minDim * 0.35;
-    for (var t = 0; t <= 360; t += 2) {
-      var rad = t * Math.PI / 180;
-      var lx = cx + Math.sin(freqA * rad + delta) * lissScale;
-      var ly = cy + Math.sin(freqB * rad) * (lissScale * 0.75);
-      if (t === 0) tCtx.moveTo(lx, ly);
-      else tCtx.lineTo(lx, ly);
-    }
-    tCtx.stroke();
-
-    // 4. Center Origin Marker
-    tCtx.fillStyle = strokeColor;
-    tCtx.globalAlpha = 0.9 * op;
-    tCtx.beginPath();
-    tCtx.arc(cx, cy, Math.max(3, minDim * 0.004), 0, Math.PI * 2);
-    tCtx.fill();
-
-    tCtx.strokeStyle = strokeColor;
-    tCtx.lineWidth = 1;
-    tCtx.setLineDash([4, 4]);
-    tCtx.beginPath();
-    tCtx.arc(cx, cy, minDim * 0.02, 0, Math.PI * 2);
-    tCtx.stroke();
-    tCtx.setLineDash([]);
-
-    tCtx.globalAlpha = 0.6 * op;
-    tCtx.font = 'bold ' + Math.max(8, minDim * 0.01) + 'px "SF Mono", monospace';
-    tCtx.textAlign = 'left';
-    tCtx.fillText('O [ORIGIN]', cx + minDim * 0.025, cy);
 
     tCtx.restore();
   }
 
   function drawStudioMode(tCtx, tW, tH, palette, op) {
     var strokeColor = palette.stroke;
-    var detailColor = palette.detail || '#555555';
     var minDim = Math.min(tW, tH);
+    var strokeW = parseFloat(studioStrokeSlider ? studioStrokeSlider.value : 1.0) || 1.0;
+    var insetPct = (parseFloat(studioFrameInsetSlider ? studioFrameInsetSlider.value : 10) || 10) / 100;
+
+    var frameMarginX = tW * insetPct;
+    var frameMarginY = tH * insetPct;
+    var frameW = tW - frameMarginX * 2;
+    var frameH = tH - frameMarginY * 2;
     var cx = tW / 2;
     var cy = tH / 2;
 
-    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
-    var prng = lcgPRNG(seed);
-    var strokeW = parseFloat(shapeStrokeSlider.value) || 1.0;
-
     tCtx.save();
     tCtx.lineCap = 'round';
+    tCtx.lineJoin = 'round';
 
-    // Recursive Branching Fractal Network (Golden Ratio 0.618)
-    var generations = 3;
-    var ratio = 0.618;
-    var baseR = minDim * 0.28;
+    // 1. Inner Safe Framing Box
+    tCtx.strokeStyle = strokeColor;
+    tCtx.lineWidth = Math.max(0.6, strokeW * 0.8);
+    tCtx.globalAlpha = 0.25 * op;
+    tCtx.strokeRect(frameMarginX, frameMarginY, frameW, frameH);
 
-    function renderBranch(bx, by, r, gen, parentAngle) {
-      if (gen > generations) return;
-
-      var alpha = (0.7 * Math.pow(0.72, gen)) * op;
-      tCtx.strokeStyle = strokeColor;
-      tCtx.lineWidth = Math.max(0.6, strokeW * (1 - gen * 0.2));
-      tCtx.globalAlpha = alpha;
-
-      // Circle at this node
-      tCtx.beginPath();
-      tCtx.arc(bx, by, r, 0, Math.PI * 2);
-      tCtx.stroke();
-
-      // Node center dot
-      tCtx.fillStyle = strokeColor;
-      tCtx.globalAlpha = (0.5 + 0.3 * (1 / (gen + 1))) * op;
-      tCtx.beginPath();
-      tCtx.arc(bx, by, Math.max(2, minDim * 0.003), 0, Math.PI * 2);
-      tCtx.fill();
-
-      // Generation tag
-      if (gen < 2) {
-        tCtx.globalAlpha = 0.4 * op;
-        tCtx.font = Math.max(7, minDim * 0.008) + 'px "SF Mono", monospace';
-        tCtx.textAlign = 'left';
-        tCtx.fillText('GEN.' + gen + ' [r=' + Math.round(r) + ']', bx + r + 6, by);
-      }
-
-      var numChildren = 3;
-      var childR = r * ratio;
-      for (var c = 0; c < numChildren; c++) {
-        var ang = parentAngle + (c - 1) * (Math.PI * 0.55) + (prng() - 0.5) * 0.2;
-        var dist = r + childR * 0.85;
-        var chX = bx + Math.cos(ang) * dist;
-        var chY = by + Math.sin(ang) * dist;
-
-        // Connecting line
-        tCtx.strokeStyle = detailColor;
-        tCtx.lineWidth = 0.7;
-        tCtx.globalAlpha = 0.25 * op;
-        tCtx.beginPath();
-        tCtx.moveTo(bx, by);
-        tCtx.lineTo(chX, chY);
-        tCtx.stroke();
-
-        renderBranch(chX, chY, childR, gen + 1, ang);
-      }
-    }
-
-    renderBranch(cx, cy, baseR, 0, -Math.PI / 2);
-
-    // 3D Contour Elevation Slices
-    tCtx.strokeStyle = detailColor;
-    tCtx.lineWidth = 0.5;
+    // 2. Compositional Guides
+    var guideMode = state.studioGuideMode || 'thirds';
+    tCtx.strokeStyle = strokeColor;
+    tCtx.lineWidth = Math.max(0.5, strokeW * 0.6);
     tCtx.setLineDash([minDim * 0.005, minDim * 0.005]);
-    for (var slice = -2; slice <= 2; slice++) {
-      var sy = cy + slice * (minDim * 0.14);
-      tCtx.globalAlpha = 0.12 * op;
+
+    if (guideMode === 'thirds') {
+      var x1 = frameMarginX + frameW / 3;
+      var x2 = frameMarginX + (frameW * 2) / 3;
+      var y1 = frameMarginY + frameH / 3;
+      var y2 = frameMarginY + (frameH * 2) / 3;
+
+      tCtx.globalAlpha = 0.22 * op;
       tCtx.beginPath();
-      tCtx.moveTo(cx - minDim * 0.4, sy);
-      tCtx.lineTo(cx + minDim * 0.4, sy);
+      tCtx.moveTo(x1, frameMarginY); tCtx.lineTo(x1, frameMarginY + frameH);
+      tCtx.moveTo(x2, frameMarginY); tCtx.lineTo(x2, frameMarginY + frameH);
+      tCtx.moveTo(frameMarginX, y1); tCtx.lineTo(frameMarginX + frameW, y1);
+      tCtx.moveTo(frameMarginX, y2); tCtx.lineTo(frameMarginX + frameW, y2);
+      tCtx.stroke();
+      tCtx.setLineDash([]);
+
+      var ppTicks = [[x1, y1], [x2, y1], [x1, y2], [x2, y2]];
+      var ptLen = Math.max(6, minDim * 0.012);
+      tCtx.globalAlpha = 0.6 * op;
+      tCtx.lineWidth = Math.max(0.8, strokeW);
+      ppTicks.forEach(function (pt) {
+        tCtx.beginPath();
+        tCtx.moveTo(pt[0] - ptLen, pt[1]); tCtx.lineTo(pt[0] + ptLen, pt[1]);
+        tCtx.moveTo(pt[0], pt[1] - ptLen); tCtx.lineTo(pt[0], pt[1] + ptLen);
+        tCtx.stroke();
+      });
+    } else if (guideMode === 'golden') {
+      var gx1 = frameMarginX + frameW * 0.382;
+      var gx2 = frameMarginX + frameW * 0.618;
+      var gy1 = frameMarginY + frameH * 0.382;
+      var gy2 = frameMarginY + frameH * 0.618;
+
+      tCtx.globalAlpha = 0.22 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(gx1, frameMarginY); tCtx.lineTo(gx1, frameMarginY + frameH);
+      tCtx.moveTo(gx2, frameMarginY); tCtx.lineTo(gx2, frameMarginY + frameH);
+      tCtx.moveTo(frameMarginX, gy1); tCtx.lineTo(frameMarginX + frameW, gy1);
+      tCtx.moveTo(frameMarginX, gy2); tCtx.lineTo(frameMarginX + frameW, gy2);
+      tCtx.stroke();
+      tCtx.setLineDash([]);
+
+      var gPoints = [[gx1, gy1], [gx2, gy1], [gx1, gy2], [gx2, gy2]];
+      var gLen = Math.max(6, minDim * 0.012);
+      tCtx.globalAlpha = 0.65 * op;
+      tCtx.lineWidth = Math.max(0.8, strokeW);
+      gPoints.forEach(function (pt) {
+        tCtx.beginPath();
+        tCtx.moveTo(pt[0] - gLen, pt[1]); tCtx.lineTo(pt[0] + gLen, pt[1]);
+        tCtx.moveTo(pt[0], pt[1] - gLen); tCtx.lineTo(pt[0], pt[1] + gLen);
+        tCtx.stroke();
+      });
+    } else if (guideMode === 'cross') {
+      tCtx.setLineDash([]);
+      tCtx.globalAlpha = 0.25 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(frameMarginX, cy); tCtx.lineTo(frameMarginX + frameW, cy);
+      tCtx.moveTo(cx, frameMarginY); tCtx.lineTo(cx, frameMarginY + frameH);
       tCtx.stroke();
 
-      tCtx.globalAlpha = 0.3 * op;
-      tCtx.font = Math.max(7, minDim * 0.007) + 'px "SF Mono", monospace';
-      tCtx.textAlign = 'right';
-      tCtx.fillText('ELEV ' + (slice * 50) + 'm', cx - minDim * 0.4 - 8, sy + 3);
+      var tickCount = 10;
+      var tSub = Math.max(3, minDim * 0.005);
+      tCtx.globalAlpha = 0.4 * op;
+      for (var t = 1; t < tickCount; t++) {
+        var tx = frameMarginX + (frameW * t) / tickCount;
+        var ty = frameMarginY + (frameH * t) / tickCount;
+        tCtx.beginPath();
+        tCtx.moveTo(tx, cy - tSub); tCtx.lineTo(tx, cy + tSub);
+        tCtx.moveTo(cx - tSub, ty); tCtx.lineTo(cx + tSub, ty);
+        tCtx.stroke();
+      }
+    } else if (guideMode === 'grid') {
+      var divs = 6;
+      tCtx.globalAlpha = 0.15 * op;
+      tCtx.beginPath();
+      for (var d = 1; d < divs; d++) {
+        var dx = frameMarginX + (frameW * d) / divs;
+        var dy = frameMarginY + (frameH * d) / divs;
+        tCtx.moveTo(dx, frameMarginY); tCtx.lineTo(dx, frameMarginY + frameH);
+        tCtx.moveTo(frameMarginX, dy); tCtx.lineTo(frameMarginX + frameW, dy);
+      }
+      tCtx.stroke();
+      tCtx.setLineDash([]);
     }
     tCtx.setLineDash([]);
+
+    // 3. Corner Crop Brackets
+    if (state.studioBrackets) {
+      var brLen = Math.max(18, minDim * 0.04);
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = Math.max(1.2, strokeW * 1.6);
+      tCtx.globalAlpha = 0.85 * op;
+
+      // Top-Left
+      tCtx.beginPath();
+      tCtx.moveTo(frameMarginX, frameMarginY + brLen);
+      tCtx.lineTo(frameMarginX, frameMarginY);
+      tCtx.lineTo(frameMarginX + brLen, frameMarginY);
+      tCtx.stroke();
+
+      // Top-Right
+      tCtx.beginPath();
+      tCtx.moveTo(frameMarginX + frameW - brLen, frameMarginY);
+      tCtx.lineTo(frameMarginX + frameW, frameMarginY);
+      tCtx.lineTo(frameMarginX + frameW, frameMarginY + brLen);
+      tCtx.stroke();
+
+      // Bottom-Left
+      tCtx.beginPath();
+      tCtx.moveTo(frameMarginX, frameMarginY + frameH - brLen);
+      tCtx.lineTo(frameMarginX, frameMarginY + frameH);
+      tCtx.lineTo(frameMarginX + brLen, frameMarginY + frameH);
+      tCtx.stroke();
+
+      // Bottom-Right
+      tCtx.beginPath();
+      tCtx.moveTo(frameMarginX + frameW - brLen, frameMarginY + frameH);
+      tCtx.lineTo(frameMarginX + frameW, frameMarginY + frameH);
+      tCtx.lineTo(frameMarginX + frameW, frameMarginY + frameH - brLen);
+      tCtx.stroke();
+    }
+
+    // 4. Center Reticle
+    var reticleMode = state.studioReticleMode || 'circle';
+    if (reticleMode === 'circle') {
+      var rR = Math.max(16, minDim * 0.035);
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = Math.max(0.8, strokeW);
+      tCtx.globalAlpha = 0.65 * op;
+      tCtx.beginPath();
+      tCtx.arc(cx, cy, rR, 0, Math.PI * 2);
+      tCtx.stroke();
+
+      tCtx.beginPath();
+      tCtx.moveTo(cx - rR - 6, cy); tCtx.lineTo(cx - rR, cy);
+      tCtx.moveTo(cx + rR, cy); tCtx.lineTo(cx + rR + 6, cy);
+      tCtx.moveTo(cx, cy - rR - 6); tCtx.lineTo(cx, cy - rR);
+      tCtx.moveTo(cx, cy + rR); tCtx.lineTo(cx, cy + rR + 6);
+      tCtx.stroke();
+
+      tCtx.fillStyle = strokeColor;
+      tCtx.beginPath();
+      tCtx.arc(cx, cy, 1.8, 0, Math.PI * 2);
+      tCtx.fill();
+    } else if (reticleMode === 'cross') {
+      var cLen = Math.max(14, minDim * 0.03);
+      var cGap = Math.max(4, minDim * 0.008);
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = Math.max(0.8, strokeW);
+      tCtx.globalAlpha = 0.7 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(cx - cLen, cy); tCtx.lineTo(cx - cGap, cy);
+      tCtx.moveTo(cx + cGap, cy); tCtx.lineTo(cx + cLen, cy);
+      tCtx.moveTo(cx, cy - cLen); tCtx.lineTo(cx, cy - cGap);
+      tCtx.moveTo(cx, cy + cGap); tCtx.lineTo(cx, cy + cLen);
+      tCtx.stroke();
+    } else if (reticleMode === 'dot') {
+      tCtx.fillStyle = strokeColor;
+      tCtx.globalAlpha = 0.85 * op;
+      tCtx.beginPath();
+      tCtx.arc(cx, cy, Math.max(2.5, minDim * 0.004), 0, Math.PI * 2);
+      tCtx.fill();
+    }
+
+    // 5. Camera Telemetry OSD
+    if (state.studioTelemetry) {
+      tCtx.fillStyle = strokeColor;
+      tCtx.font = 'bold ' + Math.max(7.5, minDim * 0.0085) + 'px "JetBrains Mono", monospace';
+      tCtx.textAlign = 'left';
+      tCtx.textBaseline = 'bottom';
+      tCtx.globalAlpha = 0.85 * op;
+
+      var redDotR = Math.max(3, minDim * 0.004);
+      tCtx.fillStyle = '#ef4444';
+      tCtx.beginPath();
+      tCtx.arc(frameMarginX + 8 + redDotR, frameMarginY - 14, redDotR, 0, Math.PI * 2);
+      tCtx.fill();
+
+      tCtx.fillStyle = strokeColor;
+      tCtx.fillText('REC [4K RAW 24.00 FPS]', frameMarginX + 14 + redDotR * 2, frameMarginY - 8);
+
+      tCtx.textAlign = 'right';
+      tCtx.fillText('BAT 98% [■■■■]  00:14:32:18', frameMarginX + frameW - 8, frameMarginY - 8);
+
+      tCtx.textBaseline = 'top';
+      tCtx.textAlign = 'left';
+      tCtx.fillText('ISO 400   1/250s   f/2.8   50mm', frameMarginX + 8, frameMarginY + frameH + 8);
+
+      tCtx.textAlign = 'right';
+      tCtx.fillText('AF-C [LOCK]   5600K   TC 23:59:12', frameMarginX + frameW - 8, frameMarginY + frameH + 8);
+
+      var evW = Math.min(160, frameW * 0.3);
+      var evY = frameMarginY + frameH - 14;
+      tCtx.strokeStyle = strokeColor;
+      tCtx.lineWidth = 0.6;
+      tCtx.globalAlpha = 0.4 * op;
+      tCtx.beginPath();
+      tCtx.moveTo(cx - evW / 2, evY);
+      tCtx.lineTo(cx + evW / 2, evY);
+      tCtx.stroke();
+
+      tCtx.font = Math.max(6.5, minDim * 0.0065) + 'px "JetBrains Mono", monospace';
+      tCtx.textAlign = 'center';
+      tCtx.textBaseline = 'middle';
+      tCtx.globalAlpha = 0.6 * op;
+      tCtx.fillText('-2     -1      0     +1     +2', cx, evY - 8);
+      tCtx.beginPath();
+      tCtx.moveTo(cx, evY - 4);
+      tCtx.lineTo(cx, evY + 4);
+      tCtx.stroke();
+    }
+
     tCtx.restore();
   }
 
   // Render Pipeline
-  function drawCanvas(tCtx, tW, tH) {
+  function drawCanvas(tCtx, tW, tH, options) {
+    options = options || {};
+    var overlayOnly = !!options.overlayOnly;
     var palette = state.palette;
     var strokeColor = palette.stroke;
     var op = parseFloat(overlayOpacitySlider.value);
     if (isNaN(op)) op = 1;
 
     // 1. Background Fill
-    tCtx.fillStyle = palette.bg;
-    tCtx.fillRect(0, 0, tW, tH);
+    if (!overlayOnly) {
+      tCtx.fillStyle = palette.bg;
+      tCtx.fillRect(0, 0, tW, tH);
+    } else {
+      tCtx.clearRect(0, 0, tW, tH);
+    }
 
     // 2. Background Image
-    if (state.image) {
+    if (state.image && !overlayOnly) {
       var img = state.image;
       var imgRatio = img.width / img.height;
       var targetRatio = tW / tH;
@@ -911,12 +1917,17 @@
 
       var imgOp = parseFloat(imageOpacitySlider.value);
       tCtx.globalAlpha = isNaN(imgOp) ? 0.75 : imgOp;
-      tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, tW, tH);
+      if (state.gradientMapOn) {
+        var mappedCanvas = getGradientMappedCanvas(img, tW, tH, sx, sy, sw, sh);
+        tCtx.drawImage(mappedCanvas, 0, 0, tW, tH);
+      } else {
+        tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, tW, tH);
+      }
       tCtx.globalAlpha = 1;
     }
 
     // 3. Pixelation Zones
-    if (state.pixelZones && state.pixelZones.length > 0 && parseInt(pixelSizeSlider.value, 10) > 1) {
+    if (!overlayOnly && state.pixelZones && state.pixelZones.length > 0 && parseInt(pixelSizeSlider.value, 10) > 1) {
       var pSize = parseInt(pixelSizeSlider.value, 10) || 16;
       var pRadius = parseInt(zoneSizeSlider.value, 10) || 90;
       var scratch = getPixelScratch();
@@ -963,10 +1974,39 @@
           tCtx.globalAlpha = 1;
         }
       });
+    } else if (overlayOnly && state.pixelZones && state.pixelZones.length > 0 && state.pixelStroke) {
+      var pRadiusZone = parseInt(zoneSizeSlider.value, 10) || 90;
+      var lblSzZone = parseInt(labelSizeSlider.value, 10) || 8;
+      state.pixelZones.forEach(function (zone) {
+        var zx = zone.x;
+        var zy = zone.y;
+        var minX = Math.max(0, Math.floor(zx - pRadiusZone));
+        var minY = Math.max(0, Math.floor(zy - pRadiusZone));
+        var zWidth = Math.min(tW, Math.ceil(zx + pRadiusZone)) - minX;
+        var zHeight = Math.min(tH, Math.ceil(zy + pRadiusZone)) - minY;
+        if (zWidth > 0 && zHeight > 0) {
+          tCtx.save();
+          tCtx.globalAlpha = 0.6 * op;
+          tCtx.strokeStyle = strokeColor;
+          tCtx.lineWidth = 1;
+          tCtx.setLineDash([4, 4]);
+          tCtx.strokeRect(minX, minY, zWidth, zHeight);
+          tCtx.setLineDash([]);
+          if (lblSzZone > 0) {
+            tCtx.globalAlpha = op;
+            tCtx.fillStyle = strokeColor;
+            tCtx.font = lblSzZone + 'px Telegraf, system-ui, sans-serif';
+            tCtx.textAlign = 'center';
+            tCtx.textBaseline = 'middle';
+            tCtx.fillText(Math.round(zx) + ',' + Math.round(zy), minX + zWidth / 2, minY + zHeight / 2);
+          }
+          tCtx.restore();
+        }
+      });
     }
 
-    // 4. Crosshair Frame
-    if (state.frameOn) {
+    // 4. Crosshair Frame (for Sensor mode)
+    if (state.frameOn && state.mode === 'circles') {
       var cx = tW / 2;
       var cy = tH / 2;
       var fSizePct = parseFloat(frameSizeSlider.value) || 60;
@@ -1008,8 +2048,8 @@
       tCtx.restore();
     }
 
-    // 5. Chain Circles & Intersections
-    if (state.chainOn && state.chainCircles && state.chainCircles.length > 0) {
+    // 5. Chain Circles & Intersections (exclusive to Sensor mode)
+    if (state.mode === 'circles' && state.chainOn && state.chainCircles && state.chainCircles.length > 0) {
       var minDim = Math.min(tW, tH);
       var cStroke = parseFloat(shapeStrokeSlider.value) || 1.0;
       var lblSize = parseInt(labelSizeSlider.value, 10) || 8;
@@ -1067,7 +2107,7 @@
               tCtx.font = lblSize + 'px Telegraf, system-ui, sans-serif';
               tCtx.textAlign = 'left';
               tCtx.textBaseline = 'middle';
-              tCtx.fillText(pNum + ' → ' + Math.round(pt.x) + ' – ' + Math.round(pt.y), pt.x + mSize + lblSize * 0.5, pt.y);
+              tCtx.fillText(pNum + ' → ' + Math.round(pt.x) + ', ' + Math.round(pt.y), pt.x + mSize + lblSize * 0.5, pt.y);
               pNum++;
             }
           });
@@ -1168,22 +2208,24 @@
     }
 
     // 9. Texture / Noise
-    var texOp = parseFloat(textureOpacitySlider.value);
-    if (!isNaN(texOp) && texOp > 0) {
-      tCtx.save();
-      tCtx.globalCompositeOperation = 'screen';
-      tCtx.globalAlpha = texOp * 0.5;
-      if (state.customTexture) {
-        tCtx.drawImage(state.customTexture, 0, 0, tW, tH);
-      } else if (state.noiseCanvas) {
-        if (!state.noisePattern && tCtx === ctx) {
-          state.noisePattern = ctx.createPattern(state.noiseCanvas, 'repeat');
+    if (!overlayOnly) {
+      var texOp = parseFloat(textureOpacitySlider.value);
+      if (!isNaN(texOp) && texOp > 0) {
+        tCtx.save();
+        tCtx.globalCompositeOperation = 'screen';
+        tCtx.globalAlpha = texOp * 0.5;
+        if (state.customTexture) {
+          tCtx.drawImage(state.customTexture, 0, 0, tW, tH);
+        } else if (state.noiseCanvas) {
+          if (!state.noisePattern && tCtx === ctx) {
+            state.noisePattern = ctx.createPattern(state.noiseCanvas, 'repeat');
+          }
+          var pat = (tCtx === ctx && state.noisePattern) ? state.noisePattern : tCtx.createPattern(state.noiseCanvas, 'repeat');
+          tCtx.fillStyle = pat;
+          tCtx.fillRect(0, 0, tW, tH);
         }
-        var pat = (tCtx === ctx && state.noisePattern) ? state.noisePattern : tCtx.createPattern(state.noiseCanvas, 'repeat');
-        tCtx.fillStyle = pat;
-        tCtx.fillRect(0, 0, tW, tH);
+        tCtx.restore();
       }
-      tCtx.restore();
     }
 
     tCtx.globalAlpha = 1;
@@ -1251,6 +2293,22 @@
     lineWeightVal.textContent = parseFloat(lineWeightSlider.value).toFixed(1);
     textureOpacityVal.textContent = parseFloat(textureOpacitySlider.value).toFixed(2);
     pixelateStatus.textContent = state.pixelZones.length + ' zones placed';
+    if (gradientMapOpacityVal && gradientMapOpacitySlider) {
+      gradientMapOpacityVal.textContent = parseFloat(gradientMapOpacitySlider.value).toFixed(2);
+    }
+
+    // Mode-specific slider readouts
+    if (telemetryGridVal && telemetryGridSlider) telemetryGridVal.textContent = telemetryGridSlider.value;
+    if (telemetryNodesVal && telemetryNodesSlider) telemetryNodesVal.textContent = telemetryNodesSlider.value;
+    if (telemetryStrokeVal && telemetryStrokeSlider) telemetryStrokeVal.textContent = parseFloat(telemetryStrokeSlider.value).toFixed(1);
+
+    if (topoLevelsVal && topoLevelsSlider) topoLevelsVal.textContent = topoLevelsSlider.value;
+    if (topoSmoothingVal && topoSmoothingSlider) topoSmoothingVal.textContent = topoSmoothingSlider.value;
+    if (topoStrokeVal && topoStrokeSlider) topoStrokeVal.textContent = parseFloat(topoStrokeSlider.value).toFixed(1);
+    if (topoPeakElevationVal && topoPeakElevationSlider) topoPeakElevationVal.textContent = topoPeakElevationSlider.value + 'm';
+
+    if (studioFrameInsetVal && studioFrameInsetSlider) studioFrameInsetVal.textContent = studioFrameInsetSlider.value + '%';
+    if (studioStrokeVal && studioStrokeSlider) studioStrokeVal.textContent = parseFloat(studioStrokeSlider.value).toFixed(1);
   }
 
   var rafPending = false;
@@ -1293,7 +2351,7 @@
   });
 
   // 3. Level 1: Pure Visual Sliders (instant GPU canvas redraw, zero geometry math)
-  [imageOpacitySlider, pixelSizeSlider, zoneSizeSlider, frameSizeSlider, dashPatternSlider, frameStrokeSlider, starSizeSlider, starPointsSlider, shapeStrokeSlider, labelSizeSlider, overlayOpacitySlider, lineWeightSlider, textureOpacitySlider].forEach(function (s) {
+  [imageOpacitySlider, pixelSizeSlider, zoneSizeSlider, frameSizeSlider, dashPatternSlider, frameStrokeSlider, starSizeSlider, starPointsSlider, shapeStrokeSlider, labelSizeSlider, overlayOpacitySlider, lineWeightSlider, textureOpacitySlider, telemetryGridSlider, telemetryNodesSlider, telemetryStrokeSlider, topoLevelsSlider, topoStrokeSlider, topoPeakElevationSlider, studioFrameInsetSlider, studioStrokeSlider].forEach(function (s) {
     bindSlider(s, 1);
   });
   if (markerSizeSlider) {
@@ -1301,6 +2359,13 @@
   }
   if (frameTextSizeSlider) {
     bindSlider(frameTextSizeSlider, 1);
+  }
+  if (topoSmoothingSlider) {
+    topoSmoothingSlider.addEventListener('input', function () {
+      topoCache.smoothing = -1;
+      syncValues();
+      scheduleUpdate(1);
+    });
   }
 
   // Toggles
@@ -1365,6 +2430,100 @@
     chainIntersectionsBtn.classList.toggle('active', state.chainIntersections);
     chainIntersectionsBtn.textContent = state.chainIntersections ? 'Intersections On' : 'Intersections Off';
     scheduleUpdate(1);
+  });
+
+  // Telemetry HUD Toggles
+  if (telemetryRadarBtn) {
+    telemetryRadarBtn.addEventListener('click', function () {
+      state.telemetryRadar = !state.telemetryRadar;
+      telemetryRadarBtn.classList.toggle('active', state.telemetryRadar);
+      telemetryRadarBtn.textContent = state.telemetryRadar ? 'Radar Dial On' : 'Radar Dial Off';
+      scheduleUpdate(1);
+    });
+  }
+  if (telemetryBracketsBtn) {
+    telemetryBracketsBtn.addEventListener('click', function () {
+      state.telemetryBrackets = !state.telemetryBrackets;
+      telemetryBracketsBtn.classList.toggle('active', state.telemetryBrackets);
+      telemetryBracketsBtn.textContent = state.telemetryBrackets ? 'Target Brackets On' : 'Target Brackets Off';
+      scheduleUpdate(1);
+    });
+  }
+  if (telemetryDataBtn) {
+    telemetryDataBtn.addEventListener('click', function () {
+      state.telemetryData = !state.telemetryData;
+      telemetryDataBtn.classList.toggle('active', state.telemetryData);
+      telemetryDataBtn.textContent = state.telemetryData ? 'Telemetry Data On' : 'Telemetry Data Off';
+      scheduleUpdate(1);
+    });
+  }
+
+  // Topography Map Toggles
+  if (topoLabelsBtn) {
+    topoLabelsBtn.addEventListener('click', function () {
+      state.topoLabels = !state.topoLabels;
+      topoLabelsBtn.classList.toggle('active', state.topoLabels);
+      topoLabelsBtn.textContent = state.topoLabels ? 'Elevation Labels On' : 'Elevation Labels Off';
+      scheduleUpdate(1);
+    });
+  }
+  if (topoPeaksBtn) {
+    topoPeaksBtn.addEventListener('click', function () {
+      state.topoPeaks = !state.topoPeaks;
+      topoPeaksBtn.classList.toggle('active', state.topoPeaks);
+      topoPeaksBtn.textContent = state.topoPeaks ? 'Summit Peaks On' : 'Summit Peaks Off';
+      scheduleUpdate(1);
+    });
+  }
+  if (topoNeatlineBtn) {
+    topoNeatlineBtn.addEventListener('click', function () {
+      state.topoNeatline = !state.topoNeatline;
+      topoNeatlineBtn.classList.toggle('active', state.topoNeatline);
+      topoNeatlineBtn.textContent = state.topoNeatline ? 'Geodetic Neatline On' : 'Geodetic Neatline Off';
+      scheduleUpdate(1);
+    });
+  }
+  if (topoLegendBtn) {
+    topoLegendBtn.addEventListener('click', function () {
+      state.topoLegend = !state.topoLegend;
+      topoLegendBtn.classList.toggle('active', state.topoLegend);
+      topoLegendBtn.textContent = state.topoLegend ? 'Survey Legend On' : 'Survey Legend Off';
+      scheduleUpdate(1);
+    });
+  }
+
+  // Viewfinder / Studio Controls
+  if (studioBracketsBtn) {
+    studioBracketsBtn.addEventListener('click', function () {
+      state.studioBrackets = !state.studioBrackets;
+      studioBracketsBtn.classList.toggle('active', state.studioBrackets);
+      studioBracketsBtn.textContent = state.studioBrackets ? 'Crop Brackets On' : 'Crop Brackets Off';
+      scheduleUpdate(1);
+    });
+  }
+  if (studioTelemetryBtn) {
+    studioTelemetryBtn.addEventListener('click', function () {
+      state.studioTelemetry = !state.studioTelemetry;
+      studioTelemetryBtn.classList.toggle('active', state.studioTelemetry);
+      studioTelemetryBtn.textContent = state.studioTelemetry ? 'Camera Telemetry On' : 'Camera Telemetry Off';
+      scheduleUpdate(1);
+    });
+  }
+  document.querySelectorAll('[data-guide-mode]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-guide-mode]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.studioGuideMode = btn.dataset.guideMode;
+      scheduleUpdate(1);
+    });
+  });
+  document.querySelectorAll('[data-reticle-mode]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-reticle-mode]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.studioReticleMode = btn.dataset.reticleMode;
+      scheduleUpdate(1);
+    });
   });
 
   // Canvas Click to add Pixelation Zone or open image picker
@@ -1438,12 +2597,26 @@
     resizeAndRender();
   });
 
-  // Stage Navigation (Hero, Geo Tool, Studio)
+  // Dynamic Sidebar Panels Filter
+  function updateDynamicSidebarPanels(currentMode) {
+    var panels = document.querySelectorAll('.sidebar .panel');
+    panels.forEach(function (panel) {
+      var modes = (panel.dataset.modes || 'all').split(' ');
+      if (modes.indexOf('all') !== -1 || modes.indexOf(currentMode) !== -1) {
+        panel.style.display = '';
+      } else {
+        panel.style.display = 'none';
+      }
+    });
+  }
+
+  // Stage Navigation (Sensor, Telemetry, Topography, Viewfinder)
   document.querySelectorAll('.nav-tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
       document.querySelectorAll('.nav-tab').forEach(function (t) { t.classList.remove('active'); });
       tab.classList.add('active');
       state.mode = tab.dataset.mode;
+      updateDynamicSidebarPanels(state.mode);
       scheduleUpdate(1);
     });
   });
@@ -1570,12 +2743,247 @@
     link.click();
   });
 
+  // Download Transparent Overlay Only PNG
+  if (downloadOverlayBtn) {
+    downloadOverlayBtn.addEventListener('click', function () {
+      var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
+      var exportCanvas = document.createElement('canvas');
+      exportCanvas.width = fmt.w;
+      exportCanvas.height = fmt.h;
+      var expCtx = exportCanvas.getContext('2d');
+      drawCanvas(expCtx, fmt.w, fmt.h, { overlayOnly: true });
+
+      var link = document.createElement('a');
+      link.download = 'tracker-overlay-' + state.format + '-' + Date.now() + '.png';
+      link.href = exportCanvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
+  // Randomize Style & Settings Engine
+  function randomizeStyleAndSettings() {
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function randFloat(min, max, decimals) {
+      var f = Math.random() * (max - min) + min;
+      return parseFloat(f.toFixed(decimals !== undefined ? decimals : 1));
+    }
+    function updateToggle(btn, isActive, onText, offText) {
+      if (!btn) return;
+      btn.classList.toggle('active', isActive);
+      btn.textContent = isActive ? onText : offText;
+    }
+    function updateSegmented(attr, value) {
+      document.querySelectorAll('[' + attr + ']').forEach(function (btn) {
+        btn.classList.toggle('active', btn.getAttribute(attr) === value);
+      });
+    }
+
+    // 1. Random Style / Mode
+    var modes = ['circles', 'hero', 'geo', 'studio'];
+    var chosenMode = pick(modes);
+    state.mode = chosenMode;
+    document.querySelectorAll('.nav-tab').forEach(function (tab) {
+      tab.classList.toggle('active', tab.dataset.mode === chosenMode);
+    });
+    updateDynamicSidebarPanels(chosenMode);
+
+    // 2. Random Palette
+    var swatches = paletteGrid.querySelectorAll('.palette-swatch');
+    if (swatches.length > 0) {
+      var chosenSwatch = pick(Array.prototype.slice.call(swatches));
+      swatches.forEach(function (s) { s.classList.remove('active'); });
+      chosenSwatch.classList.add('active');
+      state.palette = {
+        bg: chosenSwatch.dataset.bg,
+        color: chosenSwatch.dataset.color,
+        stroke: chosenSwatch.dataset.color,
+        name: chosenSwatch.title
+      };
+    }
+
+    // 3. Random Global / Detection Parameters
+    if (sizeSeedSlider) sizeSeedSlider.value = randInt(1, 9999);
+    if (thresholdSlider) thresholdSlider.value = randInt(15, 65);
+    if (blockSizeSlider) blockSizeSlider.value = randInt(6, 16);
+    if (maxCirclesSlider) maxCirclesSlider.value = randInt(15, 60);
+    if (minDistanceSlider) minDistanceSlider.value = randInt(15, 45);
+    if (minRadiusSlider) minRadiusSlider.value = randInt(4, 12);
+    if (maxRadiusSlider) maxRadiusSlider.value = randInt(25, 75);
+    if (shapeStrokeSlider) shapeStrokeSlider.value = randFloat(0.8, 2.0, 1);
+    if (overlayOpacitySlider) overlayOpacitySlider.value = randFloat(0.8, 1.0, 2);
+    if (lineWeightSlider) lineWeightSlider.value = randFloat(0.5, 1.6, 1);
+    if (maxDistanceSlider) maxDistanceSlider.value = randInt(90, 220);
+
+    // 4. Detection Mode & Shape
+    var detModes = ['combined', 'contrast', 'bright', 'dark'];
+    state.detectionMode = pick(detModes);
+    updateSegmented('data-detection-mode', state.detectionMode);
+
+    var shapes = ['circle', 'square'];
+    state.shape = pick(shapes);
+    updateSegmented('data-shape', state.shape);
+
+    // 5. Frame Marginalia
+    state.frameTextOn = Math.random() > 0.15;
+    updateToggle(frameTextToggleBtn, state.frameTextOn, 'Frame Text On', 'Frame Text Off');
+    if (frameTextSizeSlider) frameTextSizeSlider.value = randInt(8, 12);
+
+    // 6. Style-Specific Parameters
+    if (chosenMode === 'circles') {
+      state.frameOn = Math.random() > 0.2;
+      updateToggle(frameToggleBtn, state.frameOn, 'Frame On', 'Frame Off');
+      if (frameSizeSlider) frameSizeSlider.value = randInt(50, 75);
+      if (dashPatternSlider) dashPatternSlider.value = pick([4, 6, 8, 12]);
+      if (frameStrokeSlider) frameStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      if (starSizeSlider) starSizeSlider.value = randInt(6, 16);
+      if (starPointsSlider) starPointsSlider.value = pick([4, 6, 8]);
+
+      state.chainOn = Math.random() > 0.3;
+      updateToggle(chainToggleBtn, state.chainOn, 'Chain On', 'Chain Off');
+      if (chainCountSlider) chainCountSlider.value = randInt(2, 6);
+      if (chainAngleSlider) chainAngleSlider.value = randInt(0, 360);
+      if (chainBaseRadiusSlider) chainBaseRadiusSlider.value = randInt(30, 80);
+      if (chainSizeRatioSlider) chainSizeRatioSlider.value = randFloat(0.8, 1.4, 2);
+      state.chainIntersections = Math.random() > 0.2;
+      updateToggle(chainIntersectionsBtn, state.chainIntersections, 'Intersections On', 'Intersections Off');
+      if (markerSizeSlider) markerSizeSlider.value = randInt(3, 8);
+    } else if (chosenMode === 'hero') {
+      if (telemetryGridSlider) telemetryGridSlider.value = randInt(4, 9);
+      if (telemetryNodesSlider) telemetryNodesSlider.value = randInt(12, 40);
+      if (telemetryStrokeSlider) telemetryStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      state.telemetryRadar = Math.random() > 0.2;
+      updateToggle(telemetryRadarBtn, state.telemetryRadar, 'Radar Dial On', 'Radar Dial Off');
+      state.telemetryBrackets = Math.random() > 0.2;
+      updateToggle(telemetryBracketsBtn, state.telemetryBrackets, 'Target Brackets On', 'Target Brackets Off');
+      state.telemetryData = Math.random() > 0.15;
+      updateToggle(telemetryDataBtn, state.telemetryData, 'Telemetry Data On', 'Telemetry Data Off');
+    } else if (chosenMode === 'geo') {
+      if (topoLevelsSlider) topoLevelsSlider.value = randInt(10, 18);
+      if (topoSmoothingSlider) topoSmoothingSlider.value = randInt(3, 7);
+      if (topoStrokeSlider) topoStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      if (topoPeakElevationSlider) topoPeakElevationSlider.value = randInt(280, 520);
+      state.topoLabels = Math.random() > 0.2;
+      updateToggle(topoLabelsBtn, state.topoLabels, 'Elevation Labels On', 'Elevation Labels Off');
+      state.topoPeaks = Math.random() > 0.2;
+      updateToggle(topoPeaksBtn, state.topoPeaks, 'Summit Peaks On', 'Summit Peaks Off');
+      state.topoNeatline = Math.random() > 0.2;
+      updateToggle(topoNeatlineBtn, state.topoNeatline, 'Geodetic Neatline On', 'Geodetic Neatline Off');
+      state.topoLegend = Math.random() > 0.2;
+      updateToggle(topoLegendBtn, state.topoLegend, 'Survey Legend On', 'Survey Legend Off');
+    } else if (chosenMode === 'studio') {
+      if (studioFrameInsetSlider) studioFrameInsetSlider.value = randInt(20, 50);
+      if (studioStrokeSlider) studioStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      state.studioBrackets = Math.random() > 0.15;
+      updateToggle(studioBracketsBtn, state.studioBrackets, 'Crop Brackets On', 'Crop Brackets Off');
+      state.studioTelemetry = Math.random() > 0.15;
+      updateToggle(studioTelemetryBtn, state.studioTelemetry, 'Camera Telemetry On', 'Camera Telemetry Off');
+      state.studioGuideMode = pick(['thirds', 'golden', 'diagonal', 'crosshair']);
+      updateSegmented('data-guide-mode', state.studioGuideMode);
+      state.studioReticleMode = pick(['brackets', 'cross', 'circle', 'grid']);
+      updateSegmented('data-reticle-mode', state.studioReticleMode);
+    }
+
+    // 7. Gradient Map Preset Randomization
+    if (gradientPresets.length > 0) {
+      state.gradientMapIndex = randInt(0, gradientPresets.length - 1);
+      updateGradientMapPreview();
+    }
+
+    syncValues();
+    updateStatusFooter();
+    recalculate(true);
+    scheduleUpdate(3);
+  }
+
+  if (randomizeBtn) {
+    randomizeBtn.addEventListener('click', randomizeStyleAndSettings);
+  }
+  if (randomizeSettingsBtn) {
+    randomizeSettingsBtn.addEventListener('click', randomizeStyleAndSettings);
+  }
+
+  // Gradient Map Event Listeners
+  if (gradientMapToggleBtn) {
+    gradientMapToggleBtn.addEventListener('click', function () {
+      state.gradientMapOn = !state.gradientMapOn;
+      gradientMapToggleBtn.classList.toggle('active', state.gradientMapOn);
+      gradientMapToggleBtn.textContent = state.gradientMapOn ? 'Gradient Map On' : 'Gradient Map Off';
+      scheduleUpdate(1);
+    });
+  }
+
+  if (gradientMapSelect) {
+    gradientMapSelect.addEventListener('change', function () {
+      state.gradientMapIndex = parseInt(gradientMapSelect.value, 10) || 0;
+      updateGradientMapPreview();
+      scheduleUpdate(1);
+    });
+  }
+
+  if (gradientMapOpacitySlider) {
+    gradientMapOpacitySlider.addEventListener('input', function () {
+      state.gradientMapOpacity = parseFloat(gradientMapOpacitySlider.value);
+      syncValues();
+      scheduleUpdate(1);
+    });
+  }
+
+  if (gradientMapInvertBtn) {
+    gradientMapInvertBtn.addEventListener('click', function () {
+      state.gradientMapInvert = !state.gradientMapInvert;
+      gradientMapInvertBtn.classList.toggle('active', state.gradientMapInvert);
+      gradientMapInvertBtn.textContent = state.gradientMapInvert ? 'Invert On' : 'Invert Off';
+      updateGradientMapPreview();
+      scheduleUpdate(1);
+    });
+  }
+
+  if (randomizeGradientBtn) {
+    randomizeGradientBtn.addEventListener('click', function () {
+      if (gradientPresets.length > 0) {
+        state.gradientMapIndex = Math.floor(Math.random() * gradientPresets.length);
+        updateGradientMapPreview();
+        scheduleUpdate(1);
+      }
+    });
+  }
+
+  if (importGrdBtn && grdFileInput) {
+    importGrdBtn.addEventListener('click', function () {
+      grdFileInput.click();
+    });
+
+    grdFileInput.addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        try {
+          var parsed = parseGrdBuffer(ev.target.result);
+          if (parsed && parsed.length > 0) {
+            gradientPresets = parsed;
+            state.gradientMapIndex = 0;
+            populateGradientMapControls();
+            scheduleUpdate(1);
+          }
+        } catch (err) {
+          console.error('Failed to parse GRD file:', err);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      grdFileInput.value = '';
+    });
+  }
+
   window.addEventListener('resize', function () {
     resizeAndRender();
   });
 
+  populateGradientMapControls();
   syncValues();
   updateStatusFooter();
+  updateDynamicSidebarPanels(state.mode);
   recalculate(true);
   resizeAndRender();
 })();
