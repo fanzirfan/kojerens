@@ -1,179 +1,446 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Blob Tracker — Self-Hosted</title>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blob Tracker — Studio</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div class="app">
 
   <aside class="sidebar">
-    <header class="sidebar-header">
-      <h1>BLOB TRACKER</h1>
-      <p class="subtitle">Self-hosted · 100% browser</p>
-    </header>
+    <!-- SECTION 1: IMAGE -->
+    <section class="panel" data-section="image">
+      <div class="panel-header">
+        <span class="panel-title">IMAGE</span>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+      </div>
+      <div class="panel-body">
+        <button class="btn-block" id="replaceImageBtn">Replace Image</button>
+        <input type="file" id="imageInput" accept="image/*" style="display:none" />
+        
+        <div class="select-wrap">
+          <select id="presetSelect">
+            <option value="">Select preset image..</option>
+            <option value="portrait">Portrait (Reference Model)</option>
+            <option value="cyberpunk">Cyberpunk Neon</option>
+            <option value="minimal">Minimal Sculpture</option>
+          </select>
+        </div>
 
-    <section class="panel">
-      <label class="panel-label">IMAGE SOURCE</label>
-      <input type="file" id="imageInput" accept="image/*" />
-      <p class="hint" id="imageHint">Belum ada gambar. Upload foto untuk mulai.</p>
+        <div class="control-group">
+          <div class="control-header">
+            <label>IMAGE OPACITY</label>
+            <span class="val" id="imageOpacityVal">0.75</span>
+          </div>
+          <p class="hint">Fade the background image</p>
+          <input type="range" id="imageOpacity" min="0" max="1" step="0.01" value="0.75" />
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">MIN RADIUS</label>
-      <div class="row">
-        <input type="range" id="minRadius" min="2" max="30" value="8" />
-        <span class="val" id="minRadiusVal">8</span>
+    <!-- SECTION 2: PIXELATE -->
+    <section class="panel" data-section="pixelate">
+      <div class="panel-header">
+        <span class="panel-title">PIXELATE</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <p class="hint">Lingkaran terkecil (area low-score).</p>
+      <div class="panel-body">
+        <p class="hint intro">Click on the canvas to place pixelation zones</p>
 
-      <label class="panel-label">MAX RADIUS</label>
-      <div class="row">
-        <input type="range" id="maxRadius" min="5" max="80" value="32" />
-        <span class="val" id="maxRadiusVal">32</span>
+        <div class="control-group">
+          <div class="control-header">
+            <label>PIXEL SIZE</label>
+            <span class="val" id="pixelSizeVal">26</span>
+          </div>
+          <p class="hint">Mosaic block size – larger = blockier</p>
+          <input type="range" id="pixelSize" min="4" max="60" value="26" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>ZONE SIZE</label>
+            <span class="val" id="zoneSizeVal">90</span>
+          </div>
+          <p class="hint">Half-width of each square pixelation zone</p>
+          <input type="range" id="zoneSize" min="20" max="250" value="90" />
+        </div>
+
+        <button class="btn-toggle active" id="pixelateStrokeBtn">Stroke On</button>
+
+        <div class="btn-row">
+          <button class="btn-action" id="undoPixelateBtn">Undo</button>
+          <button class="btn-action" id="clearPixelateBtn">Clear</button>
+        </div>
+        <p class="status-sub" id="pixelateStatus">0 zones placed</p>
       </div>
-      <p class="hint">Lingkaran terbesar (area high-score).</p>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">STROKE</label>
-      <div class="row">
-        <input type="range" id="stroke" min="0.5" max="6" step="0.1" value="1.5" />
-        <span class="val" id="strokeVal">1.5</span>
+    <!-- SECTION 3: CROSSHAIR FRAME -->
+    <section class="panel" data-section="crosshair">
+      <div class="panel-header">
+        <span class="panel-title">CROSSHAIR FRAME</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <p class="hint">Ketebalan garis lingkaran.</p>
+      <div class="panel-body">
+        <button class="btn-toggle active" id="frameToggleBtn">Frame On</button>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>FRAME SIZE</label>
+            <span class="val" id="frameSizeVal">60</span>
+          </div>
+          <p class="hint">Square size as % of canvas short side</p>
+          <input type="range" id="frameSize" min="10" max="100" value="60" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>DASH PATTERN</label>
+            <span class="val" id="dashPatternVal">8</span>
+          </div>
+          <p class="hint">Length of each dash + gap</p>
+          <input type="range" id="dashPattern" min="2" max="30" value="8" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>STROKE</label>
+            <span class="val" id="frameStrokeVal">1.0</span>
+          </div>
+          <p class="hint">Line thickness for frame and crosshair</p>
+          <input type="range" id="frameStroke" min="0.2" max="5.0" step="0.1" value="1.0" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>STAR SIZE</label>
+            <span class="val" id="starSizeVal">40</span>
+          </div>
+          <p class="hint">Diameter of the center asterisk – 0 hides it</p>
+          <input type="range" id="starSize" min="0" max="150" value="40" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>STAR POINTS</label>
+            <span class="val" id="starPointsVal">4</span>
+          </div>
+          <p class="hint">Number of crossing lines – 2 is a plus, 4 is an 8-pointed star</p>
+          <input type="range" id="starPoints" min="1" max="8" value="4" />
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">SIZE SEED</label>
-      <div class="row">
-        <input type="range" id="seed" min="1" max="9999" value="459" />
-        <span class="val" id="seedVal">459</span>
+    <!-- SECTION 4: CHAIN -->
+    <section class="panel" data-section="chain">
+      <div class="panel-header">
+        <span class="panel-title">CHAIN</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <div class="row">
-        <label class="checkbox">
-          <input type="checkbox" id="lockSeed" checked />
-          <span>Lock seed (deterministik)</span>
-        </label>
-        <button class="btn-mini" id="randomizeSeed">🎲</button>
+      <div class="panel-body">
+        <button class="btn-toggle active" id="chainToggleBtn">Chain On</button>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>COUNT</label>
+            <span class="val" id="chainCountVal">11</span>
+          </div>
+          <p class="hint">Number of circles in the chain</p>
+          <input type="range" id="chainCount" min="1" max="25" value="11" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>ANGLE</label>
+            <span class="val" id="chainAngleVal">45</span>
+          </div>
+          <p class="hint">Direction of chain – 0 vertical, 45 diagonal, 90 horizontal</p>
+          <input type="range" id="chainAngle" min="0" max="180" value="45" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>BASE RADIUS</label>
+            <span class="val" id="chainBaseRadiusVal">250</span>
+          </div>
+          <p class="hint">Size of the center circle</p>
+          <input type="range" id="chainBaseRadius" min="30" max="500" value="250" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>SIZE RATIO</label>
+            <span class="val" id="chainSizeRatioVal">0.79</span>
+          </div>
+          <p class="hint">Size multiplier per step – below 1 shrinks outward</p>
+          <input type="range" id="chainSizeRatio" min="0.3" max="1.2" step="0.01" value="0.79" />
+        </div>
+
+        <button class="btn-toggle active" id="chainIntersectionsBtn">Intersections On</button>
       </div>
-      <p class="hint">Sama seed, sama hasil.</p>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">POINT DENSITY</label>
-      <div class="row">
-        <input type="range" id="density" min="5" max="120" value="40" />
-        <span class="val" id="densityVal">40</span>
+    <!-- SECTION 5: DETECTION -->
+    <section class="panel" data-section="detection">
+      <div class="panel-header">
+        <span class="panel-title">DETECTION</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <p class="hint">Jumlah titik yang dideteksi.</p>
+      <div class="panel-body">
+        <div class="segmented-group">
+          <button class="seg-btn active" data-detection-mode="combined">Combined</button>
+          <button class="seg-btn" data-detection-mode="contrast">Contrast</button>
+        </div>
+
+        <div class="segmented-group">
+          <button class="seg-btn active" data-detection-type="bright">Bright</button>
+          <button class="seg-btn" data-detection-type="dark">Dark</button>
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>BLOCK SIZE</label>
+            <span class="val" id="blockSizeVal">16</span>
+          </div>
+          <p class="hint">Analysis grid resolution – smaller = more detail</p>
+          <input type="range" id="blockSize" min="6" max="40" value="16" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>THRESHOLD</label>
+            <span class="val" id="thresholdVal">30</span>
+          </div>
+          <p class="hint">Min score to place a circle – higher = fewer, stronger hits</p>
+          <input type="range" id="threshold" min="0" max="100" value="30" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>MAX CIRCLES</label>
+            <span class="val" id="maxCirclesVal">80</span>
+          </div>
+          <p class="hint">Cap on total circles placed</p>
+          <input type="range" id="maxCircles" min="10" max="200" value="80" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>MIN DISTANCE</label>
+            <span class="val" id="minDistanceVal">40</span>
+          </div>
+          <p class="hint">Spacing between circle centers – prevents clustering</p>
+          <input type="range" id="minDistance" min="10" max="120" value="40" />
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">LABEL SIZE</label>
-      <div class="row">
-        <input type="range" id="labelSize" min="4" max="16" value="9" />
-        <span class="val" id="labelSizeVal">9</span>
+    <!-- SECTION 6: SHAPES -->
+    <section class="panel" data-section="shapes">
+      <div class="panel-header">
+        <span class="panel-title">SHAPES</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <p class="hint">Ukuran teks koordinat XY.</p>
+      <div class="panel-body">
+        <div class="segmented-group">
+          <button class="seg-btn active" data-shape="circle">Circle</button>
+          <button class="seg-btn" data-shape="square">Square</button>
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>MIN RADIUS</label>
+            <span class="val" id="minRadiusVal">4</span>
+          </div>
+          <p class="hint">Smallest circle size (low-score regions)</p>
+          <input type="range" id="minRadius" min="1" max="40" value="4" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>MAX RADIUS</label>
+            <span class="val" id="maxRadiusVal">24</span>
+          </div>
+          <p class="hint">Largest circle size (high-score regions)</p>
+          <input type="range" id="maxRadius" min="6" max="100" value="24" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>STROKE</label>
+            <span class="val" id="shapeStrokeVal">1.0</span>
+          </div>
+          <p class="hint">Circle outline thickness</p>
+          <input type="range" id="shapeStroke" min="0.2" max="5.0" step="0.1" value="1.0" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>SIZE SEED</label>
+            <span class="val" id="sizeSeedVal">42</span>
+          </div>
+          <p class="hint">Random seed for size variation – change for different distributions</p>
+          <input type="range" id="sizeSeed" min="1" max="9999" value="42" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>LABEL SIZE</label>
+            <span class="val" id="labelSizeVal">8</span>
+          </div>
+          <p class="hint">Font size of xy coordinate labels</p>
+          <input type="range" id="labelSize" min="4" max="20" value="8" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>OVERLAY OPACITY</label>
+            <span class="val" id="overlayOpacityVal">1.00</span>
+          </div>
+          <p class="hint">Master opacity for all circles, lines, dots, and text</p>
+          <input type="range" id="overlayOpacity" min="0" max="1" step="0.01" value="1.00" />
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">OVERLAY OPACITY</label>
-      <div class="row">
-        <input type="range" id="opacity" min="0" max="100" value="100" />
-        <span class="val" id="opacityVal">100</span>
+    <!-- SECTION 7: CONNECTIONS -->
+    <section class="panel" data-section="connections">
+      <div class="panel-header">
+        <span class="panel-title">CONNECTIONS</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <p class="hint">Opacity master untuk semua overlay.</p>
+      <div class="panel-body">
+        <div class="control-group">
+          <div class="control-header">
+            <label>MAX DISTANCE</label>
+            <span class="val" id="maxDistanceVal">150</span>
+          </div>
+          <p class="hint">Circles within this range get connected – 0 hides lines</p>
+          <input type="range" id="maxDistance" min="0" max="400" value="150" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>LINE WEIGHT</label>
+            <span class="val" id="lineWeightVal">0.8</span>
+          </div>
+          <p class="hint">Thickness of connecting lines</p>
+          <input type="range" id="lineWeight" min="0.1" max="4.0" step="0.1" value="0.8" />
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">CONNECTIONS</label>
-
-      <label class="panel-label small">MAX DISTANCE</label>
-      <div class="row">
-        <input type="range" id="maxDistance" min="0" max="400" value="120" />
-        <span class="val" id="maxDistanceVal">120</span>
+    <!-- SECTION 8: PALETTE -->
+    <section class="panel" data-section="palette">
+      <div class="panel-header">
+        <span class="panel-title">PALETTE</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <p class="hint">0 = tanpa garis.</p>
-
-      <label class="panel-label small">LINE WEIGHT</label>
-      <div class="row">
-        <input type="range" id="lineWeight" min="0.1" max="4" step="0.1" value="0.8" />
-        <span class="val" id="lineWeightVal">0.8</span>
+      <div class="panel-body">
+        <div class="palette-grid" id="paletteGrid">
+          <!-- Swatch 1: Dark bg / White line -->
+          <button class="palette-swatch" data-bg="#0a0a0a" data-color="#ffffff" title="White on Dark">
+            <div class="swatch-bg" style="background:#0a0a0a">
+              <div class="swatch-circle" style="border-color:#ffffff"></div>
+              <div class="swatch-dot" style="background:#ffffff"></div>
+            </div>
+          </button>
+          <!-- Swatch 2: Light bg / Dark line -->
+          <button class="palette-swatch" data-bg="#f4f4f4" data-color="#111111" title="Dark on Light">
+            <div class="swatch-bg" style="background:#f4f4f4">
+              <div class="swatch-circle" style="border-color:#111111"></div>
+              <div class="swatch-dot" style="background:#111111"></div>
+            </div>
+          </button>
+          <!-- Swatch 3: Dark bg / Gold line (Default / Active) -->
+          <button class="palette-swatch active" data-bg="#0c0c0c" data-color="#d4a843" title="Gold on Dark">
+            <div class="swatch-bg" style="background:#0c0c0c">
+              <div class="swatch-circle" style="border-color:#d4a843"></div>
+              <div class="swatch-dot" style="background:#d4a843"></div>
+            </div>
+          </button>
+          <!-- Swatch 4: Dark bg / Neon Green line -->
+          <button class="palette-swatch" data-bg="#08120a" data-color="#00ff66" title="Neon Green on Dark">
+            <div class="swatch-bg" style="background:#08120a">
+              <div class="swatch-circle" style="border-color:#00ff66"></div>
+              <div class="swatch-dot" style="background:#00ff66"></div>
+            </div>
+          </button>
+        </div>
       </div>
-      <p class="hint">Ketebalan garis penghubung.</p>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">TRAIL</label>
-      <div class="row">
-        <label class="checkbox">
-          <input type="checkbox" id="showTrails" checked />
-          <span>Tampilkan jejak melengkung</span>
-        </label>
+    <!-- SECTION 9: SIZE -->
+    <section class="panel" data-section="size">
+      <div class="panel-header">
+        <span class="panel-title">SIZE</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <div class="row">
-        <input type="range" id="trailLength" min="1" max="8" value="3" />
-        <span class="val" id="trailLengthVal">3</span>
+      <div class="panel-body">
+        <div class="select-wrap">
+          <select id="canvasSizeSelect">
+            <option value="portrait_3_4" selected>Portrait 3:4 (1200x1600)</option>
+            <option value="square">Square (1080x1080)</option>
+            <option value="landscape_16_9">Landscape 16:9 (1920x1080)</option>
+            <option value="instagram_story">Instagram Story (1080x1920)</option>
+            <option value="poster">Poster (1400x2000)</option>
+          </select>
+        </div>
       </div>
-      <p class="hint">Panjang trail per titik.</p>
     </section>
 
-    <section class="panel">
-      <label class="panel-label">PALETTE</label>
-      <div class="palette" id="palette">
-        <button class="swatch active" data-color="#d4a843" style="background:#d4a843"></button>
-        <button class="swatch" data-color="#ffffff" style="background:#ffffff"></button>
-        <button class="swatch" data-color="#4d6bfe" style="background:#4d6bfe"></button>
-        <button class="swatch" data-color="#ff4d4d" style="background:#ff4d4d"></button>
-        <button class="swatch" data-color="#4dffd2" style="background:#4dffd2"></button>
-        <button class="swatch" data-color="#c084fc" style="background:#c084fc"></button>
+    <!-- SECTION 10: TEXTURE / NOISE -->
+    <section class="panel" data-section="texture">
+      <div class="panel-header">
+        <span class="panel-title">TEXTURE / NOISE</span>
+        <button class="toggle-collapse">−</button>
       </div>
-      <div class="row">
-        <label class="panel-label small" style="margin:0">CUSTOM</label>
-        <input type="color" id="customColor" value="#d4a843" />
+      <div class="panel-body">
+        <button class="btn-block-outline" id="replaceTextureBtn">Replace Texture</button>
+        <input type="file" id="textureInput" accept="image/*" style="display:none" />
+        <button class="btn-block-outline" id="removeTextureBtn">Remove Texture</button>
+
+        <div class="control-group" style="margin-top:14px">
+          <div class="control-header">
+            <label>TEXTURE OPACITY</label>
+            <span class="val" id="textureOpacityVal">0.50</span>
+          </div>
+          <p class="hint">Opacity of the noise overlay (screen blend)</p>
+          <input type="range" id="textureOpacity" min="0" max="1" step="0.01" value="0.50" />
+        </div>
       </div>
-      <p class="hint">Warna dasar overlay.</p>
     </section>
 
-    <section class="panel actions">
-      <button class="btn-primary" id="redrawBtn">↻ Redraw</button>
-      <button class="btn-outline" id="downloadBtn">↓ Download PNG</button>
+    <!-- SECTION 11: EXPORT -->
+    <section class="panel" data-section="export" style="border-bottom:none">
+      <div class="panel-header">
+        <span class="panel-title">EXPORT</span>
+        <button class="toggle-collapse">−</button>
+      </div>
+      <div class="panel-body">
+        <button class="btn-download" id="downloadBtn">Download PNG</button>
+        <p class="status-footer" id="exportStatusText">1200x1600 / Gold / Dark</p>
+      </div>
     </section>
+
   </aside>
 
+  <!-- MAIN STAGE -->
   <main class="stage">
-    <div class="stage-topbar">
-      <div class="topbar-info">
-        <span class="tag" id="fpsTag">— FPS</span>
-        <span class="tag" id="countTag">0 BLOBS</span>
-      </div>
-      <div class="topbar-tabs">
-        <button class="tab active" data-mode="hero">Hero</button>
-        <button class="tab" data-mode="geo">Geo Tool</button>
-        <button class="tab" data-mode="studio">Studio</button>
-      </div>
-    </div>
-
     <div class="canvas-wrap" id="canvasWrap">
       <canvas id="canvas"></canvas>
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">◉</div>
-        <h2>Upload gambar untuk mulai</h2>
-        <p>Semua proses berjalan 100% di browser kamu.</p>
+        <h2>Click or Drag Image to Start</h2>
+        <p>Or pick a preset in the sidebar. 100% processed in your browser.</p>
       </div>
     </div>
-
-    <footer class="stage-footer">
-      <span>Tool created by Better DeepSeek</span>
-      <span id="resTag">—</span>
-    </footer>
   </main>
 
 </div>
+
 <script src="app.js"></script>
 </body>
 </html>
