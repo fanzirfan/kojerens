@@ -1565,7 +1565,7 @@
     drawCanvas(expCtx, fmt.w, fmt.h);
 
     var link = document.createElement('a');
-    link.download = 'brand-asset-' + state.format + '-' + Date.now() + '.png';
+    link.download = 'tracker-' + state.format + '-' + Date.now() + '.png';
     link.href = exportCanvas.toDataURL('image/png');
     link.click();
   });
