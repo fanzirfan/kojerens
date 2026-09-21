@@ -1,802 +1,520 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blob Tracker : Studio</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <title>KOJERENS | Generative Visual & Computational Design Studio</title>
+  <meta name="description" content="KOJERENS: A browser-native generative visual laboratory featuring high-performance contrast centroid tracking, HUD telemetry, and real-time Unicode ASCII art synthesis." />
+  <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, computer vision, hud telemetry, creative coding, browser-native" />
+  <meta name="author" content="Fanz Irfan" />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="KOJERENS | Generative Visual & Design Studio" />
+  <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker & ASCII Matrix Generator." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://manji.eu.org" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/kojerens-logo.svg" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+  <link rel="stylesheet" href="landing.css" />
 </head>
 <body>
-<div class="app">
 
-  <!-- TOPBAR -->
-  <header class="topbar">
-    <div class="topbar-brand">
-      <span class="topbar-wordmark">BLOB<span class="topbar-wordmark-accent">.</span>TRACKER</span>
+  <!-- NAVIGATION -->
+  <nav class="navbar" aria-label="Main Navigation">
+    <div class="nav-brand">
+      <a href="index.html" style="display:flex; align-items:center; gap:10px;">
+        <img src="assets/kojerens-logo.svg" alt="KOJERENS" class="nav-logo" width="28" height="28" />
+        <span class="nav-title">KOJERENS</span>
+      </a>
+      <span class="nav-badge">STUDIO LAB</span>
     </div>
-    <nav class="topbar-modes" role="tablist" aria-label="Visual engine">
-      <button class="mode-tab active" data-mode="circles" role="tab" aria-selected="true">Sensor</button>
-      <button class="mode-tab" data-mode="hero" role="tab" aria-selected="false">Telemetry</button>
-      <button class="mode-tab" data-mode="geo" role="tab" aria-selected="false">Topography</button>
-      <button class="mode-tab" data-mode="studio" role="tab" aria-selected="false">Viewfinder</button>
-    </nav>
-    <div class="topbar-actions">
-      <button class="topbar-btn" id="randomizeBtn" title="Randomize style and settings">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
-        Randomize
-      </button>
-      <button class="topbar-cta" id="downloadBtn">Export PNG</button>
+
+    <div class="nav-links">
+      <a href="#tools" class="nav-link">Studio Engines</a>
+      <a href="#features" class="nav-link">Architecture</a>
+      <a href="#about" class="nav-link">Manifesto</a>
+    </div>
+
+    <div class="nav-actions">
+      <a href="https://github.com/fanzirfan/blob-track" target="_blank" rel="noopener" class="btn-ghost" title="GitHub Repository">
+        <i class="ri-github-line"></i> GitHub
+      </a>
+      <a href="#tools" class="btn-cta">
+        Launch Tools <i class="ri-arrow-right-line"></i>
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero-section">
+    <div class="hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      <span>COMPUTATIONAL VISUAL STUDIO : 100% IN-BROWSER</span>
+    </div>
+
+    <h1 class="hero-title">
+      Generative Systems for Modern Visual Engineers.
+    </h1>
+
+    <p class="hero-description">
+      KOJERENS is a browser-native generative laboratory engineered for luminance contrast centroid tracking, technical vector telemetry, and real-time Unicode ASCII art synthesis.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#tools" class="btn-cta btn-large">
+        <i class="ri-compass-3-line"></i> Explore Creative Engines
+      </a>
+      <a href="https://github.com/fanzirfan/blob-track" target="_blank" rel="noopener" class="btn-ghost btn-large">
+        <i class="ri-code-s-slash-line"></i> View Source Code
+      </a>
+    </div>
+
+    <!-- Live Telemetry Simulator Strip -->
+    <div class="hero-telemetry-strip" aria-label="Live Laboratory Simulation">
+      <div class="telemetry-grid-header">
+        <div class="telemetry-status-tag">
+          <i class="ri-pulse-line" style="color: var(--color-void-violet);"></i>
+          <span>LIVE HARDWARE ACCELERATED RENDER PIPELINE</span>
+        </div>
+        <div>MANJI.EU.ORG // 2026</div>
+      </div>
+      <canvas id="heroHudCanvas" class="hud-preview-canvas" width="960" height="240"></canvas>
     </div>
   </header>
 
-  <!-- WORKSPACE -->
-  <div class="workspace">
-
-    <nav class="rail" aria-label="Panel navigation">
-      <button class="rail-btn active" data-panel="image" data-modes="all" title="Image" aria-pressed="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span class="rail-label">Image</span>
-      </button>
-      <button class="rail-btn" data-panel="gradientmap" data-modes="all" title="Gradient Map" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor"/><line x1="8" y1="7" x2="8" y2="17" stroke="currentColor" stroke-opacity=".4"/><line x1="13" y1="7" x2="13" y2="17" stroke="currentColor" stroke-opacity=".4"/></svg>
-        <span class="rail-label">Map</span>
-      </button>
-      <button class="rail-btn" data-panel="pixelate" data-modes="all" title="Pixelate" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/></svg>
-        <span class="rail-label">Pixel</span>
-      </button>
-      <button class="rail-btn" data-panel="frametext" data-modes="all" title="Frame Text" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-        <span class="rail-label">Text</span>
-      </button>
-      <button class="rail-btn" data-panel="detection" data-modes="circles" title="Detection" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><circle cx="11" cy="11" r="3"/></svg>
-        <span class="rail-label">Detect</span>
-      </button>
-      <button class="rail-btn" data-panel="shapes" data-modes="circles" title="Visual Style" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-        <span class="rail-label">Visual</span>
-      </button>
-      <button class="rail-btn" data-panel="palette" data-modes="all" title="Palette" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
-        <span class="rail-label">Palette</span>
-      </button>
-      <button class="rail-btn" data-panel="crosshair" data-modes="all" data-engine="true" title="Engine Settings" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        <span class="rail-label">Engine</span>
-      </button>
-      <div class="rail-sep"></div>
-      <button class="rail-btn" data-panel="size" data-modes="all" title="Canvas Size" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
-        <span class="rail-label">Size</span>
-      </button>
-      <button class="rail-btn" data-panel="texture" data-modes="all" title="Texture / Noise" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z"/></svg>
-        <span class="rail-label">Noise</span>
-      </button>
-      <button class="rail-btn" data-panel="export" data-modes="all" title="Export &amp; Actions" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span class="rail-label">Export</span>
-      </button>
-    </nav>
-
-    <!-- PANEL DRAWER -->
-    <aside class="panel-drawer open" id="panelDrawer">
-      <div class="drawer-inner sidebar">
-    <!-- SECTION 1: IMAGE -->
-    <section class="panel" data-section="image" data-modes="all">
-      <div class="panel-header">
-        <span class="panel-title">IMAGE</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+  <!-- STUDIO TOOLS SECTION (#tools) -->
+  <main>
+    <section class="section-container" id="tools">
+      <div class="section-header">
+        <div class="section-eyebrow">// PRODUCTION ENGINES</div>
+        <h2 class="section-title">Generative Online Tools</h2>
+        <p class="section-subtitle">
+          Engineered for visual researchers, art directors, and creative technologists. Zero installations, zero tracking, pure client-side computing.
+        </p>
       </div>
-      <div class="panel-body">
-        <button class="btn-block" id="replaceImageBtn">Replace Image</button>
-        <input type="file" id="imageInput" accept="image/*" style="display:none" />
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>IMAGE OPACITY</label>
-            <span class="val" id="imageOpacityVal">0.75</span>
+      <div class="tools-grid">
+        
+        <!-- TOOL 1: BLOB TRACKER -->
+        <article class="tool-card">
+          <span class="tool-card-corner-bracket">[01]</span>
+          
+          <div class="tool-header">
+            <span class="tool-index">VECTOR TELEMETRY & CENTROID TRACKER</span>
+            <h3 class="tool-title">Blob Tracker</h3>
+            <p class="tool-description">
+              Upload any image to analyze high-contrast feature centroids. Generate sci-fi HUD telemetry, topographic geodetic contour lines, constellations, and minimalist editorial framing.
+            </p>
           </div>
-          <p class="hint">Fade the background image</p>
-          <input type="range" id="imageOpacity" min="0" max="1" step="0.01" value="0.75" />
+
+          <div class="tool-preview-box">
+            <canvas id="blobPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
+          </div>
+
+          <div class="tool-tags">
+            <span class="tool-tag">Sensor Constellation</span>
+            <span class="tool-tag">Sci-Fi Telemetry</span>
+            <span class="tool-tag">Marching Squares Topo</span>
+            <span class="tool-tag">40 GRD Gradient Maps</span>
+            <span class="tool-tag">Transparent PNG Export</span>
+          </div>
+
+          <div class="tool-cta-row">
+            <span class="tool-spec-badge">4 Engines · 60/120fps GPU</span>
+            <a href="blob-tracker/index.html" class="btn-cta">
+              Open Blob Tracker <i class="ri-arrow-right-line"></i>
+            </a>
+          </div>
+        </article>
+
+        <!-- TOOL 2: ASCII MATRIX GENERATOR -->
+        <article class="tool-card">
+          <span class="tool-card-corner-bracket">[02]</span>
+          
+          <div class="tool-header">
+            <span class="tool-index">UNICODE GLYPH SYNTHESIZER</span>
+            <h3 class="tool-title">ASCII Matrix</h3>
+            <p class="tool-description">
+              Transform still imagery, recorded video streams, and real-time webcam feeds into rich multi-language Unicode character art. Features multi-pass bloom, photographic exposure, and sequence ZIP export.
+            </p>
+          </div>
+
+          <div class="tool-preview-box">
+            <canvas id="asciiPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
+          </div>
+
+          <div class="tool-tags">
+            <span class="tool-tag">Unicode Character Ramps</span>
+            <span class="tool-tag">Live Webcam Input</span>
+            <span class="tool-tag">Video Sequence ZIP</span>
+            <span class="tool-tag">Multi-Pass Bloom</span>
+            <span class="tool-tag">Pure Text Download</span>
+          </div>
+
+          <div class="tool-cta-row">
+            <span class="tool-spec-badge">Webcam · Video · Text Export</span>
+            <a href="ascii-gen/index.html" class="btn-cta">
+              Open ASCII Matrix <i class="ri-arrow-right-line"></i>
+            </a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE & CAPABILITIES (#features) -->
+    <section class="section-container" id="features">
+      <div class="section-header">
+        <div class="section-eyebrow">// CORE ARCHITECTURE</div>
+        <h2 class="section-title">Built for Precision & Privacy</h2>
+        <p class="section-subtitle">
+          Traditional online design tools send your private imagery to remote servers. KOJERENS executes all computer vision algorithms locally within your browser context.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <i class="ri-shield-check-line"></i>
+          </div>
+          <h4 class="feature-title">Zero Server Footprint</h4>
+          <p class="feature-text">
+            100% client-side execution. Your photos, videos, and camera feeds remain in local memory and never touch an external cloud server.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <i class="ri-cpu-line"></i>
+          </div>
+          <h4 class="feature-title">Hardware Accelerated</h4>
+          <p class="feature-text">
+            Offscreen canvas buffers paired with requestAnimationFrame scheduling deliver fluid 60fps to 120fps slider response times even at 4K resolution.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <i class="ri-layout-grid-line"></i>
+          </div>
+          <h4 class="feature-title">Dynamic Workspaces</h4>
+          <p class="feature-text">
+            Adaptive icon rails and sliding panel drawers maximize your visual canvas area, keeping complex generative parameter controls accessible yet uncluttered.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <i class="ri-download-cloud-line"></i>
+          </div>
+          <h4 class="feature-title">Production Exports</h4>
+          <p class="feature-text">
+            Export transparent PNG overlays, full resolution branded posters, animated frame sequences in ZIP archives, and raw ASCII plaintext ready for production.
+          </p>
         </div>
       </div>
     </section>
 
-    <!-- SECTION: GRADIENT MAP -->
-    <section class="panel" data-section="gradientmap" data-modes="all">
-      <div class="panel-header">
-        <span class="panel-title">GRADIENT MAP</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <button class="btn-toggle" id="gradientMapToggleBtn">Gradient Map Off</button>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>PRESET (40 MAPS)</label>
-            <span class="val" id="gradientMapPresetVal">Gradient 01</span>
-          </div>
-          <div class="select-wrap">
-            <select id="gradientMapSelect" aria-label="Select Gradient Map Preset">
-            </select>
+    <!-- MANIFESTO & ABOUT (#about) -->
+    <section class="section-container" id="about">
+      <div class="manifesto-card">
+        <div>
+          <h2 class="manifesto-title">The KOJERENS Creative Manifesto</h2>
+          <p class="manifesto-p">
+            In an era of generic AI templates and bloated subscriptions, KOJERENS returns control to procedural rules, mathematical aesthetics, and direct pixel manipulation.
+          </p>
+          <p class="manifesto-p">
+            Whether generating sci-fi interface assets for film, topographic geodetic charts for editorial prints, or retro-futuristic ASCII motion clips, each tool in this suite is purpose-built to inspire new visual languages.
+          </p>
+          <div style="margin-top: 24px;">
+            <a href="https://github.com/fanzirfan/blob-track" target="_blank" rel="noopener" class="btn-ghost">
+              <i class="ri-star-line"></i> Star on GitHub
+            </a>
           </div>
         </div>
 
-        <div class="gradient-preview-strip" id="gradientMapStrip" title="Active Gradient Map Preview"></div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>QUICK SWATCHES</label>
+        <div class="manifesto-aside">
+          <div class="aside-row">
+            <span>Project</span>
+            <span class="aside-val">KOJERENS Visual Lab</span>
           </div>
-          <div class="gradient-swatches-grid" id="gradientSwatchesGrid" aria-label="Gradient Map Presets Swatches">
+          <div class="aside-row">
+            <span>Engineering & Design</span>
+            <span class="aside-val">Fanz Irfan</span>
           </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>BLEND OPACITY</label>
-            <span class="val" id="gradientMapOpacityVal">1.0</span>
+          <div class="aside-row">
+            <span>Primary Host Domain</span>
+            <span class="aside-val">manji.eu.org</span>
           </div>
-          <p class="hint">Intensity of color remapping</p>
-          <input type="range" id="gradientMapOpacity" min="0" max="1" step="0.01" value="1.0" />
-        </div>
-
-        <div class="btn-row">
-          <button class="btn-toggle" id="gradientMapInvertBtn">Invert Off</button>
-          <button class="btn-action" id="randomizeGradientBtn">Random Map</button>
-        </div>
-
-        <div style="margin-top: 10px;">
-          <button class="btn-action" id="importGrdBtn" style="width: 100%;">Import .GRD File</button>
-          <input type="file" id="grdFileInput" accept=".grd" style="display:none" />
+          <div class="aside-row">
+            <span>Technology Stack</span>
+            <span class="aside-val">Vanilla HTML5 · Canvas2D · CSS3</span>
+          </div>
+          <div class="aside-row">
+            <span>License</span>
+            <span class="aside-val">Open Source (MIT)</span>
+          </div>
         </div>
       </div>
     </section>
+  </main>
 
-    <!-- SECTION 2: PIXELATE -->
-    <section class="panel" data-section="pixelate" data-modes="all">
-      <div class="panel-header">
-        <span class="panel-title">PIXELATE</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="assets/kojerens-logo.svg" alt="KOJERENS" width="22" height="22" />
+        <span style="font-family: var(--font-aeonikpro); font-weight: 700; color: #fff; font-size: 13px; letter-spacing: 0.1em;">KOJERENS</span>
       </div>
-      <div class="panel-body">
-        <p class="hint intro">Click on the canvas to place pixelation zones</p>
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>PIXEL SIZE</label>
-            <span class="val" id="pixelSizeVal">26</span>
-          </div>
-          <p class="hint">Mosaic block size: larger = blockier</p>
-          <input type="range" id="pixelSize" min="4" max="60" value="26" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>ZONE SIZE</label>
-            <span class="val" id="zoneSizeVal">90</span>
-          </div>
-          <p class="hint">Half-width of each square pixelation zone</p>
-          <input type="range" id="zoneSize" min="20" max="250" value="90" />
-        </div>
-
-        <button class="btn-toggle active" id="pixelateStrokeBtn">Stroke On</button>
-
-        <div class="btn-row">
-          <button class="btn-action" id="undoPixelateBtn">Undo</button>
-          <button class="btn-action" id="clearPixelateBtn">Clear</button>
-        </div>
-        <p class="status-sub" id="pixelateStatus">0 zones placed</p>
+      <div class="footer-links">
+        <a href="blob-tracker/index.html">Blob Tracker</a>
+        <a href="ascii-gen/index.html">ASCII Matrix</a>
+        <a href="https://github.com/fanzirfan/blob-track" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org</a>
       </div>
-    </section>
 
-    <!-- SECTION: FRAME TEXT -->
-    <section class="panel" data-section="frametext" data-modes="all">
-      <div class="panel-header">
-        <span class="panel-title">FRAME TEXT</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+      <div class="footer-attribution">
+        Crafted by <strong>Fanz Irfan</strong> · <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org</a> · 2026
       </div>
-      <div class="panel-body">
-        <button class="btn-toggle active" id="frameTextToggleBtn">Frame Text On</button>
+    </div>
+  </footer>
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>TEXT SIZE</label>
-            <span class="val" id="frameTextSizeVal">12</span>
-          </div>
-          <p class="hint">Font size of the 4 corner labels</p>
-          <input type="range" id="frameTextSize" min="6" max="40" step="1" value="12" />
-        </div>
+  <!-- Interactive Visual Simulation Script -->
+  <script>
+    (function () {
+      // 1. Hero HUD Canvas Simulation
+      var heroCanvas = document.getElementById('heroHudCanvas');
+      if (heroCanvas) {
+        var hctx = heroCanvas.getContext('2d');
+        var width, height;
+        var nodes = [];
+        var numNodes = 24;
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>TOP LEFT</label>
-          </div>
-          <input type="text" id="frameTextTL" class="input-text" value="Design & Strategy" placeholder="Top Left text..." />
-        </div>
+        function resizeHero() {
+          var rect = heroCanvas.getBoundingClientRect();
+          heroCanvas.width = rect.width;
+          heroCanvas.height = 240;
+          width = heroCanvas.width;
+          height = heroCanvas.height;
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>TOP RIGHT</label>
-          </div>
-          <input type="text" id="frameTextTR" class="input-text" value="Fanz Irfan" placeholder="Top Right text..." />
-        </div>
+          nodes = [];
+          for (var i = 0; i < numNodes; i++) {
+            nodes.push({
+              x: Math.random() * width,
+              y: Math.random() * height,
+              vx: (Math.random() - 0.5) * 0.8,
+              vy: (Math.random() - 0.5) * 0.8,
+              r: Math.random() * 2.5 + 1.5,
+              id: 'TRK-' + (100 + i)
+            });
+          }
+        }
+        resizeHero();
+        window.addEventListener('resize', resizeHero);
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>BOTTOM LEFT</label>
-          </div>
-          <input type="text" id="frameTextBL" class="input-text" value="blog.fan.my.id" placeholder="Bottom Left text..." />
-        </div>
+        var angle = 0;
+        function renderHero() {
+          if (!hctx || !width) return;
+          hctx.clearRect(0, 0, width, height);
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>BOTTOM RIGHT</label>
-          </div>
-          <input type="text" id="frameTextBR" class="input-text" value="Indonesia" placeholder="Bottom Right text..." />
-        </div>
-      </div>
-    </section>
+          // Technical perspective grid lines
+          hctx.strokeStyle = 'rgba(186, 215, 247, 0.05)';
+          hctx.lineWidth = 1;
+          var step = 40;
+          for (var x = 0; x < width; x += step) {
+            hctx.beginPath();
+            hctx.moveTo(x, 0);
+            hctx.lineTo(x, height);
+            hctx.stroke();
+          }
+          for (var y = 0; y < height; y += step) {
+            hctx.beginPath();
+            hctx.moveTo(0, y);
+            hctx.lineTo(width, y);
+            hctx.stroke();
+          }
 
-    <!-- SECTION 3: CROSSHAIR FRAME -->
-    <section class="panel" data-section="crosshair" data-modes="circles">
-      <div class="panel-header">
-        <span class="panel-title">CROSSHAIR FRAME</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <button class="btn-toggle active" id="frameToggleBtn">Frame On</button>
+          // Rotating radar circle in center
+          var cx = width / 2;
+          var cy = height / 2;
+          var radarRadius = Math.min(width, height) * 0.42;
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>FRAME WIDTH</label>
-            <span class="val" id="frameWidthVal">60</span>
-          </div>
-          <p class="hint">Frame width as % of canvas width</p>
-          <input type="range" id="frameWidth" min="10" max="100" value="60" />
-        </div>
+          hctx.strokeStyle = 'rgba(102, 58, 243, 0.25)';
+          hctx.beginPath();
+          hctx.arc(cx, cy, radarRadius, 0, Math.PI * 2);
+          hctx.stroke();
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>FRAME HEIGHT</label>
-            <span class="val" id="frameHeightVal">60</span>
-          </div>
-          <p class="hint">Frame height as % of canvas height</p>
-          <input type="range" id="frameHeight" min="10" max="100" value="60" />
-        </div>
+          hctx.strokeStyle = 'rgba(186, 215, 247, 0.15)';
+          hctx.beginPath();
+          hctx.arc(cx, cy, radarRadius * 0.5, 0, Math.PI * 2);
+          hctx.stroke();
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>DASH PATTERN</label>
-            <span class="val" id="dashPatternVal">8</span>
-          </div>
-          <p class="hint">Length of each dash + gap</p>
-          <input type="range" id="dashPattern" min="2" max="30" value="8" />
-        </div>
+          // Radar sweep line
+          angle += 0.015;
+          hctx.save();
+          hctx.translate(cx, cy);
+          hctx.rotate(angle);
+          hctx.strokeStyle = 'rgba(216, 236, 248, 0.5)';
+          hctx.beginPath();
+          hctx.moveTo(0, 0);
+          hctx.lineTo(radarRadius, 0);
+          hctx.stroke();
+          hctx.restore();
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>STROKE</label>
-            <span class="val" id="frameStrokeVal">1.0</span>
-          </div>
-          <p class="hint">Line thickness for frame and crosshair</p>
-          <input type="range" id="frameStroke" min="0.2" max="5.0" step="0.1" value="1.0" />
-        </div>
+          // Constellation lines & nodes
+          for (var i = 0; i < nodes.length; i++) {
+            var n1 = nodes[i];
+            n1.x += n1.vx;
+            n1.y += n1.vy;
+            if (n1.x < 0 || n1.x > width) n1.vx *= -1;
+            if (n1.y < 0 || n1.y > height) n1.vy *= -1;
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>STAR SIZE</label>
-            <span class="val" id="starSizeVal">40</span>
-          </div>
-          <p class="hint">Diameter of the center asterisk (0 hides it)</p>
-          <input type="range" id="starSize" min="0" max="150" value="40" />
-        </div>
+            for (var j = i + 1; j < nodes.length; j++) {
+              var n2 = nodes[j];
+              var dx = n2.x - n1.x;
+              var dy = n2.y - n1.y;
+              var dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 110) {
+                hctx.strokeStyle = 'rgba(102, 58, 243, ' + (0.35 * (1 - dist / 110)) + ')';
+                hctx.lineWidth = 1;
+                hctx.beginPath();
+                hctx.moveTo(n1.x, n1.y);
+                hctx.lineTo(n2.x, n2.y);
+                hctx.stroke();
+              }
+            }
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>STAR POINTS</label>
-            <span class="val" id="starPointsVal">4</span>
-          </div>
-          <p class="hint">Number of crossing lines: 2 is a plus, 4 is an 8-pointed star</p>
-          <input type="range" id="starPoints" min="1" max="8" value="4" />
-        </div>
-      </div>
-    </section>
+            // Draw node dot
+            hctx.fillStyle = '#d1e4fa';
+            hctx.beginPath();
+            hctx.arc(n1.x, n1.y, n1.r, 0, Math.PI * 2);
+            hctx.fill();
 
-    <!-- SECTION 4: CHAIN -->
-    <section class="panel" data-section="chain" data-modes="circles">
-      <div class="panel-header">
-        <span class="panel-title">CHAIN</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <button class="btn-toggle active" id="chainToggleBtn">Chain On</button>
+            // Label coordinate
+            if (i % 3 === 0) {
+              hctx.font = '9px "JetBrains Mono", monospace';
+              hctx.fillStyle = 'rgba(186, 215, 247, 0.5)';
+              hctx.fillText(Math.round(n1.x) + ',' + Math.round(n1.y), n1.x + 6, n1.y - 4);
+            }
+          }
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>COUNT</label>
-            <span class="val" id="chainCountVal">11</span>
-          </div>
-          <p class="hint">Number of circles in the chain</p>
-          <input type="range" id="chainCount" min="1" max="25" value="11" />
-        </div>
+          requestAnimationFrame(renderHero);
+        }
+        renderHero();
+      }
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>ANGLE</label>
-            <span class="val" id="chainAngleVal">45</span>
-          </div>
-          <p class="hint">Direction of chain: 0 vertical, 45 diagonal, 90 horizontal</p>
-          <input type="range" id="chainAngle" min="0" max="180" value="45" />
-        </div>
+      // 2. Blob Tracker Preview Canvas Simulation
+      var blobCanvas = document.getElementById('blobPreviewCanvas');
+      if (blobCanvas) {
+        var bctx = blobCanvas.getContext('2d');
+        var bw = blobCanvas.width;
+        var bh = blobCanvas.height;
+        var t = 0;
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>BASE RADIUS</label>
-            <span class="val" id="chainBaseRadiusVal">300</span>
-          </div>
-          <p class="hint">Size of the center circle</p>
-          <input type="range" id="chainBaseRadius" min="30" max="600" value="300" />
-        </div>
+        function renderBlobPreview() {
+          t += 0.02;
+          bctx.clearRect(0, 0, bw, bh);
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>SIZE RATIO</label>
-            <span class="val" id="chainSizeRatioVal">0.50</span>
-          </div>
-          <p class="hint">Size multiplier per step: below 1 shrinks outward</p>
-          <input type="range" id="chainSizeRatio" min="0.2" max="1.2" step="0.01" value="0.50" />
-        </div>
+          // Draw concentric topographic & HUD circles
+          var cx = bw / 2;
+          var cy = bh / 2;
 
-        <button class="btn-toggle active" id="chainIntersectionsBtn">Intersections On</button>
+          for (var r = 25; r <= 85; r += 20) {
+            bctx.strokeStyle = 'rgba(186, 215, 247, 0.15)';
+            bctx.lineWidth = 1;
+            bctx.setLineDash([4, 4]);
+            bctx.beginPath();
+            bctx.arc(cx, cy, r + Math.sin(t + r * 0.1) * 3, 0, Math.PI * 2);
+            bctx.stroke();
+          }
+          bctx.setLineDash([]);
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>MARKER SIZE</label>
-            <span class="val" id="markerSizeVal">3.0</span>
-          </div>
-          <p class="hint">Dot size at each adjacent-circle intersection</p>
-          <input type="range" id="markerSize" min="0.5" max="10" step="0.5" value="3.0" />
-        </div>
-      </div>
-    </section>
+          // Crosshairs
+          bctx.strokeStyle = 'rgba(102, 58, 243, 0.5)';
+          bctx.beginPath();
+          bctx.moveTo(cx - 90, cy);
+          bctx.lineTo(cx + 90, cy);
+          bctx.moveTo(cx, cy - 70);
+          bctx.lineTo(cx, cy + 70);
+          bctx.stroke();
 
-    <!-- SECTION 5: DETECTION -->
-    <section class="panel" data-section="detection" data-modes="circles">
-      <div class="panel-header">
-        <span class="panel-title">DETECTION</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="segmented-group">
-          <button class="seg-btn" data-detection-mode="combined">Combined</button>
-          <button class="seg-btn active" data-detection-mode="contrast">Contrast</button>
-        </div>
+          // Centroid blobs
+          var points = [
+            { x: cx + Math.cos(t) * 45, y: cy + Math.sin(t * 1.3) * 35, r: 6 },
+            { x: cx - Math.cos(t * 0.8) * 55, y: cy - Math.sin(t) * 40, r: 8 },
+            { x: cx + Math.sin(t * 1.2) * 60, y: cy - Math.cos(t * 0.9) * 45, r: 5 }
+          ];
 
-        <div class="segmented-group">
-          <button class="seg-btn" data-detection-mode="bright">Bright</button>
-          <button class="seg-btn" data-detection-mode="dark">Dark</button>
-        </div>
+          points.forEach(function (p, idx) {
+            bctx.strokeStyle = '#663af3';
+            bctx.lineWidth = 1.5;
+            bctx.beginPath();
+            bctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2);
+            bctx.stroke();
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>BLOCK SIZE</label>
-            <span class="val" id="blockSizeVal">16</span>
-          </div>
-          <p class="hint">Analysis grid resolution: smaller = more detail</p>
-          <input type="range" id="blockSize" min="6" max="40" value="16" />
-        </div>
+            bctx.fillStyle = '#ffffff';
+            bctx.beginPath();
+            bctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+            bctx.fill();
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>THRESHOLD</label>
-            <span class="val" id="thresholdVal">30</span>
-          </div>
-          <p class="hint">Min score to place a circle: higher = fewer, stronger hits</p>
-          <input type="range" id="threshold" min="0" max="100" value="30" />
-        </div>
+            bctx.font = '9px "JetBrains Mono", monospace';
+            bctx.fillStyle = '#d1e4fa';
+            bctx.fillText('ID-' + (idx + 1) + ' [' + Math.round(p.x) + ',' + Math.round(p.y) + ']', p.x + 10, p.y + 3);
+          });
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>MAX CIRCLES</label>
-            <span class="val" id="maxCirclesVal">80</span>
-          </div>
-          <p class="hint">Cap on total circles placed</p>
-          <input type="range" id="maxCircles" min="10" max="200" value="80" />
-        </div>
+          requestAnimationFrame(renderBlobPreview);
+        }
+        renderBlobPreview();
+      }
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>MIN DISTANCE</label>
-            <span class="val" id="minDistanceVal">40</span>
-          </div>
-          <p class="hint">Spacing between circle centers: prevents clustering</p>
-          <input type="range" id="minDistance" min="10" max="120" value="40" />
-        </div>
-      </div>
-    </section>
+      // 3. ASCII Matrix Preview Simulation
+      var asciiCanvas = document.getElementById('asciiPreviewCanvas');
+      if (asciiCanvas) {
+        var actx = asciiCanvas.getContext('2d');
+        var aw = asciiCanvas.width;
+        var ah = asciiCanvas.height;
+        var glyphs = ['0', '1', '.', ':', '-', '=', '+', '*', '#', '%', '@', '█', '░', '▒', '●'];
+        var at = 0;
 
-    <!-- SECTION 6: SHAPES -->
-    <section class="panel" data-section="shapes" data-modes="circles">
-      <div class="panel-header">
-        <span class="panel-title">SHAPES</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="segmented-group">
-          <button class="seg-btn active" data-shape="circle">Circle</button>
-          <button class="seg-btn" data-shape="square">Square</button>
-        </div>
+        function renderAsciiPreview() {
+          at += 0.03;
+          actx.clearRect(0, 0, aw, ah);
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>MIN RADIUS</label>
-            <span class="val" id="minRadiusVal">4</span>
-          </div>
-          <p class="hint">Smallest circle size (low-score regions)</p>
-          <input type="range" id="minRadius" min="1" max="40" value="4" />
-        </div>
+          actx.font = '11px "JetBrains Mono", monospace';
+          actx.textAlign = 'center';
+          actx.textBaseline = 'middle';
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>MAX RADIUS</label>
-            <span class="val" id="maxRadiusVal">24</span>
-          </div>
-          <p class="hint">Largest circle size (high-score regions)</p>
-          <input type="range" id="maxRadius" min="6" max="100" value="24" />
-        </div>
+          var cols = 28;
+          var rows = 12;
+          var cellW = aw / cols;
+          var cellH = ah / rows;
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>STROKE</label>
-            <span class="val" id="shapeStrokeVal">1.0</span>
-          </div>
-          <p class="hint">Circle outline thickness</p>
-          <input type="range" id="shapeStroke" min="0.2" max="5.0" step="0.1" value="1.0" />
-        </div>
+          for (var r = 0; r < rows; r++) {
+            for (var c = 0; c < cols; c++) {
+              var wave = Math.sin(c * 0.3 + at) * Math.cos(r * 0.4 + at);
+              var glyphIdx = Math.floor(((wave + 1) / 2) * (glyphs.length - 1));
+              var glyph = glyphs[glyphIdx] || ' ';
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>SIZE SEED</label>
-            <span class="val" id="sizeSeedVal">42</span>
-          </div>
-          <p class="hint">Random seed for size variation: change for different distributions</p>
-          <input type="range" id="sizeSeed" min="1" max="9999" value="42" />
-        </div>
+              if (wave > 0.4) {
+                actx.fillStyle = '#ffffff';
+              } else if (wave > -0.1) {
+                actx.fillStyle = '#663af3';
+              } else {
+                actx.fillStyle = 'rgba(186, 215, 247, 0.25)';
+              }
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>LABEL SIZE</label>
-            <span class="val" id="labelSizeVal">8</span>
-          </div>
-          <p class="hint">Font size of xy coordinate labels</p>
-          <input type="range" id="labelSize" min="4" max="20" value="8" />
-        </div>
+              actx.fillText(glyph, c * cellW + cellW / 2, r * cellH + cellH / 2);
+            }
+          }
 
-        <div class="control-group">
-          <div class="control-header">
-            <label>OVERLAY OPACITY</label>
-            <span class="val" id="overlayOpacityVal">1.00</span>
-          </div>
-          <p class="hint">Master opacity for all circles, lines, dots, and text</p>
-          <input type="range" id="overlayOpacity" min="0" max="1" step="0.01" value="1.00" />
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 7: CONNECTIONS -->
-    <section class="panel" data-section="connections" data-modes="circles">
-      <div class="panel-header">
-        <span class="panel-title">CONNECTIONS</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="control-group">
-          <div class="control-header">
-            <label>MAX DISTANCE</label>
-            <span class="val" id="maxDistanceVal">150</span>
-          </div>
-          <p class="hint">Circles within this range get connected (0 hides lines)</p>
-          <input type="range" id="maxDistance" min="0" max="400" value="150" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>LINE WEIGHT</label>
-            <span class="val" id="lineWeightVal">0.8</span>
-          </div>
-          <p class="hint">Thickness of connecting lines</p>
-          <input type="range" id="lineWeight" min="0.1" max="4.0" step="0.1" value="0.8" />
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION: TELEMETRY (Hero Mode) -->
-    <section class="panel" data-section="telemetry" data-modes="hero" style="display:none">
-      <div class="panel-header">
-        <span class="panel-title">TELEMETRY HUD</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="control-group">
-          <div class="control-header">
-            <label>GRID DIVISIONS</label>
-            <span class="val" id="telemetryGridVal">24</span>
-          </div>
-          <p class="hint">Coordinate perspective grid density</p>
-          <input type="range" id="telemetryGrid" min="8" max="48" step="2" value="24" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>VECTOR NODES</label>
-            <span class="val" id="telemetryNodesVal">40</span>
-          </div>
-          <p class="hint">Particle nodes connected to telemetry origin</p>
-          <input type="range" id="telemetryNodes" min="10" max="80" step="2" value="40" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>LINE STROKE</label>
-            <span class="val" id="telemetryStrokeVal">1.0</span>
-          </div>
-          <p class="hint">Stroke thickness for rays and grid lines</p>
-          <input type="range" id="telemetryStroke" min="0.4" max="3.0" step="0.1" value="1.0" />
-        </div>
-
-        <button class="btn-toggle active" id="telemetryRadarBtn">Radar Dial On</button>
-        <button class="btn-toggle active" id="telemetryBracketsBtn">Target Brackets On</button>
-        <button class="btn-toggle active" id="telemetryDataBtn">Telemetry Data On</button>
-      </div>
-    </section>
-
-    <!-- SECTION: TOPOGRAPHY (Geo Mode) -->
-    <section class="panel" data-section="topography" data-modes="geo" style="display:none">
-      <div class="panel-header">
-        <span class="panel-title">TOPOGRAPHY MAP</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="control-group">
-          <div class="control-header">
-            <label>CONTOUR LEVELS</label>
-            <span class="val" id="topoLevelsVal">14</span>
-          </div>
-          <p class="hint">Elevation density: number of contour isolines</p>
-          <input type="range" id="topoLevels" min="6" max="28" step="1" value="14" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>SMOOTHING PASSES</label>
-            <span class="val" id="topoSmoothingVal">2</span>
-          </div>
-          <p class="hint">Gaussian curve smoothing across terrain</p>
-          <input type="range" id="topoSmoothing" min="1" max="4" step="1" value="2" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>CONTOUR STROKE</label>
-            <span class="val" id="topoStrokeVal">1.0</span>
-          </div>
-          <p class="hint">Line weight of elevation contour curves</p>
-          <input type="range" id="topoStroke" min="0.4" max="3.0" step="0.1" value="1.0" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>PEAK ELEVATION</label>
-            <span class="val" id="topoPeakElevationVal">3200m</span>
-          </div>
-          <p class="hint">Maximum summit elevation scaling in meters</p>
-          <input type="range" id="topoPeakElevation" min="1200" max="6000" step="100" value="3200" />
-        </div>
-
-        <button class="btn-toggle active" id="topoLabelsBtn">Elevation Labels On</button>
-        <button class="btn-toggle active" id="topoPeaksBtn">Summit Peaks On</button>
-        <button class="btn-toggle active" id="topoNeatlineBtn">Geodetic Neatline On</button>
-        <button class="btn-toggle active" id="topoLegendBtn">Survey Legend On</button>
-      </div>
-    </section>
-
-    <!-- SECTION: VIEWFINDER (Studio Mode) -->
-    <section class="panel" data-section="viewfinder" data-modes="studio" style="display:none">
-      <div class="panel-header">
-        <span class="panel-title">VIEWFINDER / STUDIO</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="control-group">
-          <div class="control-header">
-            <label>COMPOSITION GUIDE</label>
-          </div>
-          <div class="segmented-group">
-            <button class="seg-btn active" data-guide-mode="thirds">Thirds</button>
-            <button class="seg-btn" data-guide-mode="golden">Golden</button>
-            <button class="seg-btn" data-guide-mode="cross">Cross</button>
-            <button class="seg-btn" data-guide-mode="grid">Grid</button>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>FRAME INSET</label>
-            <span class="val" id="studioFrameInsetVal">10%</span>
-          </div>
-          <p class="hint">Corner crop boundary distance from edge</p>
-          <input type="range" id="studioFrameInset" min="4" max="25" step="1" value="10" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>GUIDE STROKE</label>
-            <span class="val" id="studioStrokeVal">1.0</span>
-          </div>
-          <p class="hint">Line thickness for viewfinder guides</p>
-          <input type="range" id="studioStroke" min="0.4" max="3.0" step="0.1" value="1.0" />
-        </div>
-
-        <div class="control-group">
-          <div class="control-header">
-            <label>CENTER RETICLE</label>
-          </div>
-          <div class="segmented-group">
-            <button class="seg-btn active" data-reticle-mode="circle">Circle</button>
-            <button class="seg-btn" data-reticle-mode="cross">Cross</button>
-            <button class="seg-btn" data-reticle-mode="dot">Dot</button>
-            <button class="seg-btn" data-reticle-mode="none">None</button>
-          </div>
-        </div>
-
-        <button class="btn-toggle active" id="studioBracketsBtn">Crop Brackets On</button>
-        <button class="btn-toggle active" id="studioTelemetryBtn">Camera Telemetry On</button>
-      </div>
-    </section>
-
-    <!-- SECTION 8: PALETTE -->
-    <section class="panel" data-section="palette" data-modes="all">
-      <div class="panel-header">
-        <span class="panel-title">PALETTE</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="palette-grid" id="paletteGrid">
-          <!-- Swatch 1: Dark bg / White line (Active Default) -->
-          <button class="palette-swatch active" data-bg="#0a0a0a" data-color="#ffffff" title="White / Dark">
-            <div class="swatch-bg" style="background:#0a0a0a">
-              <div class="swatch-circle" style="border-color:#ffffff"></div>
-              <div class="swatch-dot" style="background:#ffffff"></div>
-            </div>
-          </button>
-          <!-- Swatch 2: Light bg / Dark line -->
-          <button class="palette-swatch" data-bg="#f4f4f4" data-color="#111111" title="Dark / Light">
-            <div class="swatch-bg" style="background:#f4f4f4">
-              <div class="swatch-circle" style="border-color:#111111"></div>
-              <div class="swatch-dot" style="background:#111111"></div>
-            </div>
-          </button>
-          <!-- Swatch 3: Dark bg / Gold line -->
-          <button class="palette-swatch" data-bg="#0c0c0c" data-color="#d4a843" title="Gold / Dark">
-            <div class="swatch-bg" style="background:#0c0c0c">
-              <div class="swatch-circle" style="border-color:#d4a843"></div>
-              <div class="swatch-dot" style="background:#d4a843"></div>
-            </div>
-          </button>
-          <!-- Swatch 4: Dark bg / Neon Green line -->
-          <button class="palette-swatch" data-bg="#08120a" data-color="#00ff66" title="Neon Green / Dark">
-            <div class="swatch-bg" style="background:#08120a">
-              <div class="swatch-circle" style="border-color:#00ff66"></div>
-              <div class="swatch-dot" style="background:#00ff66"></div>
-            </div>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 9: SIZE -->
-    <section class="panel" data-section="size" data-modes="all">
-      <div class="panel-header">
-        <span class="panel-title">SIZE</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <div class="select-wrap">
-          <select id="canvasSizeSelect">
-            <option value="portrait_3_4" selected>Portrait 3:4 (1200x1600)</option>
-            <option value="square">Square (1080x1080)</option>
-            <option value="landscape_16_9">Landscape 16:9 (1920x1080)</option>
-            <option value="instagram_story">Instagram Story (1080x1920)</option>
-            <option value="poster">Poster (1400x2000)</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-
-        <div class="control-group size-custom-inputs">
-          <div class="size-wh-row">
-            <div class="size-wh-field">
-              <label class="size-wh-label">W</label>
-              <input type="number" id="customWidth" class="input-text size-num" min="400" max="4000" step="10" value="1200" aria-label="Canvas width in pixels" />
-              <span class="size-wh-unit">px</span>
-            </div>
-            <div class="size-wh-sep">×</div>
-            <div class="size-wh-field">
-              <label class="size-wh-label">H</label>
-              <input type="number" id="customHeight" class="input-text size-num" min="400" max="4000" step="10" value="1600" aria-label="Canvas height in pixels" />
-              <span class="size-wh-unit">px</span>
-            </div>
-          </div>
-          <p class="hint" style="margin-top:6px">400 – 4000 px per side</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 10: TEXTURE / NOISE -->
-    <section class="panel" data-section="texture" data-modes="all">
-      <div class="panel-header">
-        <span class="panel-title">TEXTURE / NOISE</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <button class="btn-block-outline" id="replaceTextureBtn">Replace Texture</button>
-        <input type="file" id="textureInput" accept="image/*" style="display:none" />
-        <button class="btn-block-outline" id="removeTextureBtn">Remove Texture</button>
-
-        <div class="control-group" style="margin-top:14px">
-          <div class="control-header">
-            <label>TEXTURE OPACITY</label>
-            <span class="val" id="textureOpacityVal">0.50</span>
-          </div>
-          <p class="hint">Opacity of the noise overlay (screen blend)</p>
-          <input type="range" id="textureOpacity" min="0" max="1" step="0.01" value="0.50" />
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 11: EXPORT & ACTIONS -->
-    <section class="panel" data-section="export" data-modes="all" style="border-bottom:none">
-      <div class="panel-header">
-        <span class="panel-title">EXPORT & ACTIONS</span>
-        <button class="toggle-collapse" aria-label="Collapse section">−</button>
-      </div>
-      <div class="panel-body">
-        <button class="btn-download" id="downloadBtn">Download Full PNG</button>
-        <button class="btn-download-secondary" id="downloadOverlayBtn">Download Overlay Only (Transparent)</button>
-        <button class="btn-action-random" id="randomizeSettingsBtn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
-          Randomize Style & Settings
-        </button>
-        <p class="status-footer" id="exportStatusText">1200x1600 / White / Dark</p>
-      </div>
-    </section>
-
-      </div><!-- /.drawer-inner.sidebar -->
-    </aside><!-- /.panel-drawer -->
-
-    <!-- MAIN STAGE -->
-    <main class="stage">
-      <div class="canvas-wrap" id="canvasWrap">
-        <canvas id="canvas"></canvas>
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon">◉</div>
-          <h2>Drop an image to start</h2>
-          <p>Processed locally. Nothing leaves your browser.</p>
-        </div>
-      </div>
-      <div class="stage-attribution"><strong>Fanz Irfan</strong> / blog.fan.my.id</div>
-    </main>
-
-  </div><!-- /.workspace -->
-
-</div><!-- /.app -->
-
-<script src="gradients.js"></script>
-<script src="app.js"></script>
+          requestAnimationFrame(renderAsciiPreview);
+        }
+        renderAsciiPreview();
+      }
+    })();
+  </script>
 </body>
 </html>

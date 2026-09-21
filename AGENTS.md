@@ -1,22 +1,24 @@
-# Blob Tracker — Developer & Agent Guidelines
+# KOJERENS : Developer & Agent Guidelines
 
 ## Overview
-Blob Tracker is a high-performance generative visual canvas application built with vanilla web technologies (HTML5 Canvas, CSS3, ES5/ES6 JavaScript). It analyzes images for luminance contrast and physical feature centroids, generating technical vector overlays across 4 distinct generative visual engines:
-- **Sensor** (`circles`): Responsive blob and feature tracker with dynamic radius weighting, constellation connections, and coordinate readouts.
-- **Telemetry** (`hero`): High-impact sci-fi HUD display with radial dial ticks, technical perspective grid, corner brackets, and crosshairs.
-- **Topography** (`geo`): Precision geodetic contour mapping with 14 elevation levels and radial bearing spokes.
-- **Viewfinder** (`studio`): Minimalist editorial framing with rule-of-thirds compositional guides and studio telemetry typography.
+KOJERENS is a high-performance generative visual and design laboratory built with vanilla web technologies (HTML5 Canvas, CSS3, ES5/ES6 JavaScript). It hosts two client-side generative tools:
+1. **Blob Tracker** (`/blob-tracker/`): Analyzes images for luminance contrast and feature centroids across 4 distinct generative visual engines:
+   - **Sensor** (`circles`): Responsive blob and feature tracker with dynamic radius weighting, constellation connections, and coordinate readouts.
+   - **Telemetry** (`hero`): High-impact sci-fi HUD display with radial dial ticks, technical perspective grid, corner brackets, and crosshairs.
+   - **Topography** (`geo`): Precision geodetic contour mapping with Marching Squares elevation levels and radial bearing spokes.
+   - **Viewfinder** (`studio`): Minimalist editorial framing with rule-of-thirds compositional guides and studio telemetry typography.
+2. **ASCII Matrix / Generator** (`/ascii-gen/`): Browser-native glyph and ASCII art synthesizer with extensive Unicode character sets, real-time image and video processing, bloom, exposure, color quantization, and sequence export.
 
 ---
 
 ## Core Rules & Constraints
 
 1. **Attribution & Author Identity**:
-   - Always attribute to **Fanz Irfan** (never use Yordan Stoyanov or any other name).
+   - Always attribute to **Fanz Irfan** (never use any other name).
    - Default 4-corner frame texts:
      - Top Left: `Design & Strategy`
      - Top Right: `Fanz Irfan`
-     - Bottom Left: `blog.fan.my.id`
+     - Bottom Left: `manji.eu.org`
      - Bottom Right: `Indonesia`
 
 2. **File Export Conventions**:
