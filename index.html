@@ -14,7 +14,7 @@
 
   <aside class="sidebar">
     <!-- SECTION 1: IMAGE -->
-    <section class="panel" data-section="image">
+    <section class="panel" data-section="image" data-modes="all">
       <div class="panel-header">
         <span class="panel-title">IMAGE</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -35,7 +35,7 @@
     </section>
 
     <!-- SECTION 2: PIXELATE -->
-    <section class="panel" data-section="pixelate">
+    <section class="panel" data-section="pixelate" data-modes="all">
       <div class="panel-header">
         <span class="panel-title">PIXELATE</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -72,7 +72,7 @@
     </section>
 
     <!-- SECTION: FRAME TEXT -->
-    <section class="panel" data-section="frametext">
+    <section class="panel" data-section="frametext" data-modes="all">
       <div class="panel-header">
         <span class="panel-title">FRAME TEXT</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -120,7 +120,7 @@
     </section>
 
     <!-- SECTION 3: CROSSHAIR FRAME -->
-    <section class="panel" data-section="crosshair">
+    <section class="panel" data-section="crosshair" data-modes="circles">
       <div class="panel-header">
         <span class="panel-title">CROSSHAIR FRAME</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -176,7 +176,7 @@
     </section>
 
     <!-- SECTION 4: CHAIN -->
-    <section class="panel" data-section="chain">
+    <section class="panel" data-section="chain" data-modes="circles">
       <div class="panel-header">
         <span class="panel-title">CHAIN</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -234,7 +234,7 @@
     </section>
 
     <!-- SECTION 5: DETECTION -->
-    <section class="panel" data-section="detection">
+    <section class="panel" data-section="detection" data-modes="circles">
       <div class="panel-header">
         <span class="panel-title">DETECTION</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -289,7 +289,7 @@
     </section>
 
     <!-- SECTION 6: SHAPES -->
-    <section class="panel" data-section="shapes">
+    <section class="panel" data-section="shapes" data-modes="circles">
       <div class="panel-header">
         <span class="panel-title">SHAPES</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -357,7 +357,7 @@
     </section>
 
     <!-- SECTION 7: CONNECTIONS -->
-    <section class="panel" data-section="connections">
+    <section class="panel" data-section="connections" data-modes="circles">
       <div class="panel-header">
         <span class="panel-title">CONNECTIONS</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -383,8 +383,152 @@
       </div>
     </section>
 
+    <!-- SECTION: TELEMETRY (Hero Mode) -->
+    <section class="panel" data-section="telemetry" data-modes="hero" style="display:none">
+      <div class="panel-header">
+        <span class="panel-title">TELEMETRY HUD</span>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+      </div>
+      <div class="panel-body">
+        <div class="control-group">
+          <div class="control-header">
+            <label>GRID DIVISIONS</label>
+            <span class="val" id="telemetryGridVal">24</span>
+          </div>
+          <p class="hint">Coordinate perspective grid density</p>
+          <input type="range" id="telemetryGrid" min="8" max="48" step="2" value="24" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>VECTOR NODES</label>
+            <span class="val" id="telemetryNodesVal">40</span>
+          </div>
+          <p class="hint">Particle nodes connected to telemetry origin</p>
+          <input type="range" id="telemetryNodes" min="10" max="80" step="2" value="40" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>LINE STROKE</label>
+            <span class="val" id="telemetryStrokeVal">1.0</span>
+          </div>
+          <p class="hint">Stroke thickness for rays and grid lines</p>
+          <input type="range" id="telemetryStroke" min="0.4" max="3.0" step="0.1" value="1.0" />
+        </div>
+
+        <button class="btn-toggle active" id="telemetryRadarBtn">Radar Dial On</button>
+        <button class="btn-toggle active" id="telemetryBracketsBtn">Target Brackets On</button>
+        <button class="btn-toggle active" id="telemetryDataBtn">Telemetry Data On</button>
+      </div>
+    </section>
+
+    <!-- SECTION: TOPOGRAPHY (Geo Mode) -->
+    <section class="panel" data-section="topography" data-modes="geo" style="display:none">
+      <div class="panel-header">
+        <span class="panel-title">TOPOGRAPHY MAP</span>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+      </div>
+      <div class="panel-body">
+        <div class="control-group">
+          <div class="control-header">
+            <label>CONTOUR LEVELS</label>
+            <span class="val" id="topoLevelsVal">14</span>
+          </div>
+          <p class="hint">Elevation density: number of contour isolines</p>
+          <input type="range" id="topoLevels" min="6" max="28" step="1" value="14" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>SMOOTHING PASSES</label>
+            <span class="val" id="topoSmoothingVal">2</span>
+          </div>
+          <p class="hint">Gaussian curve smoothing across terrain</p>
+          <input type="range" id="topoSmoothing" min="1" max="4" step="1" value="2" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>CONTOUR STROKE</label>
+            <span class="val" id="topoStrokeVal">1.0</span>
+          </div>
+          <p class="hint">Line weight of elevation contour curves</p>
+          <input type="range" id="topoStroke" min="0.4" max="3.0" step="0.1" value="1.0" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>PEAK ELEVATION</label>
+            <span class="val" id="topoPeakElevationVal">3200m</span>
+          </div>
+          <p class="hint">Maximum summit elevation scaling in meters</p>
+          <input type="range" id="topoPeakElevation" min="1200" max="6000" step="100" value="3200" />
+        </div>
+
+        <button class="btn-toggle active" id="topoLabelsBtn">Elevation Labels On</button>
+        <button class="btn-toggle active" id="topoPeaksBtn">Summit Peaks On</button>
+        <button class="btn-toggle active" id="topoNeatlineBtn">Geodetic Neatline On</button>
+        <button class="btn-toggle active" id="topoLegendBtn">Survey Legend On</button>
+      </div>
+    </section>
+
+    <!-- SECTION: VIEWFINDER (Studio Mode) -->
+    <section class="panel" data-section="viewfinder" data-modes="studio" style="display:none">
+      <div class="panel-header">
+        <span class="panel-title">VIEWFINDER / STUDIO</span>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+      </div>
+      <div class="panel-body">
+        <div class="control-group">
+          <div class="control-header">
+            <label>COMPOSITION GUIDE</label>
+          </div>
+          <div class="segmented-group">
+            <button class="seg-btn active" data-guide-mode="thirds">Thirds</button>
+            <button class="seg-btn" data-guide-mode="golden">Golden</button>
+            <button class="seg-btn" data-guide-mode="cross">Cross</button>
+            <button class="seg-btn" data-guide-mode="grid">Grid</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>FRAME INSET</label>
+            <span class="val" id="studioFrameInsetVal">10%</span>
+          </div>
+          <p class="hint">Corner crop boundary distance from edge</p>
+          <input type="range" id="studioFrameInset" min="4" max="25" step="1" value="10" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>GUIDE STROKE</label>
+            <span class="val" id="studioStrokeVal">1.0</span>
+          </div>
+          <p class="hint">Line thickness for viewfinder guides</p>
+          <input type="range" id="studioStroke" min="0.4" max="3.0" step="0.1" value="1.0" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>CENTER RETICLE</label>
+          </div>
+          <div class="segmented-group">
+            <button class="seg-btn active" data-reticle-mode="circle">Circle</button>
+            <button class="seg-btn" data-reticle-mode="cross">Cross</button>
+            <button class="seg-btn" data-reticle-mode="dot">Dot</button>
+            <button class="seg-btn" data-reticle-mode="none">None</button>
+          </div>
+        </div>
+
+        <button class="btn-toggle active" id="studioBracketsBtn">Crop Brackets On</button>
+        <button class="btn-toggle active" id="studioTelemetryBtn">Camera Telemetry On</button>
+      </div>
+    </section>
+
     <!-- SECTION 8: PALETTE -->
-    <section class="panel" data-section="palette">
+    <section class="panel" data-section="palette" data-modes="all">
       <div class="panel-header">
         <span class="panel-title">PALETTE</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -424,7 +568,7 @@
     </section>
 
     <!-- SECTION 9: SIZE -->
-    <section class="panel" data-section="size">
+    <section class="panel" data-section="size" data-modes="all">
       <div class="panel-header">
         <span class="panel-title">SIZE</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -443,7 +587,7 @@
     </section>
 
     <!-- SECTION 10: TEXTURE / NOISE -->
-    <section class="panel" data-section="texture">
+    <section class="panel" data-section="texture" data-modes="all">
       <div class="panel-header">
         <span class="panel-title">TEXTURE / NOISE</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
@@ -465,7 +609,7 @@
     </section>
 
     <!-- SECTION 11: EXPORT -->
-    <section class="panel" data-section="export" style="border-bottom:none">
+    <section class="panel" data-section="export" data-modes="all" style="border-bottom:none">
       <div class="panel-header">
         <span class="panel-title">EXPORT</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
