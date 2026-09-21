@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blob Tracker — Self-Hosted</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <header class="sidebar-header">
+      <h1>BLOB TRACKER</h1>
+      <p class="subtitle">Self-hosted · 100% browser</p>
+    </header>
+
+    <section class="panel">
+      <label class="panel-label">IMAGE SOURCE</label>
+      <input type="file" id="imageInput" accept="image/*" />
+      <p class="hint" id="imageHint">Belum ada gambar. Upload foto untuk mulai.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">MIN RADIUS</label>
+      <div class="row">
+        <input type="range" id="minRadius" min="2" max="30" value="8" />
+        <span class="val" id="minRadiusVal">8</span>
+      </div>
+      <p class="hint">Lingkaran terkecil (area low-score).</p>
+
+      <label class="panel-label">MAX RADIUS</label>
+      <div class="row">
+        <input type="range" id="maxRadius" min="5" max="80" value="32" />
+        <span class="val" id="maxRadiusVal">32</span>
+      </div>
+      <p class="hint">Lingkaran terbesar (area high-score).</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">STROKE</label>
+      <div class="row">
+        <input type="range" id="stroke" min="0.5" max="6" step="0.1" value="1.5" />
+        <span class="val" id="strokeVal">1.5</span>
+      </div>
+      <p class="hint">Ketebalan garis lingkaran.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">SIZE SEED</label>
+      <div class="row">
+        <input type="range" id="seed" min="1" max="9999" value="459" />
+        <span class="val" id="seedVal">459</span>
+      </div>
+      <div class="row">
+        <label class="checkbox">
+          <input type="checkbox" id="lockSeed" checked />
+          <span>Lock seed (deterministik)</span>
+        </label>
+        <button class="btn-mini" id="randomizeSeed">🎲</button>
+      </div>
+      <p class="hint">Sama seed, sama hasil.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">POINT DENSITY</label>
+      <div class="row">
+        <input type="range" id="density" min="5" max="120" value="40" />
+        <span class="val" id="densityVal">40</span>
+      </div>
+      <p class="hint">Jumlah titik yang dideteksi.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">LABEL SIZE</label>
+      <div class="row">
+        <input type="range" id="labelSize" min="4" max="16" value="9" />
+        <span class="val" id="labelSizeVal">9</span>
+      </div>
+      <p class="hint">Ukuran teks koordinat XY.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">OVERLAY OPACITY</label>
+      <div class="row">
+        <input type="range" id="opacity" min="0" max="100" value="100" />
+        <span class="val" id="opacityVal">100</span>
+      </div>
+      <p class="hint">Opacity master untuk semua overlay.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">CONNECTIONS</label>
+
+      <label class="panel-label small">MAX DISTANCE</label>
+      <div class="row">
+        <input type="range" id="maxDistance" min="0" max="400" value="120" />
+        <span class="val" id="maxDistanceVal">120</span>
+      </div>
+      <p class="hint">0 = tanpa garis.</p>
+
+      <label class="panel-label small">LINE WEIGHT</label>
+      <div class="row">
+        <input type="range" id="lineWeight" min="0.1" max="4" step="0.1" value="0.8" />
+        <span class="val" id="lineWeightVal">0.8</span>
+      </div>
+      <p class="hint">Ketebalan garis penghubung.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">TRAIL</label>
+      <div class="row">
+        <label class="checkbox">
+          <input type="checkbox" id="showTrails" checked />
+          <span>Tampilkan jejak melengkung</span>
+        </label>
+      </div>
+      <div class="row">
+        <input type="range" id="trailLength" min="1" max="8" value="3" />
+        <span class="val" id="trailLengthVal">3</span>
+      </div>
+      <p class="hint">Panjang trail per titik.</p>
+    </section>
+
+    <section class="panel">
+      <label class="panel-label">PALETTE</label>
+      <div class="palette" id="palette">
+        <button class="swatch active" data-color="#d4a843" style="background:#d4a843"></button>
+        <button class="swatch" data-color="#ffffff" style="background:#ffffff"></button>
+        <button class="swatch" data-color="#4d6bfe" style="background:#4d6bfe"></button>
+        <button class="swatch" data-color="#ff4d4d" style="background:#ff4d4d"></button>
+        <button class="swatch" data-color="#4dffd2" style="background:#4dffd2"></button>
+        <button class="swatch" data-color="#c084fc" style="background:#c084fc"></button>
+      </div>
+      <div class="row">
+        <label class="panel-label small" style="margin:0">CUSTOM</label>
+        <input type="color" id="customColor" value="#d4a843" />
+      </div>
+      <p class="hint">Warna dasar overlay.</p>
+    </section>
+
+    <section class="panel actions">
+      <button class="btn-primary" id="redrawBtn">↻ Redraw</button>
+      <button class="btn-outline" id="downloadBtn">↓ Download PNG</button>
+    </section>
+  </aside>
+
+  <main class="stage">
+    <div class="stage-topbar">
+      <div class="topbar-info">
+        <span class="tag" id="fpsTag">— FPS</span>
+        <span class="tag" id="countTag">0 BLOBS</span>
+      </div>
+      <div class="topbar-tabs">
+        <button class="tab active" data-mode="hero">Hero</button>
+        <button class="tab" data-mode="geo">Geo Tool</button>
+        <button class="tab" data-mode="studio">Studio</button>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="canvas"></canvas>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">◉</div>
+        <h2>Upload gambar untuk mulai</h2>
+        <p>Semua proses berjalan 100% di browser kamu.</p>
+      </div>
+    </div>
+
+    <footer class="stage-footer">
+      <span>Tool created by Better DeepSeek</span>
+      <span id="resTag">—</span>
+    </footer>
+  </main>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
