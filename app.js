@@ -50,8 +50,10 @@
 
   // Crosshair Frame Controls
   var frameToggleBtn = document.getElementById('frameToggleBtn');
-  var frameSizeSlider = document.getElementById('frameSize');
-  var frameSizeVal = document.getElementById('frameSizeVal');
+  var frameWidthSlider = document.getElementById('frameWidth');
+  var frameWidthVal = document.getElementById('frameWidthVal');
+  var frameHeightSlider = document.getElementById('frameHeight');
+  var frameHeightVal = document.getElementById('frameHeightVal');
   var dashPatternSlider = document.getElementById('dashPattern');
   var dashPatternVal = document.getElementById('dashPatternVal');
   var frameStrokeSlider = document.getElementById('frameStroke');
@@ -144,6 +146,8 @@
   var textureOpacitySlider = document.getElementById('textureOpacity');
   var textureOpacityVal = document.getElementById('textureOpacityVal');
   var canvasSizeSelect = document.getElementById('canvasSizeSelect');
+  var customWidthInput = document.getElementById('customWidth');
+  var customHeightInput = document.getElementById('customHeight');
   var paletteGrid = document.getElementById('paletteGrid');
 
   var FORMATS = {
@@ -151,7 +155,8 @@
     square: { w: 1080, h: 1080, label: '1080x1080' },
     landscape_16_9: { w: 1920, h: 1080, label: '1920x1080' },
     instagram_story: { w: 1080, h: 1920, label: '1080x1920' },
-    poster: { w: 1400, h: 2000, label: '1400x2000' }
+    poster: { w: 1400, h: 2000, label: '1400x2000' },
+    custom: { w: 1200, h: 1600, label: 'Custom' }
   };
 
   var state = {
@@ -2009,8 +2014,10 @@
     if (state.frameOn && state.mode === 'circles') {
       var cx = tW / 2;
       var cy = tH / 2;
-      var fSizePct = parseFloat(frameSizeSlider.value) || 60;
-      var frameBox = Math.min(tW, tH) * (fSizePct / 100);
+      var fWidthPct = parseFloat(frameWidthSlider ? frameWidthSlider.value : 60) || 60;
+      var fHeightPct = parseFloat(frameHeightSlider ? frameHeightSlider.value : 60) || 60;
+      var frameBoxW = tW * (fWidthPct / 100);
+      var frameBoxH = tH * (fHeightPct / 100);
       var dash = parseFloat(dashPatternSlider.value) || 8;
       var fStroke = parseFloat(frameStrokeSlider.value) || 1.0;
 
@@ -2028,7 +2035,7 @@
       tCtx.stroke();
 
       tCtx.beginPath();
-      tCtx.rect(cx - frameBox / 2, cy - frameBox / 2, frameBox, frameBox);
+      tCtx.rect(cx - frameBoxW / 2, cy - frameBoxH / 2, frameBoxW, frameBoxH);
       tCtx.stroke();
       tCtx.setLineDash([]);
 
@@ -2267,7 +2274,8 @@
     imageOpacityVal.textContent = parseFloat(imageOpacitySlider.value).toFixed(2);
     pixelSizeVal.textContent = pixelSizeSlider.value;
     zoneSizeVal.textContent = zoneSizeSlider.value;
-    frameSizeVal.textContent = frameSizeSlider.value;
+    if (frameWidthVal && frameWidthSlider) frameWidthVal.textContent = frameWidthSlider.value;
+    if (frameHeightVal && frameHeightSlider) frameHeightVal.textContent = frameHeightSlider.value;
     dashPatternVal.textContent = dashPatternSlider.value;
     frameStrokeVal.textContent = parseFloat(frameStrokeSlider.value).toFixed(1);
     starSizeVal.textContent = starSizeSlider.value;
@@ -2351,7 +2359,7 @@
   });
 
   // 3. Level 1: Pure Visual Sliders (instant GPU canvas redraw, zero geometry math)
-  [imageOpacitySlider, pixelSizeSlider, zoneSizeSlider, frameSizeSlider, dashPatternSlider, frameStrokeSlider, starSizeSlider, starPointsSlider, shapeStrokeSlider, labelSizeSlider, overlayOpacitySlider, lineWeightSlider, textureOpacitySlider, telemetryGridSlider, telemetryNodesSlider, telemetryStrokeSlider, topoLevelsSlider, topoStrokeSlider, topoPeakElevationSlider, studioFrameInsetSlider, studioStrokeSlider].forEach(function (s) {
+  [imageOpacitySlider, pixelSizeSlider, zoneSizeSlider, frameWidthSlider, frameHeightSlider, dashPatternSlider, frameStrokeSlider, starSizeSlider, starPointsSlider, shapeStrokeSlider, labelSizeSlider, overlayOpacitySlider, lineWeightSlider, textureOpacitySlider, telemetryGridSlider, telemetryNodesSlider, telemetryStrokeSlider, topoLevelsSlider, topoStrokeSlider, topoPeakElevationSlider, studioFrameInsetSlider, studioStrokeSlider].forEach(function (s) {
     bindSlider(s, 1);
   });
   if (markerSizeSlider) {
@@ -2590,12 +2598,51 @@
   });
 
   // Canvas Format Selection
+  function syncSizeInputsFromFormat() {
+    var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
+    if (customWidthInput) customWidthInput.value = fmt.w;
+    if (customHeightInput) customHeightInput.value = fmt.h;
+  }
+
   canvasSizeSelect.addEventListener('change', function () {
     state.format = canvasSizeSelect.value;
+    if (state.format !== 'custom') {
+      var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
+      FORMATS.custom.w = fmt.w;
+      FORMATS.custom.h = fmt.h;
+    }
+    syncSizeInputsFromFormat();
     updateStatusFooter();
     recalculate(true);
     resizeAndRender();
   });
+
+  function handleCustomDimensionChange() {
+    var w = parseInt(customWidthInput.value, 10);
+    var h = parseInt(customHeightInput.value, 10);
+    if (!w || isNaN(w)) w = 1200;
+    if (!h || isNaN(h)) h = 1600;
+    w = Math.max(400, Math.min(4000, w));
+    h = Math.max(400, Math.min(4000, h));
+
+    FORMATS.custom.w = w;
+    FORMATS.custom.h = h;
+    FORMATS.custom.label = w + 'x' + h;
+
+    state.format = 'custom';
+    canvasSizeSelect.value = 'custom';
+
+    updateStatusFooter();
+    recalculate(true);
+    resizeAndRender();
+  }
+
+  if (customWidthInput) {
+    customWidthInput.addEventListener('change', handleCustomDimensionChange);
+  }
+  if (customHeightInput) {
+    customHeightInput.addEventListener('change', handleCustomDimensionChange);
+  }
 
   // Dynamic Sidebar Panels + Rail Filter
   function updateDynamicSidebarPanels(currentMode) {
@@ -2895,7 +2942,8 @@
     if (chosenMode === 'circles') {
       state.frameOn = Math.random() > 0.2;
       updateToggle(frameToggleBtn, state.frameOn, 'Frame On', 'Frame Off');
-      if (frameSizeSlider) frameSizeSlider.value = randInt(50, 75);
+      if (frameWidthSlider) frameWidthSlider.value = randInt(40, 80);
+      if (frameHeightSlider) frameHeightSlider.value = randInt(40, 80);
       if (dashPatternSlider) dashPatternSlider.value = pick([4, 6, 8, 12]);
       if (frameStrokeSlider) frameStrokeSlider.value = randFloat(0.8, 2.0, 1);
       if (starSizeSlider) starSizeSlider.value = randInt(6, 16);
@@ -3044,6 +3092,7 @@
 
   populateGradientMapControls();
   syncValues();
+  syncSizeInputsFromFormat();
   updateStatusFooter();
   updateDynamicSidebarPanels(state.mode);
   recalculate(true);

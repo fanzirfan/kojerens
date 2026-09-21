@@ -254,11 +254,20 @@
 
         <div class="control-group">
           <div class="control-header">
-            <label>FRAME SIZE</label>
-            <span class="val" id="frameSizeVal">60</span>
+            <label>FRAME WIDTH</label>
+            <span class="val" id="frameWidthVal">60</span>
           </div>
-          <p class="hint">Square size as % of canvas short side</p>
-          <input type="range" id="frameSize" min="10" max="100" value="60" />
+          <p class="hint">Frame width as % of canvas width</p>
+          <input type="range" id="frameWidth" min="10" max="100" value="60" />
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>FRAME HEIGHT</label>
+            <span class="val" id="frameHeightVal">60</span>
+          </div>
+          <p class="hint">Frame height as % of canvas height</p>
+          <input type="range" id="frameHeight" min="10" max="100" value="60" />
         </div>
 
         <div class="control-group">
@@ -705,7 +714,25 @@
             <option value="landscape_16_9">Landscape 16:9 (1920x1080)</option>
             <option value="instagram_story">Instagram Story (1080x1920)</option>
             <option value="poster">Poster (1400x2000)</option>
+            <option value="custom">Custom</option>
           </select>
+        </div>
+
+        <div class="control-group size-custom-inputs">
+          <div class="size-wh-row">
+            <div class="size-wh-field">
+              <label class="size-wh-label">W</label>
+              <input type="number" id="customWidth" class="input-text size-num" min="400" max="4000" step="10" value="1200" aria-label="Canvas width in pixels" />
+              <span class="size-wh-unit">px</span>
+            </div>
+            <div class="size-wh-sep">×</div>
+            <div class="size-wh-field">
+              <label class="size-wh-label">H</label>
+              <input type="number" id="customHeight" class="input-text size-num" min="400" max="4000" step="10" value="1600" aria-label="Canvas height in pixels" />
+              <span class="size-wh-unit">px</span>
+            </div>
+          </div>
+          <p class="hint" style="margin-top:6px">400 – 4000 px per side</p>
         </div>
       </div>
     </section>
