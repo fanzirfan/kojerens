@@ -113,7 +113,7 @@
     frameTextOn: true,
     frameTextTL: 'Design & Strategy',
     frameTextTR: 'Fanz Irfan',
-    frameTextBL: 'www.fanzirfan.id',
+    frameTextBL: 'blog.fan.my.id',
     frameTextBR: 'Indonesia',
     chainOn: true,
     chainIntersections: true,
