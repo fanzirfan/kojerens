@@ -192,18 +192,32 @@
 
   // Block Analysis Cache: avoids re-analyzing 2M pixels on circle placement/visual slider drags
   var cachedAnalysis = {
-    key: '',
+    image: null,
+    targetW: 0,
+    targetH: 0,
+    bSize: 0,
+    mode: '',
     blocks: null
   };
 
   function getAnalyzedBlocks(img, targetW, targetH, bSize, mode, forceReanalyze) {
-    var imgKey = (img.src && img.src.length < 250) ? img.src : (img.width + 'x' + img.height);
-    var key = imgKey + '_' + targetW + 'x' + targetH + '_' + bSize + '_' + mode;
-    if (!forceReanalyze && cachedAnalysis.key === key && cachedAnalysis.blocks) {
+    if (
+      !forceReanalyze &&
+      cachedAnalysis.blocks &&
+      cachedAnalysis.image === img &&
+      cachedAnalysis.targetW === targetW &&
+      cachedAnalysis.targetH === targetH &&
+      cachedAnalysis.bSize === bSize &&
+      cachedAnalysis.mode === mode
+    ) {
       return cachedAnalysis.blocks;
     }
     var blocks = analyzeImage(img, targetW, targetH, bSize, mode);
-    cachedAnalysis.key = key;
+    cachedAnalysis.image = img;
+    cachedAnalysis.targetW = targetW;
+    cachedAnalysis.targetH = targetH;
+    cachedAnalysis.bSize = bSize;
+    cachedAnalysis.mode = mode;
     cachedAnalysis.blocks = blocks;
     return blocks;
   }
@@ -229,8 +243,14 @@
       sy = (img.height - sh) / 2;
     }
 
-    actx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-    var f = actx.getImageData(0, 0, targetW, targetH).data;
+    var f;
+    try {
+      actx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+      f = actx.getImageData(0, 0, targetW, targetH).data;
+    } catch (err) {
+      console.warn('Canvas pixel read error (e.g. cross-origin/tainted image):', err);
+      return [];
+    }
 
     var p = bSize || 16;
     var cols = Math.floor(targetW / p);
@@ -1437,15 +1457,28 @@
     resizeAndRender();
   }
 
+  function isImageFile(file) {
+    if (!file) return false;
+    if (file.type && file.type.startsWith('image/')) return true;
+    var name = file.name || '';
+    return /\.(png|jpe?g|webp|avif|bmp|gif|tiff|svg)$/i.test(name);
+  }
+
   function loadFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!isImageFile(file)) return;
     var reader = new FileReader();
     reader.onload = function (ev) {
       var img = new Image();
       img.onload = function () {
         applyLoadedImage(img);
       };
+      img.onerror = function (err) {
+        console.error('Image load error:', err);
+      };
       img.src = ev.target.result;
+    };
+    reader.onerror = function (err) {
+      console.error('FileReader error:', err);
     };
     reader.readAsDataURL(file);
   }
@@ -1485,10 +1518,12 @@
     var items = e.clipboardData && e.clipboardData.items;
     if (!items) return;
     for (var i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
+      if (items[i].type && items[i].type.indexOf('image') !== -1) {
         var blob = items[i].getAsFile();
-        if (blob) loadFile(blob);
-        break;
+        if (blob) {
+          loadFile(blob);
+          break;
+        }
       }
     }
   });
@@ -1499,7 +1534,7 @@
   });
   textureInput.addEventListener('change', function (e) {
     var file = e.target.files && e.target.files[0];
-    if (file) {
+    if (file && isImageFile(file)) {
       var r = new FileReader();
       r.onload = function (ev) {
         var tImg = new Image();
@@ -1543,11 +1578,4 @@
   updateStatusFooter();
   recalculate(true);
   resizeAndRender();
-
-  // Load preset portrait automatically on startup if file exists
-  var autoImg = new Image();
-  autoImg.onload = function () {
-    applyLoadedImage(autoImg);
-  };
-  autoImg.src = 'assets/preset-portrait.png';
 })();
