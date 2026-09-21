@@ -2610,16 +2610,58 @@
     });
   }
 
-  // Stage Navigation (Sensor, Telemetry, Topography, Viewfinder)
-  document.querySelectorAll('.nav-tab').forEach(function (tab) {
+  // Topbar Mode Tabs (Sensor, Telemetry, Topography, Viewfinder)
+  document.querySelectorAll('.mode-tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
-      document.querySelectorAll('.nav-tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.mode-tab').forEach(function (t) {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
       tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
       state.mode = tab.dataset.mode;
       updateDynamicSidebarPanels(state.mode);
+      // Reflect active mode in engine rail button
+      updateRailModeHighlight(state.mode);
       scheduleUpdate(1);
     });
   });
+
+  // Icon Rail: toggle panel drawer
+  var panelDrawer = document.getElementById('panelDrawer');
+  var activeRailPanel = 'image';
+  document.querySelectorAll('.rail-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = btn.dataset.panel;
+      if (activeRailPanel === target && panelDrawer.classList.contains('open')) {
+        // Clicking active icon collapses drawer
+        panelDrawer.classList.remove('open');
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', 'false');
+        activeRailPanel = null;
+      } else {
+        // Open drawer and scroll to target section
+        document.querySelectorAll('.rail-btn').forEach(function (b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+        activeRailPanel = target;
+        panelDrawer.classList.add('open');
+        // Scroll the sidebar to the target section
+        var targetSection = panelDrawer.querySelector('[data-section="' + target + '"]');
+        if (targetSection) {
+          setTimeout(function () { targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+        }
+      }
+    });
+  });
+
+  function updateRailModeHighlight(mode) {
+    // No rail button directly maps to mode; engine button can optionally highlight
+  }
+
 
   // Image Loading
   function applyLoadedImage(img) {
@@ -2783,8 +2825,9 @@
     var modes = ['circles', 'hero', 'geo', 'studio'];
     var chosenMode = pick(modes);
     state.mode = chosenMode;
-    document.querySelectorAll('.nav-tab').forEach(function (tab) {
+    document.querySelectorAll('.mode-tab').forEach(function (tab) {
       tab.classList.toggle('active', tab.dataset.mode === chosenMode);
+      tab.setAttribute('aria-selected', tab.dataset.mode === chosenMode ? 'true' : 'false');
     });
     updateDynamicSidebarPanels(chosenMode);
 
