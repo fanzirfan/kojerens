@@ -34,6 +34,57 @@
       </div>
     </section>
 
+    <!-- SECTION: GRADIENT MAP -->
+    <section class="panel" data-section="gradientmap" data-modes="all">
+      <div class="panel-header">
+        <span class="panel-title">GRADIENT MAP</span>
+        <button class="toggle-collapse" aria-label="Collapse section">−</button>
+      </div>
+      <div class="panel-body">
+        <button class="btn-toggle" id="gradientMapToggleBtn">Gradient Map Off</button>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>PRESET (40 MAPS)</label>
+            <span class="val" id="gradientMapPresetVal">Gradient 01</span>
+          </div>
+          <div class="select-wrap">
+            <select id="gradientMapSelect" aria-label="Select Gradient Map Preset">
+            </select>
+          </div>
+        </div>
+
+        <div class="gradient-preview-strip" id="gradientMapStrip" title="Active Gradient Map Preview"></div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>QUICK SWATCHES</label>
+          </div>
+          <div class="gradient-swatches-grid" id="gradientSwatchesGrid" aria-label="Gradient Map Presets Swatches">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-header">
+            <label>BLEND OPACITY</label>
+            <span class="val" id="gradientMapOpacityVal">1.0</span>
+          </div>
+          <p class="hint">Intensity of color remapping</p>
+          <input type="range" id="gradientMapOpacity" min="0" max="1" step="0.01" value="1.0" />
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-toggle" id="gradientMapInvertBtn">Invert Off</button>
+          <button class="btn-action" id="randomizeGradientBtn">Random Map</button>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <button class="btn-action" id="importGrdBtn" style="width: 100%;">Import .GRD File</button>
+          <input type="file" id="grdFileInput" accept=".grd" style="display:none" />
+        </div>
+      </div>
+    </section>
+
     <!-- SECTION 2: PIXELATE -->
     <section class="panel" data-section="pixelate" data-modes="all">
       <div class="panel-header">
@@ -608,14 +659,19 @@
       </div>
     </section>
 
-    <!-- SECTION 11: EXPORT -->
+    <!-- SECTION 11: EXPORT & ACTIONS -->
     <section class="panel" data-section="export" data-modes="all" style="border-bottom:none">
       <div class="panel-header">
-        <span class="panel-title">EXPORT</span>
+        <span class="panel-title">EXPORT & ACTIONS</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
-        <button class="btn-download" id="downloadBtn">Download PNG</button>
+        <button class="btn-download" id="downloadBtn">Download Full PNG</button>
+        <button class="btn-download-secondary" id="downloadOverlayBtn">Download Overlay Only (Transparent)</button>
+        <button class="btn-action-random" id="randomizeSettingsBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+          Randomize Style & Settings
+        </button>
         <p class="status-footer" id="exportStatusText">1200x1600 / White / Dark</p>
       </div>
     </section>
@@ -629,6 +685,11 @@
       <button class="nav-tab" data-mode="hero">Telemetry</button>
       <button class="nav-tab" data-mode="geo">Topography</button>
       <button class="nav-tab" data-mode="studio">Viewfinder</button>
+      <div class="stage-nav-divider"></div>
+      <button class="nav-action-btn" id="randomizeBtn" title="Randomize style and settings">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        Randomize
+      </button>
     </div>
 
     <div class="canvas-wrap" id="canvasWrap">
@@ -645,6 +706,7 @@
 
 </div>
 
+<script src="gradients.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

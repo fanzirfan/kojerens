@@ -11,7 +11,23 @@
   var replaceTextureBtn = document.getElementById('replaceTextureBtn');
   var removeTextureBtn = document.getElementById('removeTextureBtn');
   var downloadBtn = document.getElementById('downloadBtn');
+  var downloadOverlayBtn = document.getElementById('downloadOverlayBtn');
+  var randomizeBtn = document.getElementById('randomizeBtn');
+  var randomizeSettingsBtn = document.getElementById('randomizeSettingsBtn');
   var exportStatusText = document.getElementById('exportStatusText');
+
+  // Gradient Map Controls
+  var gradientMapToggleBtn = document.getElementById('gradientMapToggleBtn');
+  var gradientMapSelect = document.getElementById('gradientMapSelect');
+  var gradientMapPresetVal = document.getElementById('gradientMapPresetVal');
+  var gradientMapStrip = document.getElementById('gradientMapStrip');
+  var gradientSwatchesGrid = document.getElementById('gradientSwatchesGrid');
+  var gradientMapOpacitySlider = document.getElementById('gradientMapOpacity');
+  var gradientMapOpacityVal = document.getElementById('gradientMapOpacityVal');
+  var gradientMapInvertBtn = document.getElementById('gradientMapInvertBtn');
+  var randomizeGradientBtn = document.getElementById('randomizeGradientBtn');
+  var importGrdBtn = document.getElementById('importGrdBtn');
+  var grdFileInput = document.getElementById('grdFileInput');
 
   // Frame Text Controls
   var frameTextToggleBtn = document.getElementById('frameTextToggleBtn');
@@ -171,7 +187,11 @@
     studioGuideMode: 'thirds',
     studioReticleMode: 'circle',
     studioBrackets: true,
-    studioTelemetry: true
+    studioTelemetry: true,
+    gradientMapOn: false,
+    gradientMapIndex: 0,
+    gradientMapOpacity: 1.0,
+    gradientMapInvert: false
   };
 
   // Lehmer PRNG (LCG)
@@ -232,6 +252,291 @@
       pixelScratchCtx = pixelScratchCanvas.getContext('2d');
     }
     return { canvas: pixelScratchCanvas, ctx: pixelScratchCtx };
+  }
+
+  // Gradient Map System & Presets
+  var gradientPresets = (typeof window !== 'undefined' && window.GRADIENT_MAP_PRESETS) ? window.GRADIENT_MAP_PRESETS : [];
+
+  function getGradientLUT(index, inverted) {
+    var grad = gradientPresets[index] || gradientPresets[0];
+    if (!grad || !grad.stops || grad.stops.length === 0) {
+      var fallback = new Uint8Array(256 * 3);
+      for (var k = 0; k < 256; k++) {
+        fallback[k * 3] = k;
+        fallback[k * 3 + 1] = k;
+        fallback[k * 3 + 2] = k;
+      }
+      return fallback;
+    }
+
+    var stops = grad.stops.map(function (s) {
+      return { r: s.r, g: s.g, b: s.b, pos: inverted ? (1 - s.pos) : s.pos };
+    }).sort(function (a, b) { return a.pos - b.pos; });
+
+    if (stops[0].pos > 0) {
+      stops.unshift({ r: stops[0].r, g: stops[0].g, b: stops[0].b, pos: 0 });
+    }
+    if (stops[stops.length - 1].pos < 1) {
+      var last = stops[stops.length - 1];
+      stops.push({ r: last.r, g: last.g, b: last.b, pos: 1 });
+    }
+
+    var lut = new Uint8Array(256 * 3);
+    for (var i = 0; i < 256; i++) {
+      var t = i / 255;
+      var s0 = stops[0];
+      var s1 = stops[stops.length - 1];
+      for (var j = 0; j < stops.length - 1; j++) {
+        if (t >= stops[j].pos && t <= stops[j + 1].pos) {
+          s0 = stops[j];
+          s1 = stops[j + 1];
+          break;
+        }
+      }
+      var span = s1.pos - s0.pos;
+      var factor = span > 0.0001 ? (t - s0.pos) / span : 0;
+      lut[i * 3] = Math.round(s0.r + (s1.r - s0.r) * factor);
+      lut[i * 3 + 1] = Math.round(s0.g + (s1.g - s0.g) * factor);
+      lut[i * 3 + 2] = Math.round(s0.b + (s1.b - s0.b) * factor);
+    }
+    return lut;
+  }
+
+  function getGradientCss(grad, inverted) {
+    if (!grad || !grad.stops || grad.stops.length === 0) return '#000';
+    var stops = grad.stops.map(function (s) {
+      return { hex: s.hex, pos: inverted ? (1 - s.pos) : s.pos };
+    }).sort(function (a, b) { return a.pos - b.pos; });
+    var stopStrs = stops.map(function (s) {
+      return s.hex + ' ' + (s.pos * 100).toFixed(1) + '%';
+    });
+    return 'linear-gradient(to right, ' + stopStrs.join(', ') + ')';
+  }
+
+  var gradientMapCache = {
+    key: null,
+    canvas: null,
+    ctx: null
+  };
+
+  function getGradientMappedCanvas(img, tW, tH, sx, sy, sw, sh) {
+    var opVal = gradientMapOpacitySlider ? parseFloat(gradientMapOpacitySlider.value) : state.gradientMapOpacity;
+    if (isNaN(opVal)) opVal = 1.0;
+    var key = [
+      img.src ? img.src.slice(-32) : 'img',
+      tW,
+      tH,
+      state.gradientMapIndex,
+      opVal.toFixed(2),
+      state.gradientMapInvert ? 1 : 0
+    ].join('_');
+
+    if (gradientMapCache.key === key && gradientMapCache.canvas) {
+      return gradientMapCache.canvas;
+    }
+
+    if (!gradientMapCache.canvas) {
+      gradientMapCache.canvas = document.createElement('canvas');
+      gradientMapCache.ctx = gradientMapCache.canvas.getContext('2d', { willReadFrequently: true });
+    }
+    var oc = gradientMapCache.canvas;
+    var oCtx = gradientMapCache.ctx;
+    if (oc.width !== tW || oc.height !== tH) {
+      oc.width = tW;
+      oc.height = tH;
+    }
+
+    oCtx.drawImage(img, sx, sy, sw, sh, 0, 0, tW, tH);
+    var imgData = oCtx.getImageData(0, 0, tW, tH);
+    var data = imgData.data;
+    var len = data.length;
+    var lut = getGradientLUT(state.gradientMapIndex, state.gradientMapInvert);
+    var blend = opVal;
+
+    for (var i = 0; i < len; i += 4) {
+      var r = data[i];
+      var g = data[i + 1];
+      var b = data[i + 2];
+      var lum = (r * 77 + g * 151 + b * 28) >> 8;
+      var lr = lut[lum * 3];
+      var lg = lut[lum * 3 + 1];
+      var lb = lut[lum * 3 + 2];
+      if (blend < 1) {
+        data[i] = Math.round(r + (lr - r) * blend);
+        data[i + 1] = Math.round(g + (lg - g) * blend);
+        data[i + 2] = Math.round(b + (lb - b) * blend);
+      } else {
+        data[i] = lr;
+        data[i + 1] = lg;
+        data[i + 2] = lb;
+      }
+    }
+    oCtx.putImageData(imgData, 0, 0);
+    gradientMapCache.key = key;
+    return oc;
+  }
+
+  function updateGradientMapPreview() {
+    var grad = gradientPresets[state.gradientMapIndex] || gradientPresets[0];
+    if (!grad) return;
+    var css = getGradientCss(grad, state.gradientMapInvert);
+    if (gradientMapStrip) gradientMapStrip.style.background = css;
+    if (gradientMapPresetVal) gradientMapPresetVal.textContent = grad.name;
+    if (gradientMapSelect) gradientMapSelect.value = state.gradientMapIndex;
+
+    if (gradientSwatchesGrid) {
+      var items = gradientSwatchesGrid.querySelectorAll('.gradient-swatch-item');
+      items.forEach(function (el, idx) {
+        el.classList.toggle('active', idx === state.gradientMapIndex);
+        var g = gradientPresets[idx];
+        if (g) el.style.background = getGradientCss(g, state.gradientMapInvert);
+      });
+    }
+  }
+
+  function populateGradientMapControls() {
+    if (!gradientMapSelect || !gradientSwatchesGrid) return;
+    gradientMapSelect.innerHTML = '';
+    gradientSwatchesGrid.innerHTML = '';
+
+    gradientPresets.forEach(function (grad, idx) {
+      var opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = grad.name;
+      gradientMapSelect.appendChild(opt);
+
+      var swatch = document.createElement('div');
+      swatch.className = 'gradient-swatch-item' + (idx === state.gradientMapIndex ? ' active' : '');
+      swatch.title = grad.name;
+      swatch.style.background = getGradientCss(grad, state.gradientMapInvert);
+      swatch.setAttribute('data-index', idx);
+      swatch.setAttribute('role', 'button');
+      swatch.setAttribute('tabindex', '0');
+      swatch.setAttribute('aria-label', grad.name);
+
+      swatch.addEventListener('click', function () {
+        state.gradientMapIndex = idx;
+        updateGradientMapPreview();
+        scheduleUpdate(1);
+      });
+      swatch.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          state.gradientMapIndex = idx;
+          updateGradientMapPreview();
+          scheduleUpdate(1);
+        }
+      });
+
+      gradientSwatchesGrid.appendChild(swatch);
+    });
+
+    updateGradientMapPreview();
+  }
+
+  function parseGrdBuffer(arrayBuffer) {
+    var view = new DataView(arrayBuffer);
+    var uint8 = new Uint8Array(arrayBuffer);
+    var grads = [];
+    var len = arrayBuffer.byteLength;
+
+    function getAscii(offset, count) {
+      var res = '';
+      for (var i = 0; i < count; i++) {
+        res += String.fromCharCode(uint8[offset + i]);
+      }
+      return res;
+    }
+
+    function readUtf16BE(start, charCount) {
+      var res = '';
+      for (var i = 0; i < charCount; i++) {
+        var code = view.getUint16(start + i * 2, false);
+        if (code === 0) break;
+        res += String.fromCharCode(code);
+      }
+      return res;
+    }
+
+    var offset = 0;
+    while (offset < len - 8) {
+      if (getAscii(offset, 4) === 'Nm  ' && getAscii(offset + 4, 4) === 'TEXT') {
+        var nameLen = view.getUint32(offset + 8, false);
+        var origName = readUtf16BE(offset + 12, nameLen);
+        var gradStart = offset;
+
+        var nextGrad = len;
+        for (var j = offset + 12 + nameLen * 2; j < len - 8; j++) {
+          if (getAscii(j, 4) === 'Nm  ' && getAscii(j + 4, 4) === 'TEXT') {
+            nextGrad = j;
+            break;
+          }
+        }
+
+        var colorStops = [];
+        var p = gradStart;
+        while (p < nextGrad - 8) {
+          if (getAscii(p, 4) === 'Rd  ') {
+            var rIdx = -1, gIdx = -1, bIdx = -1, lctnIdx = -1;
+            for (var k = p; k < Math.min(nextGrad, p + 200); k++) {
+              if (rIdx === -1 && getAscii(k, 4) === 'doub') rIdx = k + 4;
+              else if (gIdx === -1 && getAscii(k, 4) === 'Grn ') {
+                for (var k2 = k; k2 < k + 20; k2++) {
+                  if (getAscii(k2, 4) === 'doub') { gIdx = k2 + 4; break; }
+                }
+              } else if (bIdx === -1 && getAscii(k, 4) === 'Bl  ') {
+                for (var k3 = k; k3 < k + 20; k3++) {
+                  if (getAscii(k3, 4) === 'doub') { bIdx = k3 + 4; break; }
+                }
+              } else if (lctnIdx === -1 && getAscii(k, 4) === 'Lctn') {
+                for (var k4 = k; k4 < k + 20; k4++) {
+                  if (getAscii(k4, 4) === 'long') { lctnIdx = k4 + 4; break; }
+                }
+              }
+              if (rIdx !== -1 && gIdx !== -1 && bIdx !== -1 && lctnIdx !== -1) break;
+            }
+
+            if (rIdx !== -1 && gIdx !== -1 && bIdx !== -1 && lctnIdx !== -1) {
+              var r = Math.round(view.getFloat64(rIdx, false));
+              var g = Math.round(view.getFloat64(gIdx, false));
+              var b = Math.round(view.getFloat64(bIdx, false));
+              var lctn = view.getInt32(lctnIdx, false);
+              var pos = Math.max(0, Math.min(1, lctn / 4096));
+              colorStops.push({
+                r: r, g: g, b: b,
+                pos: parseFloat(pos.toFixed(4)),
+                hex: '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
+              });
+              p = lctnIdx + 4;
+              continue;
+            }
+          }
+          p++;
+        }
+
+        colorStops.sort(function (a, b) { return a.pos - b.pos; });
+        var uniqueStops = [];
+        colorStops.forEach(function (s) {
+          if (uniqueStops.length === 0 || Math.abs(uniqueStops[uniqueStops.length - 1].pos - s.pos) > 0.001) {
+            uniqueStops.push(s);
+          }
+        });
+
+        var numStr = (grads.length + 1 < 10 ? '0' : '') + (grads.length + 1);
+        var cleanName = 'Gradient ' + numStr;
+
+        grads.push({
+          id: 'custom_grad_' + (grads.length + 1),
+          name: cleanName,
+          stops: uniqueStops
+        });
+
+        offset = nextGrad;
+      } else {
+        offset++;
+      }
+    }
+    return grads;
   }
 
   // Block Analysis Cache: avoids re-analyzing 2M pixels on circle placement/visual slider drags
@@ -1575,18 +1880,24 @@
   }
 
   // Render Pipeline
-  function drawCanvas(tCtx, tW, tH) {
+  function drawCanvas(tCtx, tW, tH, options) {
+    options = options || {};
+    var overlayOnly = !!options.overlayOnly;
     var palette = state.palette;
     var strokeColor = palette.stroke;
     var op = parseFloat(overlayOpacitySlider.value);
     if (isNaN(op)) op = 1;
 
     // 1. Background Fill
-    tCtx.fillStyle = palette.bg;
-    tCtx.fillRect(0, 0, tW, tH);
+    if (!overlayOnly) {
+      tCtx.fillStyle = palette.bg;
+      tCtx.fillRect(0, 0, tW, tH);
+    } else {
+      tCtx.clearRect(0, 0, tW, tH);
+    }
 
     // 2. Background Image
-    if (state.image) {
+    if (state.image && !overlayOnly) {
       var img = state.image;
       var imgRatio = img.width / img.height;
       var targetRatio = tW / tH;
@@ -1606,12 +1917,17 @@
 
       var imgOp = parseFloat(imageOpacitySlider.value);
       tCtx.globalAlpha = isNaN(imgOp) ? 0.75 : imgOp;
-      tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, tW, tH);
+      if (state.gradientMapOn) {
+        var mappedCanvas = getGradientMappedCanvas(img, tW, tH, sx, sy, sw, sh);
+        tCtx.drawImage(mappedCanvas, 0, 0, tW, tH);
+      } else {
+        tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, tW, tH);
+      }
       tCtx.globalAlpha = 1;
     }
 
     // 3. Pixelation Zones
-    if (state.pixelZones && state.pixelZones.length > 0 && parseInt(pixelSizeSlider.value, 10) > 1) {
+    if (!overlayOnly && state.pixelZones && state.pixelZones.length > 0 && parseInt(pixelSizeSlider.value, 10) > 1) {
       var pSize = parseInt(pixelSizeSlider.value, 10) || 16;
       var pRadius = parseInt(zoneSizeSlider.value, 10) || 90;
       var scratch = getPixelScratch();
@@ -1656,6 +1972,35 @@
           tCtx.textBaseline = 'middle';
           tCtx.fillText(Math.round(zx) + ',' + Math.round(zy), minX + zWidth / 2, minY + zHeight / 2);
           tCtx.globalAlpha = 1;
+        }
+      });
+    } else if (overlayOnly && state.pixelZones && state.pixelZones.length > 0 && state.pixelStroke) {
+      var pRadiusZone = parseInt(zoneSizeSlider.value, 10) || 90;
+      var lblSzZone = parseInt(labelSizeSlider.value, 10) || 8;
+      state.pixelZones.forEach(function (zone) {
+        var zx = zone.x;
+        var zy = zone.y;
+        var minX = Math.max(0, Math.floor(zx - pRadiusZone));
+        var minY = Math.max(0, Math.floor(zy - pRadiusZone));
+        var zWidth = Math.min(tW, Math.ceil(zx + pRadiusZone)) - minX;
+        var zHeight = Math.min(tH, Math.ceil(zy + pRadiusZone)) - minY;
+        if (zWidth > 0 && zHeight > 0) {
+          tCtx.save();
+          tCtx.globalAlpha = 0.6 * op;
+          tCtx.strokeStyle = strokeColor;
+          tCtx.lineWidth = 1;
+          tCtx.setLineDash([4, 4]);
+          tCtx.strokeRect(minX, minY, zWidth, zHeight);
+          tCtx.setLineDash([]);
+          if (lblSzZone > 0) {
+            tCtx.globalAlpha = op;
+            tCtx.fillStyle = strokeColor;
+            tCtx.font = lblSzZone + 'px Telegraf, system-ui, sans-serif';
+            tCtx.textAlign = 'center';
+            tCtx.textBaseline = 'middle';
+            tCtx.fillText(Math.round(zx) + ',' + Math.round(zy), minX + zWidth / 2, minY + zHeight / 2);
+          }
+          tCtx.restore();
         }
       });
     }
@@ -1863,22 +2208,24 @@
     }
 
     // 9. Texture / Noise
-    var texOp = parseFloat(textureOpacitySlider.value);
-    if (!isNaN(texOp) && texOp > 0) {
-      tCtx.save();
-      tCtx.globalCompositeOperation = 'screen';
-      tCtx.globalAlpha = texOp * 0.5;
-      if (state.customTexture) {
-        tCtx.drawImage(state.customTexture, 0, 0, tW, tH);
-      } else if (state.noiseCanvas) {
-        if (!state.noisePattern && tCtx === ctx) {
-          state.noisePattern = ctx.createPattern(state.noiseCanvas, 'repeat');
+    if (!overlayOnly) {
+      var texOp = parseFloat(textureOpacitySlider.value);
+      if (!isNaN(texOp) && texOp > 0) {
+        tCtx.save();
+        tCtx.globalCompositeOperation = 'screen';
+        tCtx.globalAlpha = texOp * 0.5;
+        if (state.customTexture) {
+          tCtx.drawImage(state.customTexture, 0, 0, tW, tH);
+        } else if (state.noiseCanvas) {
+          if (!state.noisePattern && tCtx === ctx) {
+            state.noisePattern = ctx.createPattern(state.noiseCanvas, 'repeat');
+          }
+          var pat = (tCtx === ctx && state.noisePattern) ? state.noisePattern : tCtx.createPattern(state.noiseCanvas, 'repeat');
+          tCtx.fillStyle = pat;
+          tCtx.fillRect(0, 0, tW, tH);
         }
-        var pat = (tCtx === ctx && state.noisePattern) ? state.noisePattern : tCtx.createPattern(state.noiseCanvas, 'repeat');
-        tCtx.fillStyle = pat;
-        tCtx.fillRect(0, 0, tW, tH);
+        tCtx.restore();
       }
-      tCtx.restore();
     }
 
     tCtx.globalAlpha = 1;
@@ -1946,6 +2293,9 @@
     lineWeightVal.textContent = parseFloat(lineWeightSlider.value).toFixed(1);
     textureOpacityVal.textContent = parseFloat(textureOpacitySlider.value).toFixed(2);
     pixelateStatus.textContent = state.pixelZones.length + ' zones placed';
+    if (gradientMapOpacityVal && gradientMapOpacitySlider) {
+      gradientMapOpacityVal.textContent = parseFloat(gradientMapOpacitySlider.value).toFixed(2);
+    }
 
     // Mode-specific slider readouts
     if (telemetryGridVal && telemetryGridSlider) telemetryGridVal.textContent = telemetryGridSlider.value;
@@ -2393,10 +2743,244 @@
     link.click();
   });
 
+  // Download Transparent Overlay Only PNG
+  if (downloadOverlayBtn) {
+    downloadOverlayBtn.addEventListener('click', function () {
+      var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
+      var exportCanvas = document.createElement('canvas');
+      exportCanvas.width = fmt.w;
+      exportCanvas.height = fmt.h;
+      var expCtx = exportCanvas.getContext('2d');
+      drawCanvas(expCtx, fmt.w, fmt.h, { overlayOnly: true });
+
+      var link = document.createElement('a');
+      link.download = 'tracker-overlay-' + state.format + '-' + Date.now() + '.png';
+      link.href = exportCanvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
+  // Randomize Style & Settings Engine
+  function randomizeStyleAndSettings() {
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function randFloat(min, max, decimals) {
+      var f = Math.random() * (max - min) + min;
+      return parseFloat(f.toFixed(decimals !== undefined ? decimals : 1));
+    }
+    function updateToggle(btn, isActive, onText, offText) {
+      if (!btn) return;
+      btn.classList.toggle('active', isActive);
+      btn.textContent = isActive ? onText : offText;
+    }
+    function updateSegmented(attr, value) {
+      document.querySelectorAll('[' + attr + ']').forEach(function (btn) {
+        btn.classList.toggle('active', btn.getAttribute(attr) === value);
+      });
+    }
+
+    // 1. Random Style / Mode
+    var modes = ['circles', 'hero', 'geo', 'studio'];
+    var chosenMode = pick(modes);
+    state.mode = chosenMode;
+    document.querySelectorAll('.nav-tab').forEach(function (tab) {
+      tab.classList.toggle('active', tab.dataset.mode === chosenMode);
+    });
+    updateDynamicSidebarPanels(chosenMode);
+
+    // 2. Random Palette
+    var swatches = paletteGrid.querySelectorAll('.palette-swatch');
+    if (swatches.length > 0) {
+      var chosenSwatch = pick(Array.prototype.slice.call(swatches));
+      swatches.forEach(function (s) { s.classList.remove('active'); });
+      chosenSwatch.classList.add('active');
+      state.palette = {
+        bg: chosenSwatch.dataset.bg,
+        color: chosenSwatch.dataset.color,
+        stroke: chosenSwatch.dataset.color,
+        name: chosenSwatch.title
+      };
+    }
+
+    // 3. Random Global / Detection Parameters
+    if (sizeSeedSlider) sizeSeedSlider.value = randInt(1, 9999);
+    if (thresholdSlider) thresholdSlider.value = randInt(15, 65);
+    if (blockSizeSlider) blockSizeSlider.value = randInt(6, 16);
+    if (maxCirclesSlider) maxCirclesSlider.value = randInt(15, 60);
+    if (minDistanceSlider) minDistanceSlider.value = randInt(15, 45);
+    if (minRadiusSlider) minRadiusSlider.value = randInt(4, 12);
+    if (maxRadiusSlider) maxRadiusSlider.value = randInt(25, 75);
+    if (shapeStrokeSlider) shapeStrokeSlider.value = randFloat(0.8, 2.0, 1);
+    if (overlayOpacitySlider) overlayOpacitySlider.value = randFloat(0.8, 1.0, 2);
+    if (lineWeightSlider) lineWeightSlider.value = randFloat(0.5, 1.6, 1);
+    if (maxDistanceSlider) maxDistanceSlider.value = randInt(90, 220);
+
+    // 4. Detection Mode & Shape
+    var detModes = ['combined', 'contrast', 'bright', 'dark'];
+    state.detectionMode = pick(detModes);
+    updateSegmented('data-detection-mode', state.detectionMode);
+
+    var shapes = ['circle', 'square'];
+    state.shape = pick(shapes);
+    updateSegmented('data-shape', state.shape);
+
+    // 5. Frame Marginalia
+    state.frameTextOn = Math.random() > 0.15;
+    updateToggle(frameTextToggleBtn, state.frameTextOn, 'Frame Text On', 'Frame Text Off');
+    if (frameTextSizeSlider) frameTextSizeSlider.value = randInt(8, 12);
+
+    // 6. Style-Specific Parameters
+    if (chosenMode === 'circles') {
+      state.frameOn = Math.random() > 0.2;
+      updateToggle(frameToggleBtn, state.frameOn, 'Frame On', 'Frame Off');
+      if (frameSizeSlider) frameSizeSlider.value = randInt(50, 75);
+      if (dashPatternSlider) dashPatternSlider.value = pick([4, 6, 8, 12]);
+      if (frameStrokeSlider) frameStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      if (starSizeSlider) starSizeSlider.value = randInt(6, 16);
+      if (starPointsSlider) starPointsSlider.value = pick([4, 6, 8]);
+
+      state.chainOn = Math.random() > 0.3;
+      updateToggle(chainToggleBtn, state.chainOn, 'Chain On', 'Chain Off');
+      if (chainCountSlider) chainCountSlider.value = randInt(2, 6);
+      if (chainAngleSlider) chainAngleSlider.value = randInt(0, 360);
+      if (chainBaseRadiusSlider) chainBaseRadiusSlider.value = randInt(30, 80);
+      if (chainSizeRatioSlider) chainSizeRatioSlider.value = randFloat(0.8, 1.4, 2);
+      state.chainIntersections = Math.random() > 0.2;
+      updateToggle(chainIntersectionsBtn, state.chainIntersections, 'Intersections On', 'Intersections Off');
+      if (markerSizeSlider) markerSizeSlider.value = randInt(3, 8);
+    } else if (chosenMode === 'hero') {
+      if (telemetryGridSlider) telemetryGridSlider.value = randInt(4, 9);
+      if (telemetryNodesSlider) telemetryNodesSlider.value = randInt(12, 40);
+      if (telemetryStrokeSlider) telemetryStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      state.telemetryRadar = Math.random() > 0.2;
+      updateToggle(telemetryRadarBtn, state.telemetryRadar, 'Radar Dial On', 'Radar Dial Off');
+      state.telemetryBrackets = Math.random() > 0.2;
+      updateToggle(telemetryBracketsBtn, state.telemetryBrackets, 'Target Brackets On', 'Target Brackets Off');
+      state.telemetryData = Math.random() > 0.15;
+      updateToggle(telemetryDataBtn, state.telemetryData, 'Telemetry Data On', 'Telemetry Data Off');
+    } else if (chosenMode === 'geo') {
+      if (topoLevelsSlider) topoLevelsSlider.value = randInt(10, 18);
+      if (topoSmoothingSlider) topoSmoothingSlider.value = randInt(3, 7);
+      if (topoStrokeSlider) topoStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      if (topoPeakElevationSlider) topoPeakElevationSlider.value = randInt(280, 520);
+      state.topoLabels = Math.random() > 0.2;
+      updateToggle(topoLabelsBtn, state.topoLabels, 'Elevation Labels On', 'Elevation Labels Off');
+      state.topoPeaks = Math.random() > 0.2;
+      updateToggle(topoPeaksBtn, state.topoPeaks, 'Summit Peaks On', 'Summit Peaks Off');
+      state.topoNeatline = Math.random() > 0.2;
+      updateToggle(topoNeatlineBtn, state.topoNeatline, 'Geodetic Neatline On', 'Geodetic Neatline Off');
+      state.topoLegend = Math.random() > 0.2;
+      updateToggle(topoLegendBtn, state.topoLegend, 'Survey Legend On', 'Survey Legend Off');
+    } else if (chosenMode === 'studio') {
+      if (studioFrameInsetSlider) studioFrameInsetSlider.value = randInt(20, 50);
+      if (studioStrokeSlider) studioStrokeSlider.value = randFloat(0.8, 2.0, 1);
+      state.studioBrackets = Math.random() > 0.15;
+      updateToggle(studioBracketsBtn, state.studioBrackets, 'Crop Brackets On', 'Crop Brackets Off');
+      state.studioTelemetry = Math.random() > 0.15;
+      updateToggle(studioTelemetryBtn, state.studioTelemetry, 'Camera Telemetry On', 'Camera Telemetry Off');
+      state.studioGuideMode = pick(['thirds', 'golden', 'diagonal', 'crosshair']);
+      updateSegmented('data-guide-mode', state.studioGuideMode);
+      state.studioReticleMode = pick(['brackets', 'cross', 'circle', 'grid']);
+      updateSegmented('data-reticle-mode', state.studioReticleMode);
+    }
+
+    // 7. Gradient Map Preset Randomization
+    if (gradientPresets.length > 0) {
+      state.gradientMapIndex = randInt(0, gradientPresets.length - 1);
+      updateGradientMapPreview();
+    }
+
+    syncValues();
+    updateStatusFooter();
+    recalculate(true);
+    scheduleUpdate(3);
+  }
+
+  if (randomizeBtn) {
+    randomizeBtn.addEventListener('click', randomizeStyleAndSettings);
+  }
+  if (randomizeSettingsBtn) {
+    randomizeSettingsBtn.addEventListener('click', randomizeStyleAndSettings);
+  }
+
+  // Gradient Map Event Listeners
+  if (gradientMapToggleBtn) {
+    gradientMapToggleBtn.addEventListener('click', function () {
+      state.gradientMapOn = !state.gradientMapOn;
+      gradientMapToggleBtn.classList.toggle('active', state.gradientMapOn);
+      gradientMapToggleBtn.textContent = state.gradientMapOn ? 'Gradient Map On' : 'Gradient Map Off';
+      scheduleUpdate(1);
+    });
+  }
+
+  if (gradientMapSelect) {
+    gradientMapSelect.addEventListener('change', function () {
+      state.gradientMapIndex = parseInt(gradientMapSelect.value, 10) || 0;
+      updateGradientMapPreview();
+      scheduleUpdate(1);
+    });
+  }
+
+  if (gradientMapOpacitySlider) {
+    gradientMapOpacitySlider.addEventListener('input', function () {
+      state.gradientMapOpacity = parseFloat(gradientMapOpacitySlider.value);
+      syncValues();
+      scheduleUpdate(1);
+    });
+  }
+
+  if (gradientMapInvertBtn) {
+    gradientMapInvertBtn.addEventListener('click', function () {
+      state.gradientMapInvert = !state.gradientMapInvert;
+      gradientMapInvertBtn.classList.toggle('active', state.gradientMapInvert);
+      gradientMapInvertBtn.textContent = state.gradientMapInvert ? 'Invert On' : 'Invert Off';
+      updateGradientMapPreview();
+      scheduleUpdate(1);
+    });
+  }
+
+  if (randomizeGradientBtn) {
+    randomizeGradientBtn.addEventListener('click', function () {
+      if (gradientPresets.length > 0) {
+        state.gradientMapIndex = Math.floor(Math.random() * gradientPresets.length);
+        updateGradientMapPreview();
+        scheduleUpdate(1);
+      }
+    });
+  }
+
+  if (importGrdBtn && grdFileInput) {
+    importGrdBtn.addEventListener('click', function () {
+      grdFileInput.click();
+    });
+
+    grdFileInput.addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        try {
+          var parsed = parseGrdBuffer(ev.target.result);
+          if (parsed && parsed.length > 0) {
+            gradientPresets = parsed;
+            state.gradientMapIndex = 0;
+            populateGradientMapControls();
+            scheduleUpdate(1);
+          }
+        } catch (err) {
+          console.error('Failed to parse GRD file:', err);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      grdFileInput.value = '';
+    });
+  }
+
   window.addEventListener('resize', function () {
     resizeAndRender();
   });
 
+  populateGradientMapControls();
   syncValues();
   updateStatusFooter();
   updateDynamicSidebarPanels(state.mode);
