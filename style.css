@@ -445,45 +445,60 @@ canvas {
   object-fit: contain;
   border-radius: 2px;
   box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7);
-  display: none;
-}
-canvas.visible {
   display: block;
 }
 
 .empty-state {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(18, 18, 18, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  padding: 18px 28px;
+  border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  color: #666666;
+  gap: 6px;
+  color: #888888;
   cursor: pointer;
   user-select: none;
+  z-index: 5;
+  transition: all 0.2s ease;
+  pointer-events: auto;
 }
-.empty-state:hover .empty-icon {
-  color: #d4a843;
-  transform: scale(1.08);
+.empty-state:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(26, 26, 26, 0.95);
+  color: #dddddd;
 }
 .empty-state.hidden {
-  display: none;
+  display: none !important;
 }
 .empty-icon {
-  font-size: 42px;
-  color: #333333;
-  margin-bottom: 4px;
+  font-size: 28px;
+  color: #777777;
+  margin-bottom: 2px;
   transition: color 0.2s, transform 0.2s;
 }
+.empty-state:hover .empty-icon {
+  color: #ffffff;
+  transform: scale(1.1);
+}
 .empty-state h2 {
-  font-size: 14px;
-  font-weight: 500;
-  color: #aaaaaa;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #cccccc;
 }
 .empty-state p {
-  font-size: 11px;
-  color: #666666;
+  font-size: 10px;
+  color: #777777;
 }
 
 /* STAGE NAVIGATION & ATTRIBUTION */

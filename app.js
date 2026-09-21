@@ -460,39 +460,44 @@
   }
 
   function recalculate() {
-    if (!state.image) return;
     var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
     var w = fmt.w;
     var h = fmt.h;
 
-    var bSize = parseInt(blockSizeSlider.value, 10) || 16;
-    var thresh = parseFloat(thresholdSlider.value) || 30;
-    var maxC = parseInt(maxCirclesSlider.value, 10) || 80;
-    var minDist = parseFloat(minDistanceSlider.value) || 40;
-    var minR = parseFloat(minRadiusSlider.value) || 4;
-    var maxR = parseFloat(maxRadiusSlider.value) || 24;
-    var seed = parseInt(sizeSeedSlider.value, 10) || 42;
-
-    var blocks = analyzeImage(state.image, w, h, bSize, state.detectionMode);
-    state.circles = placeCircles(blocks, {
-      mode: state.detectionMode,
-      threshold: thresh,
-      maxCircles: maxC,
-      minRadius: minR,
-      maxRadius: maxR,
-      minDistance: minDist,
-      sizeSeed: seed
-    });
-
-    var connDist = parseFloat(maxDistanceSlider.value) || 150;
-    state.connections = buildConnections(state.circles, connDist);
-
+    // Chain geometry is independent of image
     state.chainCircles = buildChain(w, h, {
       chainCount: parseInt(chainCountSlider.value, 10) || 11,
       chainAngle: parseFloat(chainAngleSlider.value) || 45,
       chainBaseRadius: parseFloat(chainBaseRadiusSlider.value) || 300,
       chainSizeRatio: parseFloat(chainSizeRatioSlider.value) || 0.50
     });
+
+    if (state.image) {
+      var bSize = parseInt(blockSizeSlider.value, 10) || 16;
+      var thresh = parseFloat(thresholdSlider.value) || 30;
+      var maxC = parseInt(maxCirclesSlider.value, 10) || 80;
+      var minDist = parseFloat(minDistanceSlider.value) || 40;
+      var minR = parseFloat(minRadiusSlider.value) || 4;
+      var maxR = parseFloat(maxRadiusSlider.value) || 24;
+      var seed = parseInt(sizeSeedSlider.value, 10) || 42;
+
+      var blocks = analyzeImage(state.image, w, h, bSize, state.detectionMode);
+      state.circles = placeCircles(blocks, {
+        mode: state.detectionMode,
+        threshold: thresh,
+        maxCircles: maxC,
+        minRadius: minR,
+        maxRadius: maxR,
+        minDistance: minDist,
+        sizeSeed: seed
+      });
+
+      var connDist = parseFloat(maxDistanceSlider.value) || 150;
+      state.connections = buildConnections(state.circles, connDist);
+    } else {
+      state.circles = [];
+      state.connections = [];
+    }
   }
 
   // Render Pipeline
@@ -954,9 +959,12 @@
     render();
   });
 
-  // Canvas Click to add Pixelation Zone
+  // Canvas Click to add Pixelation Zone or open image picker
   canvas.addEventListener('click', function (e) {
-    if (!state.image) return;
+    if (!state.image) {
+      imageInput.click();
+      return;
+    }
     var rect = canvas.getBoundingClientRect();
     var clickX = (e.clientX - rect.left) / rect.width * canvas.width;
     var clickY = (e.clientY - rect.top) / rect.height * canvas.height;
@@ -1127,7 +1135,6 @@
 
   // Download High-Resolution PNG
   downloadBtn.addEventListener('click', function () {
-    if (!state.image) return;
     var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
     var exportCanvas = document.createElement('canvas');
     exportCanvas.width = fmt.w;
@@ -1142,13 +1149,13 @@
   });
 
   window.addEventListener('resize', function () {
-    if (state.image) {
-      resizeAndRender();
-    }
+    resizeAndRender();
   });
 
   syncValues();
   updateStatusFooter();
+  recalculate();
+  resizeAndRender();
 
   // Load preset portrait automatically on startup if file exists
   var autoImg = new Image();
