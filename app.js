@@ -122,6 +122,7 @@
     palette: { bg: '#0a0a0a', color: '#ffffff', stroke: '#ffffff', name: 'White / Dark' },
     customTexture: null,
     noiseCanvas: null,
+    noisePattern: null,
     format: 'portrait_3_4',
     mode: 'circles',
     circles: [],
@@ -154,6 +155,7 @@
     }
     nctx.putImageData(idata, 0, 0);
     state.noiseCanvas = nc;
+    state.noisePattern = null;
   }
   createNoisePattern();
 
@@ -162,12 +164,54 @@
     exportStatusText.textContent = fmt.label + ' / ' + state.palette.name;
   }
 
+  // Reusable Offscreen Canvas buffer with willReadFrequently
+  var offscreenCanvas = null;
+  var offscreenCtx = null;
+  function getOffscreen(w, h) {
+    if (!offscreenCanvas) {
+      offscreenCanvas = document.createElement('canvas');
+      offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+    }
+    if (offscreenCanvas.width !== w || offscreenCanvas.height !== h) {
+      offscreenCanvas.width = w;
+      offscreenCanvas.height = h;
+    }
+    return { canvas: offscreenCanvas, ctx: offscreenCtx };
+  }
+
+  // Reusable Scratch Canvas for hardware-accelerated pixelation
+  var pixelScratchCanvas = null;
+  var pixelScratchCtx = null;
+  function getPixelScratch() {
+    if (!pixelScratchCanvas) {
+      pixelScratchCanvas = document.createElement('canvas');
+      pixelScratchCtx = pixelScratchCanvas.getContext('2d');
+    }
+    return { canvas: pixelScratchCanvas, ctx: pixelScratchCtx };
+  }
+
+  // Block Analysis Cache: avoids re-analyzing 2M pixels on circle placement/visual slider drags
+  var cachedAnalysis = {
+    key: '',
+    blocks: null
+  };
+
+  function getAnalyzedBlocks(img, targetW, targetH, bSize, mode, forceReanalyze) {
+    var imgKey = (img.src && img.src.length < 250) ? img.src : (img.width + 'x' + img.height);
+    var key = imgKey + '_' + targetW + 'x' + targetH + '_' + bSize + '_' + mode;
+    if (!forceReanalyze && cachedAnalysis.key === key && cachedAnalysis.blocks) {
+      return cachedAnalysis.blocks;
+    }
+    var blocks = analyzeImage(img, targetW, targetH, bSize, mode);
+    cachedAnalysis.key = key;
+    cachedAnalysis.blocks = blocks;
+    return blocks;
+  }
+
   // Enhanced Image Feature Detection with Edge Gradient & Salience-Weighted Centroid Snapping
   function analyzeImage(img, targetW, targetH, bSize, mode) {
-    var off = document.createElement('canvas');
-    off.width = targetW;
-    off.height = targetH;
-    var actx = off.getContext('2d');
+    var off = getOffscreen(targetW, targetH);
+    var actx = off.ctx;
 
     var imgRatio = img.width / img.height;
     var targetRatio = targetW / targetH;
@@ -226,7 +270,7 @@
             var nextX = x < targetW - 1 ? x + 1 : x;
             var gx = lum[yOff + nextX] - lum[yOff + prevX];
             var gy = lum[nextYOff + x] - lum[prevYOff + x];
-            sumGrad += Math.hypot(gx, gy);
+            sumGrad += Math.sqrt(gx * gx + gy * gy);
           }
         }
 
@@ -244,47 +288,51 @@
         // Snaps circle center precisely to physical feature (pupils, glints, teeth, contours)
         var candX = startX + p / 2;
         var candY = startY + p / 2;
-        var sumW = 0, sumWX = 0, sumWY = 0;
 
-        for (var py = startY; py < endY; py++) {
-          var pyOff = py * targetW;
-          var pprevY = (py > 0 ? py - 1 : py) * targetW;
-          var pnextY = (py < targetH - 1 ? py + 1 : py) * targetW;
+        // Optimization: skip Pass 2 if the block is flat/uniform background
+        if (rmsContrast > 4 || meanGrad > 3) {
+          var sumW = 0, sumWX = 0, sumWY = 0;
 
-          for (var px = startX; px < endX; px++) {
-            var lVal = lum[pyOff + px];
-            var ppx1 = px > 0 ? px - 1 : px;
-            var ppx2 = px < targetW - 1 ? px + 1 : px;
-            var pgx = lum[pyOff + ppx2] - lum[pyOff + ppx1];
-            var pgy = lum[pnextY + px] - lum[pprevY + px];
-            var pgrad = Math.hypot(pgx, pgy);
+          for (var py = startY; py < endY; py++) {
+            var pyOff = py * targetW;
+            var pprevY = (py > 0 ? py - 1 : py) * targetW;
+            var pnextY = (py < targetH - 1 ? py + 1 : py) * targetW;
 
-            var w = 0;
-            if (detMode === 'bright') {
-              w = Math.pow(Math.max(0, lVal - 50) / 205, 2.5);
-            } else if (detMode === 'dark') {
-              w = Math.pow(Math.max(0, 205 - lVal) / 205, 2.5);
-            } else if (detMode === 'contrast') {
-              var diff = Math.abs(lVal - mean);
-              w = pgrad * 0.7 + diff * 0.3;
-            } else { // combined
-              var diffMid = Math.abs(lVal - 128);
-              w = (pgrad * 0.6 + Math.abs(lVal - mean) * 0.4) * (1 + diffMid / 128);
-            }
+            for (var px = startX; px < endX; px++) {
+              var lVal = lum[pyOff + px];
+              var ppx1 = px > 0 ? px - 1 : px;
+              var ppx2 = px < targetW - 1 ? px + 1 : px;
+              var pgx = lum[pyOff + ppx2] - lum[pyOff + ppx1];
+              var pgy = lum[pnextY + px] - lum[pprevY + px];
+              var pgrad = Math.sqrt(pgx * pgx + pgy * pgy);
 
-            if (w > 0) {
-              sumW += w;
-              sumWX += px * w;
-              sumWY += py * w;
+              var w = 0;
+              if (detMode === 'bright') {
+                w = Math.pow(Math.max(0, lVal - 50) / 205, 2.5);
+              } else if (detMode === 'dark') {
+                w = Math.pow(Math.max(0, 205 - lVal) / 205, 2.5);
+              } else if (detMode === 'contrast') {
+                var diff = Math.abs(lVal - mean);
+                w = pgrad * 0.7 + diff * 0.3;
+              } else { // combined
+                var diffMid = Math.abs(lVal - 128);
+                w = (pgrad * 0.6 + Math.abs(lVal - mean) * 0.4) * (1 + diffMid / 128);
+              }
+
+              if (w > 0) {
+                sumW += w;
+                sumWX += px * w;
+                sumWY += py * w;
+              }
             }
           }
-        }
 
-        if (sumW > 0.001) {
-          candX = sumWX / sumW;
-          candY = sumWY / sumW;
-          candX = Math.max(startX + 1, Math.min(endX - 1, candX));
-          candY = Math.max(startY + 1, Math.min(endY - 1, candY));
+          if (sumW > 0.001) {
+            candX = sumWX / sumW;
+            candY = sumWY / sumW;
+            candX = Math.max(startX + 1, Math.min(endX - 1, candX));
+            candY = Math.max(startY + 1, Math.min(endY - 1, candY));
+          }
         }
 
         blocks.push({
@@ -389,11 +437,16 @@
   function buildConnections(circles, maxDist) {
     var lines = [];
     if (maxDist <= 0) return lines;
+    var maxDistSq = maxDist * maxDist;
     for (var r = 0; r < circles.length; r++) {
+      var cr = circles[r];
       for (var i = r + 1; i < circles.length; i++) {
-        var dist = Math.hypot(circles[i].x - circles[r].x, circles[i].y - circles[r].y);
-        if (dist < maxDist) {
-          lines.push({ a: r, b: i, dist: dist });
+        var ci = circles[i];
+        var dx = ci.x - cr.x;
+        var dy = ci.y - cr.y;
+        var dSq = dx * dx + dy * dy;
+        if (dSq < maxDistSq) {
+          lines.push({ a: r, b: i, dist: Math.sqrt(dSq) });
         }
       }
     }
@@ -440,7 +493,7 @@
   function circleIntersections(c1, c2) {
     var dx = c2.x - c1.x;
     var dy = c2.y - c1.y;
-    var dist = Math.hypot(dx, dy);
+    var dist = Math.sqrt(dx * dx + dy * dy);
     if (dist > c1.r + c2.r || dist < Math.abs(c1.r - c2.r) || dist === 0) return [];
 
     var a = (c1.r * c1.r - c2.r * c2.r + dist * dist) / (2 * dist);
@@ -459,7 +512,7 @@
     ];
   }
 
-  function recalculate() {
+  function recalculate(forceReanalyze) {
     var fmt = FORMATS[state.format] || FORMATS.portrait_3_4;
     var w = fmt.w;
     var h = fmt.h;
@@ -481,7 +534,7 @@
       var maxR = parseFloat(maxRadiusSlider.value) || 24;
       var seed = parseInt(sizeSeedSlider.value, 10) || 42;
 
-      var blocks = analyzeImage(state.image, w, h, bSize, state.detectionMode);
+      var blocks = getAnalyzedBlocks(state.image, w, h, bSize, state.detectionMode, forceReanalyze);
       state.circles = placeCircles(blocks, {
         mode: state.detectionMode,
         threshold: thresh,
@@ -846,6 +899,7 @@
     if (state.pixelZones && state.pixelZones.length > 0 && parseInt(pixelSizeSlider.value, 10) > 1) {
       var pSize = parseInt(pixelSizeSlider.value, 10) || 16;
       var pRadius = parseInt(zoneSizeSlider.value, 10) || 90;
+      var scratch = getPixelScratch();
 
       state.pixelZones.forEach(function (zone) {
         var zx = zone.x;
@@ -856,28 +910,19 @@
         var zHeight = Math.min(tH, Math.ceil(zy + pRadius)) - minY;
 
         if (zWidth > 0 && zHeight > 0) {
+          var smallW = Math.max(1, Math.round(zWidth / pSize));
+          var smallH = Math.max(1, Math.round(zHeight / pSize));
+          scratch.canvas.width = smallW;
+          scratch.canvas.height = smallH;
+          scratch.ctx.imageSmoothingEnabled = true;
+          scratch.ctx.drawImage(tCtx.canvas, minX, minY, zWidth, zHeight, 0, 0, smallW, smallH);
+
           tCtx.save();
           tCtx.beginPath();
           tCtx.rect(minX, minY, zWidth, zHeight);
           tCtx.clip();
-
-          var zData = tCtx.getImageData(minX, minY, zWidth, zHeight).data;
-          for (var py = 0; py < zHeight; py += pSize) {
-            for (var px = 0; px < zWidth; px += pSize) {
-              var rSum = 0, gSum = 0, bSum = 0, count = 0;
-              for (var by = 0; by < pSize && py + by < zHeight; by++) {
-                for (var bx = 0; bx < pSize && px + bx < zWidth; bx++) {
-                  var idx = ((py + by) * zWidth + (px + bx)) * 4;
-                  rSum += zData[idx];
-                  gSum += zData[idx + 1];
-                  bSum += zData[idx + 2];
-                  count++;
-                }
-              }
-              tCtx.fillStyle = 'rgb(' + ((rSum / count) | 0) + ',' + ((gSum / count) | 0) + ',' + ((bSum / count) | 0) + ')';
-              tCtx.fillRect(minX + px, minY + py, pSize, pSize);
-            }
-          }
+          tCtx.imageSmoothingEnabled = false;
+          tCtx.drawImage(scratch.canvas, 0, 0, smallW, smallH, minX, minY, zWidth, zHeight);
           tCtx.restore();
 
           if (state.pixelStroke) {
@@ -1111,7 +1156,10 @@
       if (state.customTexture) {
         tCtx.drawImage(state.customTexture, 0, 0, tW, tH);
       } else if (state.noiseCanvas) {
-        var pat = tCtx.createPattern(state.noiseCanvas, 'repeat');
+        if (!state.noisePattern && tCtx === ctx) {
+          state.noisePattern = ctx.createPattern(state.noiseCanvas, 'repeat');
+        }
+        var pat = (tCtx === ctx && state.noisePattern) ? state.noisePattern : tCtx.createPattern(state.noiseCanvas, 'repeat');
         tCtx.fillStyle = pat;
         tCtx.fillRect(0, 0, tW, tH);
       }
@@ -1185,28 +1233,54 @@
     pixelateStatus.textContent = state.pixelZones.length + ' zones placed';
   }
 
-  function bindSlider(slider, triggersRecalc) {
+  var rafPending = false;
+  var scheduledRecalcLevel = 0; // 0: none, 1: render only, 2: placement/chain recalc, 3: full reanalyze
+
+  function scheduleUpdate(level) {
+    if (level > scheduledRecalcLevel) {
+      scheduledRecalcLevel = level;
+    }
+    if (!rafPending) {
+      rafPending = true;
+      requestAnimationFrame(function () {
+        rafPending = false;
+        var lvl = scheduledRecalcLevel;
+        scheduledRecalcLevel = 0;
+        if (lvl === 3) {
+          recalculate(true);
+        } else if (lvl === 2) {
+          recalculate(false);
+        }
+        render();
+      });
+    }
+  }
+
+  function bindSlider(slider, recalcLevel) {
+    if (!slider) return;
     slider.addEventListener('input', function () {
       syncValues();
-      if (triggersRecalc) recalculate();
-      render();
+      scheduleUpdate(recalcLevel);
     });
   }
 
-  // Bind Recalculate Sliders
-  [blockSizeSlider, thresholdSlider, maxCirclesSlider, minDistanceSlider, minRadiusSlider, maxRadiusSlider, sizeSeedSlider, maxDistanceSlider, chainCountSlider, chainAngleSlider, chainBaseRadiusSlider, chainSizeRatioSlider].forEach(function (s) {
-    bindSlider(s, true);
+  // 1. Level 3: Full Re-analysis of image blocks (only block size re-partitions image pixels)
+  bindSlider(blockSizeSlider, 3);
+
+  // 2. Level 2: Fast Circle Placement & Chain Geometry (uses cached analysis, runs in < 1ms)
+  [thresholdSlider, maxCirclesSlider, minDistanceSlider, minRadiusSlider, maxRadiusSlider, sizeSeedSlider, maxDistanceSlider, chainCountSlider, chainAngleSlider, chainBaseRadiusSlider, chainSizeRatioSlider].forEach(function (s) {
+    bindSlider(s, 2);
   });
 
-  // Bind Fast Visual Sliders
+  // 3. Level 1: Pure Visual Sliders (instant GPU canvas redraw, zero geometry math)
   [imageOpacitySlider, pixelSizeSlider, zoneSizeSlider, frameSizeSlider, dashPatternSlider, frameStrokeSlider, starSizeSlider, starPointsSlider, shapeStrokeSlider, labelSizeSlider, overlayOpacitySlider, lineWeightSlider, textureOpacitySlider].forEach(function (s) {
-    bindSlider(s, false);
+    bindSlider(s, 1);
   });
   if (markerSizeSlider) {
-    bindSlider(markerSizeSlider, false);
+    bindSlider(markerSizeSlider, 1);
   }
   if (frameTextSizeSlider) {
-    bindSlider(frameTextSizeSlider, false);
+    bindSlider(frameTextSizeSlider, 1);
   }
 
   // Toggles
@@ -1214,28 +1288,28 @@
     state.pixelStroke = !state.pixelStroke;
     pixelateStrokeBtn.classList.toggle('active', state.pixelStroke);
     pixelateStrokeBtn.textContent = state.pixelStroke ? 'Stroke On' : 'Stroke Off';
-    render();
+    scheduleUpdate(1);
   });
 
   undoPixelateBtn.addEventListener('click', function () {
     if (state.pixelZones.length > 0) {
       state.pixelZones.pop();
       syncValues();
-      render();
+      scheduleUpdate(1);
     }
   });
 
   clearPixelateBtn.addEventListener('click', function () {
     state.pixelZones = [];
     syncValues();
-    render();
+    scheduleUpdate(1);
   });
 
   frameToggleBtn.addEventListener('click', function () {
     state.frameOn = !state.frameOn;
     frameToggleBtn.classList.toggle('active', state.frameOn);
     frameToggleBtn.textContent = state.frameOn ? 'Frame On' : 'Frame Off';
-    render();
+    scheduleUpdate(1);
   });
 
   if (frameTextToggleBtn) {
@@ -1243,7 +1317,7 @@
       state.frameTextOn = !state.frameTextOn;
       frameTextToggleBtn.classList.toggle('active', state.frameTextOn);
       frameTextToggleBtn.textContent = state.frameTextOn ? 'Frame Text On' : 'Frame Text Off';
-      render();
+      scheduleUpdate(1);
     });
   }
 
@@ -1254,7 +1328,7 @@
         state.frameTextTR = frameTextTRInput.value;
         state.frameTextBL = frameTextBLInput.value;
         state.frameTextBR = frameTextBRInput.value;
-        render();
+        scheduleUpdate(1);
       });
     }
   });
@@ -1263,14 +1337,14 @@
     state.chainOn = !state.chainOn;
     chainToggleBtn.classList.toggle('active', state.chainOn);
     chainToggleBtn.textContent = state.chainOn ? 'Chain On' : 'Chain Off';
-    render();
+    scheduleUpdate(1);
   });
 
   chainIntersectionsBtn.addEventListener('click', function () {
     state.chainIntersections = !state.chainIntersections;
     chainIntersectionsBtn.classList.toggle('active', state.chainIntersections);
     chainIntersectionsBtn.textContent = state.chainIntersections ? 'Intersections On' : 'Intersections Off';
-    render();
+    scheduleUpdate(1);
   });
 
   // Canvas Click to add Pixelation Zone or open image picker
@@ -1289,7 +1363,7 @@
     });
 
     syncValues();
-    render();
+    scheduleUpdate(1);
   });
 
   // Segmented Buttons: Detection Mode (Combined, Contrast, Bright, Dark)
@@ -1298,8 +1372,7 @@
       document.querySelectorAll('[data-detection-mode]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.detectionMode = btn.dataset.detectionMode;
-      recalculate();
-      render();
+      scheduleUpdate(3);
     });
   });
 
@@ -1309,7 +1382,7 @@
       document.querySelectorAll('[data-shape]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.shape = btn.dataset.shape;
-      render();
+      scheduleUpdate(1);
     });
   });
 
@@ -1334,14 +1407,14 @@
       name: swatch.title
     };
     updateStatusFooter();
-    render();
+    scheduleUpdate(1);
   });
 
   // Canvas Format Selection
   canvasSizeSelect.addEventListener('change', function () {
     state.format = canvasSizeSelect.value;
     updateStatusFooter();
-    recalculate();
+    recalculate(true);
     resizeAndRender();
   });
 
@@ -1351,7 +1424,7 @@
       document.querySelectorAll('.nav-tab').forEach(function (t) { t.classList.remove('active'); });
       tab.classList.add('active');
       state.mode = tab.dataset.mode;
-      render();
+      scheduleUpdate(1);
     });
   });
 
@@ -1360,7 +1433,7 @@
     state.image = img;
     emptyState.classList.add('hidden');
     canvas.classList.add('visible');
-    recalculate();
+    recalculate(true);
     resizeAndRender();
   }
 
@@ -1432,7 +1505,7 @@
         var tImg = new Image();
         tImg.onload = function () {
           state.customTexture = tImg;
-          render();
+          scheduleUpdate(1);
         };
         tImg.src = ev.target.result;
       };
@@ -1444,7 +1517,7 @@
     state.customTexture = null;
     textureOpacitySlider.value = 0;
     syncValues();
-    render();
+    scheduleUpdate(1);
   });
 
   // Download High-Resolution PNG
@@ -1468,7 +1541,7 @@
 
   syncValues();
   updateStatusFooter();
-  recalculate();
+  recalculate(true);
   resizeAndRender();
 
   // Load preset portrait automatically on startup if file exists
