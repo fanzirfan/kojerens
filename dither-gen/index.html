@@ -29,17 +29,6 @@
       <span class="topbar-subtool-badge">1-BIT DITHER</span>
     </div>
 
-    <nav class="topbar-modes" role="tablist" aria-label="Dither Engine">
-      <button class="mode-tab active" data-engine="atkinson" role="tab" aria-selected="true">Atkinson</button>
-      <button class="mode-tab" data-engine="floyd" role="tab" aria-selected="false">Floyd</button>
-      <button class="mode-tab" data-engine="bayer8" role="tab" aria-selected="false">Bayer 8x8</button>
-      <button class="mode-tab" data-engine="bayer4" role="tab" aria-selected="false">Bayer 4x4</button>
-      <button class="mode-tab" data-engine="halftone" role="tab" aria-selected="false">Halftone</button>
-      <button class="mode-tab" data-engine="line" role="tab" aria-selected="false">Line</button>
-      <button class="mode-tab" data-engine="sierra" role="tab" aria-selected="false">Sierra</button>
-      <button class="mode-tab" data-engine="bluenoise" role="tab" aria-selected="false">Blue Noise</button>
-    </nav>
-
     <!-- ACTIONS ON RIGHT -->
     <div class="topbar-actions">
       <a href="../blob-tracker/index.html" class="topbar-tool-switch" title="Switch to Blob Tracker">
@@ -495,6 +484,75 @@
 
       <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
     </main>
+
+    <!-- PRESETS SIDEBAR (RIGHT) -->
+    <aside class="presets-sidebar" id="presetsSidebar" aria-label="Dither Engines">
+      <div class="presets-sidebar-header">
+        <span class="presets-sidebar-title"><i class="ri-grid-fill"></i> DITHER ENGINES</span>
+      </div>
+      <div class="presets-sidebar-list">
+        <button class="preset-card-btn active" data-engine="atkinson">
+          <span class="preset-name">Atkinson</span>
+          <span class="preset-desc">Apple Mac 1984 clean crisp contrast</span>
+        </button>
+        <button class="preset-card-btn" data-engine="floyd">
+          <span class="preset-name">Floyd-Steinberg</span>
+          <span class="preset-desc">Classic error diffusion balance</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bayer8">
+          <span class="preset-name">Bayer 8x8</span>
+          <span class="preset-desc">Ordered matrix halftone dithering</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bayer4">
+          <span class="preset-name">Bayer 4x4</span>
+          <span class="preset-desc">Medium geometric pattern grid</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bayer2">
+          <span class="preset-name">Bayer 2x2</span>
+          <span class="preset-desc">Coarse 2x2 micro cross-hatch</span>
+        </button>
+        <button class="preset-card-btn" data-engine="halftone">
+          <span class="preset-name">Halftone Dot</span>
+          <span class="preset-desc">Analog newsprint radial screen</span>
+        </button>
+        <button class="preset-card-btn" data-engine="line">
+          <span class="preset-name">Halftone Line</span>
+          <span class="preset-desc">Industrial linear scan screentone</span>
+        </button>
+        <button class="preset-card-btn" data-engine="sierra">
+          <span class="preset-name">Sierra-3</span>
+          <span class="preset-desc">High precision 3-row error diffusion</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bluenoise">
+          <span class="preset-name">Blue Noise</span>
+          <span class="preset-desc">High-frequency organic stipple</span>
+        </button>
+        <button class="preset-card-btn" data-engine="jjn">
+          <span class="preset-name">JJN</span>
+          <span class="preset-desc">Jarvis-Judice-Ninke wide dispersion</span>
+        </button>
+        <button class="preset-card-btn" data-engine="stucki">
+          <span class="preset-name">Stucki</span>
+          <span class="preset-desc">Crisp edge-preserving diffusion</span>
+        </button>
+        <button class="preset-card-btn" data-engine="burkes">
+          <span class="preset-name">Burkes</span>
+          <span class="preset-desc">Fast 7-pixel error distribution</span>
+        </button>
+        <button class="preset-card-btn" data-engine="random">
+          <span class="preset-name">White Noise</span>
+          <span class="preset-desc">Random stochastic grain distribution</span>
+        </button>
+        <button class="preset-card-btn" data-engine="threshold">
+          <span class="preset-name">Direct 1-Bit</span>
+          <span class="preset-desc">Pure high-contrast luminance cutoff</span>
+        </button>
+        <button class="preset-card-btn" data-engine="posterize">
+          <span class="preset-name">2-Bit Quantize</span>
+          <span class="preset-desc">Stepped tonal quantization bands</span>
+        </button>
+      </div>
+    </aside>
 
   </div><!-- /.workspace -->
 

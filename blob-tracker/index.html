@@ -25,12 +25,6 @@
       </a>
       <span class="topbar-subtool-badge">TRACKER</span>
     </div>
-    <nav class="topbar-modes" role="tablist" aria-label="Visual engine">
-      <button class="mode-tab active" data-mode="circles" role="tab" aria-selected="true">Sensor</button>
-      <button class="mode-tab" data-mode="hero" role="tab" aria-selected="false">Telemetry</button>
-      <button class="mode-tab" data-mode="geo" role="tab" aria-selected="false">Topography</button>
-      <button class="mode-tab" data-mode="studio" role="tab" aria-selected="false">Viewfinder</button>
-    </nav>
     <div class="topbar-actions">
       <a href="../ascii-gen/index.html" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">
         <i class="ri-terminal-line"></i>
@@ -887,6 +881,31 @@
 
       <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
     </main>
+
+    <!-- PRESETS SIDEBAR (RIGHT) -->
+    <aside class="presets-sidebar" id="presetsSidebar" aria-label="Visual Engine Presets">
+      <div class="presets-sidebar-header">
+        <span class="presets-sidebar-title"><i class="ri-radar-line"></i> VISUAL ENGINES</span>
+      </div>
+      <div class="presets-sidebar-list">
+        <button class="preset-card-btn active" data-mode="circles">
+          <span class="preset-name">Sensor</span>
+          <span class="preset-desc">Centroids, dynamic radius, constellation links</span>
+        </button>
+        <button class="preset-card-btn" data-mode="hero">
+          <span class="preset-name">Telemetry</span>
+          <span class="preset-desc">Sci-fi HUD display, dial ticks, technical grid</span>
+        </button>
+        <button class="preset-card-btn" data-mode="geo">
+          <span class="preset-name">Topography</span>
+          <span class="preset-desc">Marching squares contours, bearing spokes</span>
+        </button>
+        <button class="preset-card-btn" data-mode="studio">
+          <span class="preset-name">Viewfinder</span>
+          <span class="preset-desc">Editorial framing, rule of thirds, studio telemetry</span>
+        </button>
+      </div>
+    </aside>
 
   </div><!-- /.workspace -->
 

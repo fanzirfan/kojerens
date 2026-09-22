@@ -29,18 +29,6 @@
       <span class="topbar-subtool-badge">CRT BEAM &amp; GLITCH</span>
     </div>
 
-    <!-- PRESET MODES -->
-    <nav class="topbar-modes" role="tablist" aria-label="CRT Presets">
-      <button class="mode-tab active" data-preset="trinitron" role="tab" aria-selected="true">Trinitron PVM</button>
-      <button class="mode-tab" data-preset="consumer" role="tab" aria-selected="false">Consumer 90s</button>
-      <button class="mode-tab" data-preset="green_p1" role="tab" aria-selected="false">P1 Emerald</button>
-      <button class="mode-tab" data-preset="amber_p3" role="tab" aria-selected="false">P3 Amber</button>
-      <button class="mode-tab" data-preset="vhs_glitch" role="tab" aria-selected="false">VHS Tape</button>
-      <button class="mode-tab" data-preset="cyberpunk" role="tab" aria-selected="false">Cyber Fringes</button>
-      <button class="mode-tab" data-preset="arcade_slot" role="tab" aria-selected="false">Arcade 240p</button>
-      <button class="mode-tab" data-preset="lofi_rf" role="tab" aria-selected="false">Lo-Fi Broadcast</button>
-    </nav>
-
     <!-- ACTIONS ON RIGHT -->
     <div class="topbar-actions">
       <a href="../blob-tracker/index.html" class="topbar-tool-switch" title="Switch to Blob Tracker">
@@ -578,6 +566,47 @@
 
       <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
     </main>
+
+    <!-- PRESETS SIDEBAR (RIGHT) -->
+    <aside class="presets-sidebar" id="presetsSidebar" aria-label="Style Presets">
+      <div class="presets-sidebar-header">
+        <span class="presets-sidebar-title"><i class="ri-palette-line"></i> STYLE PRESETS</span>
+      </div>
+      <div class="presets-sidebar-list">
+        <button class="preset-card-btn active" data-preset="trinitron">
+          <span class="preset-name">Trinitron PVM</span>
+          <span class="preset-desc">Aperture grille, high scanline focus</span>
+        </button>
+        <button class="preset-card-btn" data-preset="consumer">
+          <span class="preset-name">Consumer 90s</span>
+          <span class="preset-desc">Curved shadow mask, composite bleed</span>
+        </button>
+        <button class="preset-card-btn" data-preset="green_p1">
+          <span class="preset-name">P1 Emerald</span>
+          <span class="preset-desc">Monochrome green phosphor persistence</span>
+        </button>
+        <button class="preset-card-btn" data-preset="amber_p3">
+          <span class="preset-name">P3 Amber</span>
+          <span class="preset-desc">Warm amber mainframe terminal</span>
+        </button>
+        <button class="preset-card-btn" data-preset="vhs_glitch">
+          <span class="preset-name">VHS Tape</span>
+          <span class="preset-desc">Tracking jitter, sync noise, tape roll</span>
+        </button>
+        <button class="preset-card-btn" data-preset="cyberpunk">
+          <span class="preset-name">Cyber Fringes</span>
+          <span class="preset-desc">Chromatic split, neon glow</span>
+        </button>
+        <button class="preset-card-btn" data-preset="arcade_slot">
+          <span class="preset-name">Arcade 240p</span>
+          <span class="preset-desc">Slot mask, crisp arcade beam grid</span>
+        </button>
+        <button class="preset-card-btn" data-preset="lofi_rf">
+          <span class="preset-name">Lo-Fi Broadcast</span>
+          <span class="preset-desc">RF antenna static, ghosting, drift</span>
+        </button>
+      </div>
+    </aside>
 
   </div><!-- /.workspace -->
 

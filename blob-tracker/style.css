@@ -147,58 +147,14 @@ body {
   color: var(--color-void-violet);
 }
 
-/* MODES IN TOPBAR (RIGHT-ALIGNED) */
-.topbar-modes {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 3px;
-  margin-left: auto;
-  overflow-x: auto;
-  scrollbar-width: none;
-  white-space: nowrap;
-  flex-shrink: 1;
-}
-.topbar-modes::-webkit-scrollbar { display: none; }
-
-.mode-tab {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--color-fog-veil);
-  font-family: var(--font-untitled-sans);
-  font-size: 11.5px;
-  font-weight: 500;
-  padding: 4px 12px;
-  border-radius: var(--radius-buttons);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-}
-.mode-tab:hover {
-  color: var(--color-frost-glow);
-  background: var(--color-glass-fill);
-}
-.mode-tab.active {
-  background: var(--color-steel-plate);
-  border-color: rgba(186, 215, 247, 0.28);
-  color: var(--color-pure-white);
-  box-shadow: inset 0 1px 1px rgba(216, 236, 248, 0.22), 0 2px 6px rgba(0, 0, 0, 0.35);
-}
-.mode-tab:focus-visible {
-  outline: 2px solid var(--color-frost-glow) !important;
-  outline-offset: 2px !important;
-}
-
+/* ACTIONS (RIGHT) */
 .topbar-actions {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  margin-left: 8px;
-  border-left: 1px solid var(--color-glass-edge);
-  padding-left: 8px;
+  margin-left: auto;
 }
 
 .topbar-tool-switch {
@@ -1376,6 +1332,110 @@ input[type="range"]:focus-visible {
 }
 
 /* ==========================================================================
+   PRESETS SIDEBAR (RIGHT)
+   ========================================================================== */
+.presets-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(5, 6, 15, 0.96);
+  border-left: 1px solid var(--color-glass-edge);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 15;
+  user-select: none;
+}
+
+.presets-sidebar-header {
+  height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-glass-edge);
+  flex-shrink: 0;
+}
+
+.presets-sidebar-title {
+  font-family: var(--font-dotdigital);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-moon-mist);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.presets-sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(186, 215, 247, 0.18) transparent;
+}
+
+.presets-sidebar-list::-webkit-scrollbar {
+  width: 4px;
+}
+.presets-sidebar-list::-webkit-scrollbar-thumb {
+  background: rgba(186, 215, 247, 0.18);
+  border-radius: 4px;
+}
+
+.preset-card-btn {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: all 0.15s ease;
+  color: var(--color-fog-veil);
+  font-family: var(--font-untitled-sans);
+}
+
+.preset-card-btn:hover {
+  background: var(--color-glass-fill-hover);
+  border-color: var(--color-glass-edge-active);
+  color: var(--color-pure-white);
+  transform: translateY(-1px);
+}
+
+.preset-card-btn.active {
+  background: var(--color-steel-plate);
+  border-color: rgba(186, 215, 247, 0.35);
+  color: var(--color-pure-white);
+  box-shadow: inset 0 1px 1px rgba(216, 236, 248, 0.22), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.preset-card-btn .preset-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.preset-card-btn .preset-desc {
+  font-size: 9.5px;
+  color: var(--color-fog-veil);
+  line-height: 1.3;
+}
+
+.preset-card-btn.active .preset-desc {
+  color: var(--color-blueprint-blue);
+}
+
+/* ==========================================================================
    MOBILE & RESPONSIVE LAYOUT (R-03)
    Split-Pane Architecture: Topbar + Stage + Rail pinned, Drawer scrolls freely
    ========================================================================== */
@@ -1396,18 +1456,16 @@ input[type="range"]:focus-visible {
     position: relative;
   }
   .topbar {
-    height: auto;
-    min-height: 40px;
+    height: 44px;
+    min-height: 44px;
     flex-shrink: 0;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 10px 4px;
+    padding: 0 10px;
     background: rgba(5, 6, 15, 0.98);
     border-bottom: 1px solid var(--color-glass-edge);
     z-index: 30;
-    gap: 4px 0;
   }
   .topbar-brand {
     flex-shrink: 0;
@@ -1423,6 +1481,10 @@ input[type="range"]:focus-visible {
     display: flex;
     align-items: center;
     gap: 5px;
+  }
+
+  .presets-sidebar {
+    display: none;
   }
   .topbar-tool-switch {
     padding: 4px 8px;

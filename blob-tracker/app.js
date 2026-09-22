@@ -2766,30 +2766,19 @@
 
   function switchVisualMode(newMode) {
     state.mode = newMode;
-    document.querySelectorAll('.preset-pill-btn').forEach(function (btn) {
+    document.querySelectorAll('.preset-pill-btn, .preset-card-btn, .mode-tab').forEach(function (btn) {
       btn.classList.toggle('active', btn.dataset.mode === newMode);
-    });
-    document.querySelectorAll('.mode-tab').forEach(function (tab) {
-      tab.classList.toggle('active', tab.dataset.mode === newMode);
     });
     updateDynamicSidebarPanels(state.mode);
     updateRailModeHighlight(state.mode);
     scheduleUpdate(1);
   }
 
-  // Right-Panel Visual Engine Preset Pills & Topbar Mode Tabs
-  document.querySelectorAll('.preset-pill-btn').forEach(function (btn) {
+  // Right-Panel Visual Engine Preset Cards, Pills, & Mode Tabs
+  document.querySelectorAll('.preset-pill-btn, .preset-card-btn, .mode-tab').forEach(function (btn) {
     btn.addEventListener('click', function () {
       if (btn.dataset.mode) {
         switchVisualMode(btn.dataset.mode);
-      }
-    });
-  });
-
-  document.querySelectorAll('.mode-tab').forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      if (tab.dataset.mode) {
-        switchVisualMode(tab.dataset.mode);
       }
     });
   });
@@ -3400,7 +3389,7 @@
     var modes = ['circles', 'hero', 'geo', 'studio'];
     var chosenMode = pick(modes);
     state.mode = chosenMode;
-    document.querySelectorAll('.mode-tab').forEach(function (tab) {
+    document.querySelectorAll('.preset-pill-btn, .preset-card-btn, .mode-tab').forEach(function (tab) {
       tab.classList.toggle('active', tab.dataset.mode === chosenMode);
       tab.setAttribute('aria-selected', tab.dataset.mode === chosenMode ? 'true' : 'false');
     });
@@ -3671,11 +3660,8 @@
       var params = new URLSearchParams(hashStr);
       if (params.has('mode')) {
         state.mode = params.get('mode');
-        document.querySelectorAll('.preset-pill-btn').forEach(function (btn) {
-          btn.classList.toggle('active', btn.dataset.mode === state.mode);
-        });
-        document.querySelectorAll('.mode-tab').forEach(function (tab) {
-          tab.classList.toggle('active', tab.getAttribute('data-mode') === state.mode);
+        document.querySelectorAll('.preset-pill-btn, .preset-card-btn, .mode-tab').forEach(function (btn) {
+          btn.classList.toggle('active', btn.dataset.mode === state.mode || btn.getAttribute('data-mode') === state.mode);
         });
         updateDynamicSidebarPanels(state.mode);
       }
