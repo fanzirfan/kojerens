@@ -263,7 +263,7 @@ html, body {
   gap: 2px;
   padding: 10px 0;
   background: rgba(5, 6, 15, 0.94);
-  border-left: 1px solid var(--color-glass-edge);
+  border-right: 1px solid var(--color-glass-edge);
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 20;
@@ -318,7 +318,7 @@ html, body {
 }
 
 /* ==========================================================================
-   PANEL DRAWER (Sidebar controls - Right Hand)
+   PANEL DRAWER (Sidebar controls - Left Hand)
    ========================================================================== */
 .panel-drawer {
   flex-shrink: 0;
@@ -327,7 +327,7 @@ html, body {
   transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 15;
-  border-left: 1px solid var(--color-glass-edge);
+  border-right: 1px solid var(--color-glass-edge);
 }
 .panel-drawer.open {
   width: 295px;

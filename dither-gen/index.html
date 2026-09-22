@@ -29,59 +29,84 @@
       <span class="topbar-subtool-badge">1-BIT DITHER</span>
     </div>
 
+    <nav class="topbar-modes" role="tablist" aria-label="Dither Engine">
+      <button class="mode-tab active" data-engine="atkinson" role="tab" aria-selected="true">Atkinson</button>
+      <button class="mode-tab" data-engine="floyd" role="tab" aria-selected="false">Floyd</button>
+      <button class="mode-tab" data-engine="bayer8" role="tab" aria-selected="false">Bayer 8x8</button>
+      <button class="mode-tab" data-engine="bayer4" role="tab" aria-selected="false">Bayer 4x4</button>
+      <button class="mode-tab" data-engine="halftone" role="tab" aria-selected="false">Halftone</button>
+      <button class="mode-tab" data-engine="line" role="tab" aria-selected="false">Line</button>
+      <button class="mode-tab" data-engine="sierra" role="tab" aria-selected="false">Sierra</button>
+      <button class="mode-tab" data-engine="bluenoise" role="tab" aria-selected="false">Blue Noise</button>
+    </nav>
+
     <!-- ACTIONS ON RIGHT -->
     <div class="topbar-actions">
       <a href="../blob-tracker/index.html" class="topbar-tool-switch" title="Switch to Blob Tracker">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        <i class="ri-radar-line"></i>
         <span>Blob Tracker</span>
       </a>
       <a href="../ascii-gen/index.html" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <i class="ri-terminal-line"></i>
         <span>ASCII Gen</span>
       </a>
       <a href="../crt-gen/index.html" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <i class="ri-tv-line"></i>
         <span>CRT Gen</span>
       </a>
       <button class="topbar-btn" id="topbarRandomBtn" title="Randomize style and settings">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        <i class="ri-dice-line"></i>
         <span class="btn-text">Random</span>
       </button>
       <button class="topbar-cta" id="topbarDownloadBtn">Export PNG</button>
     </div>
   </header>
 
-  <!-- WORKSPACE (Stage on Left, Controls on Right) -->
+  <!-- WORKSPACE -->
   <div class="workspace">
 
-    <!-- MAIN STAGE (LEFT) -->
-    <main class="stage" id="stageMain">
-      <div class="canvas-wrap" id="canvasWrap">
-        <canvas id="canvas"></canvas>
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon"><i class="ri-grid-line"></i></div>
-          <h2>Drop a file to synthesize</h2>
-          <p>Local in-browser computing. Zero server dependency.</p>
-          <button class="btn-block-outline empty-load-btn" id="emptyLoadSampleBtn">Load Demo Graphic</button>
-        </div>
-      </div>
+    <!-- ICON RAIL (FAR LEFT) -->
+    <nav class="rail" aria-label="Panel navigation">
+      <button class="rail-btn active" data-panel="presets" title="Dither Presets" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        <span class="rail-label">Style</span>
+      </button>
+      <button class="rail-btn" data-panel="file" title="Source File &amp; Crop" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="rail-label">File</span>
+      </button>
+      <button class="rail-btn" data-panel="engine" title="Dither Algorithm" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="rail-label">Engine</span>
+      </button>
+      <button class="rail-btn" data-panel="palette" title="Color Palette" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
+        <span class="rail-label">Palette</span>
+      </button>
+      <button class="rail-btn" data-panel="scale" title="Pixel Scale &amp; Crunch" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="rail-label">Scale</span>
+      </button>
+      <button class="rail-btn" data-panel="levels" title="Image Levels &amp; Tone" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        <span class="rail-label">Levels</span>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="rail-btn" data-panel="size" title="Canvas Format" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        <span class="rail-label">Size</span>
+      </button>
+      <button class="rail-btn" data-panel="frame" title="Telemetry Typography" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="rail-label">Text</span>
+      </button>
+      <button class="rail-btn" data-panel="export" title="Production Export" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="rail-label">Export</span>
+      </button>
+    </nav>
 
-      <!-- Stage Floating Zoom Controls -->
-      <div class="stage-zoom-bar" id="stageZoomBar">
-        <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out" aria-label="Zoom Out">
-          <i class="ri-subtract-line"></i>
-        </button>
-        <span class="zoom-val" id="zoomVal">100%</span>
-        <button class="zoom-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In">
-          <i class="ri-add-line"></i>
-        </button>
-        <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
-      </div>
-
-      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
-    </main>
-
-    <!-- PANEL DRAWER (RIGHT) -->
+    <!-- PANEL DRAWER (MIDDLE LEFT) -->
     <aside class="panel-drawer open" id="panelDrawer">
       <div class="drawer-inner sidebar">
 
@@ -444,46 +469,32 @@
       </div><!-- /.drawer-inner.sidebar -->
     </aside><!-- /.panel-drawer -->
 
-    <!-- ICON RAIL (FAR RIGHT) -->
-    <nav class="rail" aria-label="Panel navigation">
-      <button class="rail-btn active" data-panel="presets" title="Dither Presets" aria-pressed="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
-        <span class="rail-label">Style</span>
-      </button>
-      <button class="rail-btn" data-panel="file" title="Source File &amp; Crop" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        <span class="rail-label">File</span>
-      </button>
-      <button class="rail-btn" data-panel="engine" title="Dither Algorithm" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        <span class="rail-label">Engine</span>
-      </button>
-      <button class="rail-btn" data-panel="palette" title="Color Palette" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
-        <span class="rail-label">Palette</span>
-      </button>
-      <button class="rail-btn" data-panel="scale" title="Pixel Scale &amp; Crunch" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        <span class="rail-label">Scale</span>
-      </button>
-      <button class="rail-btn" data-panel="levels" title="Image Levels &amp; Tone" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-        <span class="rail-label">Levels</span>
-      </button>
-      <div class="rail-sep"></div>
-      <button class="rail-btn" data-panel="size" title="Canvas Format" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
-        <span class="rail-label">Size</span>
-      </button>
-      <button class="rail-btn" data-panel="frame" title="Telemetry Typography" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-        <span class="rail-label">Text</span>
-      </button>
-      <button class="rail-btn" data-panel="export" title="Production Export" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span class="rail-label">Export</span>
-      </button>
-    </nav>
+    <!-- MAIN STAGE (RIGHT) -->
+    <main class="stage" id="stageMain">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="canvas"></canvas>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon"><i class="ri-grid-line"></i></div>
+          <h2>Drop a file to synthesize</h2>
+          <p>Local in-browser computing. Zero server dependency.</p>
+          <button class="btn-block-outline empty-load-btn" id="emptyLoadSampleBtn">Load Demo Graphic</button>
+        </div>
+      </div>
+
+      <!-- Stage Floating Zoom Controls -->
+      <div class="stage-zoom-bar" id="stageZoomBar">
+        <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out" aria-label="Zoom Out">
+          <i class="ri-subtract-line"></i>
+        </button>
+        <span class="zoom-val" id="zoomVal">100%</span>
+        <button class="zoom-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In">
+          <i class="ri-add-line"></i>
+        </button>
+        <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
+      </div>
+
+      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
+    </main>
 
   </div><!-- /.workspace -->
 

@@ -1306,9 +1306,9 @@
       interlaceVal.textContent = state.interlace === 'even' ? 'Even Fields' : state.interlace === 'odd' ? 'Odd Fields' : 'Progressive';
     }
 
-    // Preset pills in right panel
-    var presetPills = document.querySelectorAll('.preset-pill-btn');
-    presetPills.forEach(function (btn) {
+    // Preset tabs & pills
+    var presetTabs = document.querySelectorAll('.mode-tab, .preset-pill-btn');
+    presetTabs.forEach(function (btn) {
       btn.classList.toggle('active', btn.getAttribute('data-preset') === state.preset);
     });
   }
@@ -1317,9 +1317,9 @@
   // EVENT LISTENERS & UI WIRING
   // ==========================================================================
   function initEventListeners() {
-    // Preset pill buttons in right panel
-    var presetPills = document.querySelectorAll('.preset-pill-btn');
-    presetPills.forEach(function (btn) {
+    // Preset buttons (topbar tabs & drawer pills)
+    var presetBtns = document.querySelectorAll('.mode-tab, .preset-pill-btn');
+    presetBtns.forEach(function (btn) {
       btn.addEventListener('click', function () {
         var pKey = btn.getAttribute('data-preset');
         applyPreset(pKey);

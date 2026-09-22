@@ -1274,7 +1274,10 @@
     engineSelect.value = state.engine;
     engineNameVal.textContent = engineSelect.options[engineSelect.selectedIndex] ? engineSelect.options[engineSelect.selectedIndex].text.split(' (')[0] : state.engine;
 
-    // Right-panel Engine Preset Pills
+    // Topbar & Drawer Engine Preset Tabs/Pills
+    document.querySelectorAll('.mode-tab').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.engine === state.engine);
+    });
     document.querySelectorAll('.preset-pill-btn').forEach(function (btn) {
       btn.classList.toggle('active', btn.dataset.engine === state.engine);
     });
@@ -1314,8 +1317,8 @@
 
   // EVENT LISTENERS
   function initEventListeners() {
-    // Engine Preset Pills in Right Panel
-    document.querySelectorAll('.preset-pill-btn').forEach(function (btn) {
+    // Engine Preset Pills & Tabs
+    document.querySelectorAll('.mode-tab, .preset-pill-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         state.engine = btn.dataset.engine;
         syncUiWithState();

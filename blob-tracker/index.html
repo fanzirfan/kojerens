@@ -25,21 +25,27 @@
       </a>
       <span class="topbar-subtool-badge">TRACKER</span>
     </div>
+    <nav class="topbar-modes" role="tablist" aria-label="Visual engine">
+      <button class="mode-tab active" data-mode="circles" role="tab" aria-selected="true">Sensor</button>
+      <button class="mode-tab" data-mode="hero" role="tab" aria-selected="false">Telemetry</button>
+      <button class="mode-tab" data-mode="geo" role="tab" aria-selected="false">Topography</button>
+      <button class="mode-tab" data-mode="studio" role="tab" aria-selected="false">Viewfinder</button>
+    </nav>
     <div class="topbar-actions">
       <a href="../ascii-gen/index.html" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <i class="ri-terminal-line"></i>
         <span>ASCII Gen</span>
       </a>
       <a href="../dither-gen/index.html" class="topbar-tool-switch" title="Switch to 1-Bit Dither Matrix">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <i class="ri-grid-fill"></i>
         <span>1-Bit Dither</span>
       </a>
       <a href="../crt-gen/index.html" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <i class="ri-tv-line"></i>
         <span>CRT Gen</span>
       </a>
       <button class="topbar-btn" id="randomizeBtn" title="Randomize style and settings">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        <i class="ri-dice-line"></i>
         Randomize
       </button>
       <button class="topbar-cta" id="topbarDownloadBtn">Export PNG</button>
@@ -49,34 +55,56 @@
   <!-- WORKSPACE -->
   <div class="workspace">
 
-    <!-- MAIN STAGE (LEFT) -->
-    <main class="stage" id="stageMain">
-      <div class="canvas-wrap" id="canvasWrap">
-        <canvas id="canvas"></canvas>
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon"><i class="ri-radar-line"></i></div>
-          <h2>Drop a file to start</h2>
-          <p>Processed locally. Nothing leaves your browser.</p>
-          <button class="btn-block-outline empty-load-btn" id="emptyLoadSampleBtn" style="margin-top:6px; width:auto; padding:6px 14px;">Load Demo Graphic</button>
-        </div>
-      </div>
+    <!-- ICON RAIL (FAR LEFT) -->
+    <nav class="rail" aria-label="Panel navigation">
+      <button class="rail-btn active" data-panel="image" data-modes="all" title="Source File &amp; Crop" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="rail-label">File</span>
+      </button>
+      <button class="rail-btn" data-panel="gradientmap" data-modes="all" title="Gradient Map" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor"/><line x1="8" y1="7" x2="8" y2="17" stroke="currentColor" stroke-opacity=".4"/><line x1="13" y1="7" x2="13" y2="17" stroke="currentColor" stroke-opacity=".4"/></svg>
+        <span class="rail-label">Map</span>
+      </button>
+      <button class="rail-btn" data-panel="pixelate" data-modes="all" title="Pixelate" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/></svg>
+        <span class="rail-label">Pixel</span>
+      </button>
+      <button class="rail-btn" data-panel="frametext" data-modes="all" title="Frame Text" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="rail-label">Text</span>
+      </button>
+      <button class="rail-btn" data-panel="detection" data-modes="circles" title="Detection" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><circle cx="11" cy="11" r="3"/></svg>
+        <span class="rail-label">Detect</span>
+      </button>
+      <button class="rail-btn" data-panel="shapes" data-modes="circles" title="Visual Style" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        <span class="rail-label">Visual</span>
+      </button>
+      <button class="rail-btn" data-panel="palette" data-modes="all" title="Palette" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
+        <span class="rail-label">Palette</span>
+      </button>
+      <button class="rail-btn" data-panel="crosshair" data-modes="all" data-engine="true" title="Engine Settings" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="rail-label">Engine</span>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="rail-btn" data-panel="size" data-modes="all" title="Canvas Size" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        <span class="rail-label">Size</span>
+      </button>
+      <button class="rail-btn" data-panel="texture" data-modes="all" title="Texture / Noise" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z"/></svg>
+        <span class="rail-label">Noise</span>
+      </button>
+      <button class="rail-btn" data-panel="export" data-modes="all" title="Export &amp; Actions" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="rail-label">Export</span>
+      </button>
+    </nav>
 
-      <!-- Stage Floating Zoom Controls -->
-      <div class="stage-zoom-bar" id="stageZoomBar">
-        <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out" aria-label="Zoom Out">
-          <i class="ri-subtract-line"></i>
-        </button>
-        <span class="zoom-val" id="zoomVal">100%</span>
-        <button class="zoom-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In">
-          <i class="ri-add-line"></i>
-        </button>
-        <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
-      </div>
-
-      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
-    </main>
-
-    <!-- PANEL DRAWER (RIGHT) -->
+    <!-- PANEL DRAWER (MIDDLE LEFT) -->
     <aside class="panel-drawer open" id="panelDrawer">
       <div class="drawer-inner sidebar">
 
@@ -833,58 +861,32 @@
       </div><!-- /.drawer-inner.sidebar -->
     </aside><!-- /.panel-drawer -->
 
-    <!-- ICON RAIL (FAR RIGHT) -->
-    <nav class="rail" aria-label="Panel navigation">
-      <button class="rail-btn active" data-panel="modes" data-modes="all" title="Visual Engine" aria-pressed="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
-        <span class="rail-label">Engine</span>
-      </button>
-      <button class="rail-btn" data-panel="image" data-modes="all" title="Source File &amp; Crop" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        <span class="rail-label">File</span>
-      </button>
-      <button class="rail-btn" data-panel="gradientmap" data-modes="all" title="Gradient Map" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor"/><line x1="8" y1="7" x2="8" y2="17" stroke="currentColor" stroke-opacity=".4"/><line x1="13" y1="7" x2="13" y2="17" stroke="currentColor" stroke-opacity=".4"/></svg>
-        <span class="rail-label">Map</span>
-      </button>
-      <button class="rail-btn" data-panel="pixelate" data-modes="all" title="Pixelate" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/></svg>
-        <span class="rail-label">Pixel</span>
-      </button>
-      <button class="rail-btn" data-panel="frametext" data-modes="all" title="Frame Text" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-        <span class="rail-label">Text</span>
-      </button>
-      <button class="rail-btn" data-panel="detection" data-modes="circles" title="Detection" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><circle cx="11" cy="11" r="3"/></svg>
-        <span class="rail-label">Detect</span>
-      </button>
-      <button class="rail-btn" data-panel="shapes" data-modes="circles" title="Visual Style" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-        <span class="rail-label">Visual</span>
-      </button>
-      <button class="rail-btn" data-panel="palette" data-modes="all" title="Palette" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
-        <span class="rail-label">Palette</span>
-      </button>
-      <button class="rail-btn" data-panel="crosshair" data-modes="all" data-engine="true" title="Engine Settings" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        <span class="rail-label">Engine</span>
-      </button>
-      <div class="rail-sep"></div>
-      <button class="rail-btn" data-panel="size" data-modes="all" title="Canvas Size" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
-        <span class="rail-label">Size</span>
-      </button>
-      <button class="rail-btn" data-panel="texture" data-modes="all" title="Texture / Noise" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z"/></svg>
-        <span class="rail-label">Noise</span>
-      </button>
-      <button class="rail-btn" data-panel="export" data-modes="all" title="Export &amp; Actions" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span class="rail-label">Export</span>
-      </button>
-    </nav>
+    <!-- MAIN STAGE (RIGHT) -->
+    <main class="stage" id="stageMain">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="canvas"></canvas>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon"><i class="ri-radar-line"></i></div>
+          <h2>Drop a file to start</h2>
+          <p>Processed locally. Nothing leaves your browser.</p>
+          <button class="btn-block-outline empty-load-btn" id="emptyLoadSampleBtn" style="margin-top:6px; width:auto; padding:6px 14px;">Load Demo Graphic</button>
+        </div>
+      </div>
+
+      <!-- Stage Floating Zoom Controls -->
+      <div class="stage-zoom-bar" id="stageZoomBar">
+        <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out" aria-label="Zoom Out">
+          <i class="ri-subtract-line"></i>
+        </button>
+        <span class="zoom-val" id="zoomVal">100%</span>
+        <button class="zoom-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In">
+          <i class="ri-add-line"></i>
+        </button>
+        <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
+      </div>
+
+      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
+    </main>
 
   </div><!-- /.workspace -->
 
