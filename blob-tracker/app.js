@@ -232,7 +232,7 @@
     pixelZones: [],
     pixelStroke: true,
     frameOn: true,
-    frameTextOn: true,
+    frameTextOn: false,
     frameTextTL: 'Design & Strategy',
     frameTextTR: 'Fanz Irfan',
     frameTextBL: 'manji.eu.org',
@@ -2822,7 +2822,25 @@
   // Image Loading
   function applyLoadedImage(img) {
     state.image = img;
-    if (!state.rawImage) state.rawImage = img;
+    state.rawImage = img;
+    emptyState.classList.add('hidden');
+    canvas.classList.add('visible');
+    if (state.format === 'original') {
+      var ow = img.naturalWidth || img.width;
+      var oh = img.naturalHeight || img.height;
+      FORMATS.original.w = ow;
+      FORMATS.original.h = oh;
+      FORMATS.original.label = ow + 'x' + oh;
+      syncSizeInputsFromFormat();
+    }
+    updateStatusFooter();
+    recalculate(true);
+    resizeAndRender();
+  }
+
+  function setCroppedImage(img) {
+    state.image = img;
+    // Non-destructive: preserves state.rawImage so reset/re-crop restores full original
     emptyState.classList.add('hidden');
     canvas.classList.add('visible');
     if (state.format === 'original') {
@@ -2951,10 +2969,18 @@
     cropCanvas.width = Math.round(cropState.imgW * s);
     cropCanvas.height = Math.round(cropState.imgH * s);
 
-    cropState.startX = Math.round(cropCanvas.width * 0.1);
-    cropState.startY = Math.round(cropCanvas.height * 0.1);
-    cropState.w = Math.round(cropCanvas.width * 0.8);
-    cropState.h = Math.round(cropCanvas.height * 0.8);
+    cropState.ratio = 'free';
+    var rBtns = document.querySelectorAll('.crop-ratio-btn');
+    rBtns.forEach(function (b) {
+      if (b.dataset.ratio === 'free') b.classList.add('active');
+      else b.classList.remove('active');
+    });
+
+    // Default crop box: 88% centered frame so handles and move are immediately usable
+    cropState.w = Math.max(30, Math.round(cropCanvas.width * 0.88));
+    cropState.h = Math.max(30, Math.round(cropCanvas.height * 0.88));
+    cropState.startX = Math.round((cropCanvas.width - cropState.w) / 2);
+    cropState.startY = Math.round((cropCanvas.height - cropState.h) / 2);
 
     drawCropCanvas();
   }
@@ -3000,6 +3026,16 @@
     cropCtx.fillRect(cropState.startX - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
     cropCtx.fillRect(cropState.startX + cropState.w - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
 
+    // Mid-edge handle bars
+    var midX = cropState.startX + cropState.w / 2;
+    var midY = cropState.startY + cropState.h / 2;
+    var edgeLen = 14;
+    var edgeThick = 4;
+    cropCtx.fillRect(midX - edgeLen/2, cropState.startY - edgeThick/2, edgeLen, edgeThick);
+    cropCtx.fillRect(midX - edgeLen/2, cropState.startY + cropState.h - edgeThick/2, edgeLen, edgeThick);
+    cropCtx.fillRect(cropState.startX - edgeThick/2, midY - edgeLen/2, edgeThick, edgeLen);
+    cropCtx.fillRect(cropState.startX + cropState.w - edgeThick/2, midY - edgeLen/2, edgeThick, edgeLen);
+
     // Pixel readout
     var origW = Math.round(cropState.w / cropState.scale);
     var origH = Math.round(cropState.h / cropState.scale);
@@ -3012,10 +3048,28 @@
     var sourceImg = state.rawImage || state.image;
     if (!sourceImg) return;
 
+    var fullW = sourceImg.naturalWidth || sourceImg.width;
+    var fullH = sourceImg.naturalHeight || sourceImg.height;
+
     var origX = Math.round(cropState.startX / cropState.scale);
     var origY = Math.round(cropState.startY / cropState.scale);
     var origW = Math.round(cropState.w / cropState.scale);
     var origH = Math.round(cropState.h / cropState.scale);
+
+    origX = Math.max(0, Math.min(fullW - 1, origX));
+    origY = Math.max(0, Math.min(fullH - 1, origY));
+    origW = Math.max(1, Math.min(fullW - origX, origW));
+    origH = Math.max(1, Math.min(fullH - origY, origH));
+
+    // If selected area encompasses full image (within 2px margin), restore full rawImage
+    if (origX <= 2 && origY <= 2 && origW >= fullW - 4 && origH >= fullH - 4) {
+      applyLoadedImage(state.rawImage);
+      cropModal.style.display = 'none';
+      if (window.StudioPipeline) {
+        StudioPipeline.showToast('Restored full image');
+      }
+      return;
+    }
 
     var cCanvas = document.createElement('canvas');
     cCanvas.width = origW;
@@ -3025,7 +3079,7 @@
 
     var croppedImg = new Image();
     croppedImg.onload = function () {
-      applyLoadedImage(croppedImg);
+      setCroppedImage(croppedImg);
       cropModal.style.display = 'none';
       if (window.StudioPipeline) {
         StudioPipeline.showToast('Applied image crop (' + origW + 'x' + origH + ')');
@@ -3102,10 +3156,15 @@
   }
   if (cropResetBtn) {
     cropResetBtn.addEventListener('click', function () {
-      cropState.startX = Math.round(cropCanvas.width * 0.1);
-      cropState.startY = Math.round(cropCanvas.height * 0.1);
-      cropState.w = Math.round(cropCanvas.width * 0.8);
-      cropState.h = Math.round(cropCanvas.height * 0.8);
+      cropState.ratio = 'free';
+      cropRatioBtns.forEach(function (b) {
+        if (b.dataset.ratio === 'free') b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      cropState.startX = 0;
+      cropState.startY = 0;
+      cropState.w = cropCanvas.width;
+      cropState.h = cropCanvas.height;
       drawCropCanvas();
     });
   }
@@ -3140,49 +3199,214 @@
     });
   });
 
-  if (cropCanvas) {
-    cropCanvas.addEventListener('mousedown', function (e) {
-      var rect = cropCanvas.getBoundingClientRect();
-      var mx = e.clientX - rect.left;
-      var my = e.clientY - rect.top;
+  // Crop Canvas Dragging & Precision Interaction
+  function getCropCoords(e) {
+    var rect = cropCanvas.getBoundingClientRect();
+    var scaleX = rect.width > 0 ? (cropCanvas.width / rect.width) : 1;
+    var scaleY = rect.height > 0 ? (cropCanvas.height / rect.height) : 1;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
 
-      var hs = 14;
-      if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - cropState.startY) < hs) {
-        cropState.dragMode = 'nw';
-      } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - cropState.startY) < hs) {
-        cropState.dragMode = 'ne';
-      } else if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
-        cropState.dragMode = 'sw';
-      } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
-        cropState.dragMode = 'se';
-      } else if (mx >= cropState.startX && mx <= cropState.startX + cropState.w && my >= cropState.startY && my <= cropState.startY + cropState.h) {
-        cropState.dragMode = 'move';
-      } else {
-        cropState.dragMode = null;
-        return;
+  function getCropHitMode(mx, my) {
+    var x = cropState.startX;
+    var y = cropState.startY;
+    var w = cropState.w;
+    var h = cropState.h;
+    var hs = 16;
+
+    // Corners
+    var nearL = Math.abs(mx - x) <= hs;
+    var nearR = Math.abs(mx - (x + w)) <= hs;
+    var nearT = Math.abs(my - y) <= hs;
+    var nearB = Math.abs(my - (y + h)) <= hs;
+
+    if (nearT && nearL) return 'nw';
+    if (nearT && nearR) return 'ne';
+    if (nearB && nearL) return 'sw';
+    if (nearB && nearR) return 'se';
+
+    // Edges
+    var edgeHs = 12;
+    if (Math.abs(my - y) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 'n';
+    if (Math.abs(my - (y + h)) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 's';
+    if (Math.abs(mx - x) <= edgeHs && my >= y - hs && my <= y + h + hs) return 'w';
+    if (Math.abs(mx - (x + w)) <= edgeHs && my >= y - hs && my <= y + h + hs) return 'e';
+
+    // Inside
+    if (mx > x && mx < x + w && my > y && my < y + h) {
+      if (w >= cropCanvas.width - 4 && h >= cropCanvas.height - 4) {
+        return 'draw';
       }
+      return 'move';
+    }
+
+    // Outside
+    return 'draw';
+  }
+
+  if (cropCanvas) {
+    cropCanvas.addEventListener('mousemove', function (e) {
+      if (cropState.dragging) return;
+      var coords = getCropCoords(e);
+      var mode = getCropHitMode(coords.x, coords.y);
+      if (mode === 'nw' || mode === 'se') cropCanvas.style.cursor = 'nwse-resize';
+      else if (mode === 'ne' || mode === 'sw') cropCanvas.style.cursor = 'nesw-resize';
+      else if (mode === 'n' || mode === 's') cropCanvas.style.cursor = 'ns-resize';
+      else if (mode === 'e' || mode === 'w') cropCanvas.style.cursor = 'ew-resize';
+      else if (mode === 'move') cropCanvas.style.cursor = 'move';
+      else cropCanvas.style.cursor = 'crosshair';
+    });
+
+    cropCanvas.addEventListener('mousedown', function (e) {
+      var coords = getCropCoords(e);
+      var mode = getCropHitMode(coords.x, coords.y);
 
       cropState.dragging = true;
-      cropState.offsetX = mx - cropState.startX;
-      cropState.offsetY = my - cropState.startY;
+      cropState.dragMode = mode;
+      cropState.offsetX = coords.x - cropState.startX;
+      cropState.offsetY = coords.y - cropState.startY;
+      cropState.drawStartX = coords.x;
+      cropState.drawStartY = coords.y;
+
+      if (mode === 'draw') {
+        cropState.startX = coords.x;
+        cropState.startY = coords.y;
+        cropState.w = 1;
+        cropState.h = 1;
+        drawCropCanvas();
+      }
     });
 
     window.addEventListener('mousemove', function (e) {
       if (!cropState.dragging || !cropCanvas || cropModal.style.display === 'none') return;
-      var rect = cropCanvas.getBoundingClientRect();
-      var mx = e.clientX - rect.left;
-      var my = e.clientY - rect.top;
+      var coords = getCropCoords(e);
+      var mx = coords.x;
+      var my = coords.y;
+      var cw = cropCanvas.width;
+      var ch = cropCanvas.height;
+      var minSize = 25;
 
-      if (cropState.dragMode === 'move') {
-        cropState.startX = Math.max(0, Math.min(cropCanvas.width - cropState.w, mx - cropState.offsetX));
-        cropState.startY = Math.max(0, Math.min(cropCanvas.height - cropState.h, my - cropState.offsetY));
+      if (cropState.dragMode === 'draw') {
+        var x1 = Math.max(0, Math.min(cw, Math.min(cropState.drawStartX, mx)));
+        var y1 = Math.max(0, Math.min(ch, Math.min(cropState.drawStartY, my)));
+        var x2 = Math.max(0, Math.min(cw, Math.max(cropState.drawStartX, mx)));
+        var y2 = Math.max(0, Math.min(ch, Math.max(cropState.drawStartY, my)));
+        var newW = Math.max(minSize, x2 - x1);
+        var newH = Math.max(minSize, y2 - y1);
+
+        if (cropState.ratio === '1:1') {
+          var side = Math.min(newW, newH);
+          newW = side; newH = side;
+          if (mx < cropState.drawStartX) x1 = Math.max(0, cropState.drawStartX - side);
+          if (my < cropState.drawStartY) y1 = Math.max(0, cropState.drawStartY - side);
+        } else if (cropState.ratio === '4:3') {
+          newH = Math.round(newW * 0.75);
+        } else if (cropState.ratio === '16:9') {
+          newH = Math.round(newW * (9 / 16));
+        } else if (cropState.ratio === '3:4') {
+          newH = Math.round(newW * (4 / 3));
+        }
+
+        cropState.startX = Math.min(x1, cw - newW);
+        cropState.startY = Math.min(y1, ch - newH);
+        cropState.w = Math.min(cw - cropState.startX, newW);
+        cropState.h = Math.min(ch - cropState.startY, newH);
+      } else if (cropState.dragMode === 'move') {
+        cropState.startX = Math.max(0, Math.min(cw - cropState.w, mx - cropState.offsetX));
+        cropState.startY = Math.max(0, Math.min(ch - cropState.h, my - cropState.offsetY));
+      } else if (cropState.dragMode === 'e') {
+        var newW = Math.max(minSize, Math.min(cw - cropState.startX, mx - cropState.startX));
+        cropState.w = newW;
+        if (cropState.ratio === '1:1') cropState.h = Math.min(ch - cropState.startY, newW);
+        else if (cropState.ratio === '4:3') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * 0.75));
+        else if (cropState.ratio === '16:9') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (9 / 16)));
+        else if (cropState.ratio === '3:4') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (4 / 3)));
+      } else if (cropState.dragMode === 'w') {
+        var right = cropState.startX + cropState.w;
+        var newX = Math.max(0, Math.min(right - minSize, mx));
+        var newW = right - newX;
+        cropState.startX = newX;
+        cropState.w = newW;
+        if (cropState.ratio === '1:1') cropState.h = Math.min(ch - cropState.startY, newW);
+        else if (cropState.ratio === '4:3') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * 0.75));
+        else if (cropState.ratio === '16:9') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (9 / 16)));
+        else if (cropState.ratio === '3:4') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (4 / 3)));
+      } else if (cropState.dragMode === 's') {
+        var newH = Math.max(minSize, Math.min(ch - cropState.startY, my - cropState.startY));
+        cropState.h = newH;
+        if (cropState.ratio === '1:1') cropState.w = Math.min(cw - cropState.startX, newH);
+        else if (cropState.ratio === '4:3') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (4 / 3)));
+        else if (cropState.ratio === '16:9') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (16 / 9)));
+        else if (cropState.ratio === '3:4') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * 0.75));
+      } else if (cropState.dragMode === 'n') {
+        var bottom = cropState.startY + cropState.h;
+        var newY = Math.max(0, Math.min(bottom - minSize, my));
+        var newH = bottom - newY;
+        cropState.startY = newY;
+        cropState.h = newH;
+        if (cropState.ratio === '1:1') cropState.w = Math.min(cw - cropState.startX, newH);
+        else if (cropState.ratio === '4:3') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (4 / 3)));
+        else if (cropState.ratio === '16:9') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (16 / 9)));
+        else if (cropState.ratio === '3:4') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * 0.75));
       } else if (cropState.dragMode === 'se') {
-        cropState.w = Math.max(40, Math.min(cropCanvas.width - cropState.startX, mx - cropState.startX));
-        if (cropState.ratio === '1:1') cropState.h = cropState.w;
-        else if (cropState.ratio === '4:3') cropState.h = Math.round(cropState.w * (3 / 4));
-        else if (cropState.ratio === '16:9') cropState.h = Math.round(cropState.w * (9 / 16));
-        else if (cropState.ratio === '3:4') cropState.h = Math.round(cropState.w * (4 / 3));
-        else cropState.h = Math.max(40, Math.min(cropCanvas.height - cropState.startY, my - cropState.startY));
+        var newW = Math.max(minSize, Math.min(cw - cropState.startX, mx - cropState.startX));
+        var newH = Math.max(minSize, Math.min(ch - cropState.startY, my - cropState.startY));
+        if (cropState.ratio === '1:1') newH = newW;
+        else if (cropState.ratio === '4:3') newH = Math.round(newW * 0.75);
+        else if (cropState.ratio === '16:9') newH = Math.round(newW * (9 / 16));
+        else if (cropState.ratio === '3:4') newH = Math.round(newW * (4 / 3));
+        if (cropState.startY + newH <= ch) {
+          cropState.w = newW;
+          cropState.h = newH;
+        }
+      } else if (cropState.dragMode === 'nw') {
+        var right = cropState.startX + cropState.w;
+        var bottom = cropState.startY + cropState.h;
+        var newX = Math.max(0, Math.min(right - minSize, mx));
+        var newY = Math.max(0, Math.min(bottom - minSize, my));
+        var nwW = right - newX;
+        var nwH = bottom - newY;
+        if (cropState.ratio === '1:1') { nwH = nwW; newY = bottom - nwH; }
+        else if (cropState.ratio === '4:3') { nwH = Math.round(nwW * 0.75); newY = bottom - nwH; }
+        else if (cropState.ratio === '16:9') { nwH = Math.round(nwW * (9 / 16)); newY = bottom - nwH; }
+        else if (cropState.ratio === '3:4') { nwH = Math.round(nwW * (4 / 3)); newY = bottom - nwH; }
+        if (newY >= 0) {
+          cropState.startX = newX;
+          cropState.startY = newY;
+          cropState.w = nwW;
+          cropState.h = nwH;
+        }
+      } else if (cropState.dragMode === 'ne') {
+        var bottom = cropState.startY + cropState.h;
+        var newW = Math.max(minSize, Math.min(cw - cropState.startX, mx - cropState.startX));
+        var newY = Math.max(0, Math.min(bottom - minSize, my));
+        var neH = bottom - newY;
+        if (cropState.ratio === '1:1') { neH = newW; newY = bottom - neH; }
+        else if (cropState.ratio === '4:3') { neH = Math.round(newW * 0.75); newY = bottom - neH; }
+        else if (cropState.ratio === '16:9') { neH = Math.round(newW * (9 / 16)); newY = bottom - neH; }
+        else if (cropState.ratio === '3:4') { neH = Math.round(newW * (4 / 3)); newY = bottom - neH; }
+        if (newY >= 0) {
+          cropState.startY = newY;
+          cropState.w = newW;
+          cropState.h = neH;
+        }
+      } else if (cropState.dragMode === 'sw') {
+        var right = cropState.startX + cropState.w;
+        var newX = Math.max(0, Math.min(right - minSize, mx));
+        var swW = right - newX;
+        var newH = Math.max(minSize, Math.min(ch - cropState.startY, my - cropState.startY));
+        if (cropState.ratio === '1:1') newH = swW;
+        else if (cropState.ratio === '4:3') newH = Math.round(swW * 0.75);
+        else if (cropState.ratio === '16:9') newH = Math.round(swW * (9 / 16));
+        else if (cropState.ratio === '3:4') newH = Math.round(swW * (4 / 3));
+        if (cropState.startY + newH <= ch) {
+          cropState.startX = newX;
+          cropState.w = swW;
+          cropState.h = newH;
+        }
       }
       drawCropCanvas();
     });
@@ -3324,18 +3548,22 @@
     }, 1000);
   }
 
-  function executeFullDownload() {
-    if (!state.image) {
-      imageInput.click();
-      return;
-    }
+  function renderToExportCanvas(overlayOnly) {
     var fmt = getActiveFormat();
     var exportCanvas = document.createElement('canvas');
     exportCanvas.width = fmt.w;
     exportCanvas.height = fmt.h;
     var expCtx = exportCanvas.getContext('2d');
-    drawCanvas(expCtx, fmt.w, fmt.h);
+    drawCanvas(expCtx, fmt.w, fmt.h, overlayOnly ? { overlayOnly: true } : undefined);
+    return exportCanvas;
+  }
 
+  function executeFullDownload() {
+    if (!state.image) {
+      imageInput.click();
+      return;
+    }
+    var exportCanvas = renderToExportCanvas(false);
     var filename = 'tracker-' + state.format + '-' + Date.now() + '.png';
     triggerDownload(exportCanvas, filename);
   }
@@ -3345,13 +3573,7 @@
       imageInput.click();
       return;
     }
-    var fmt = getActiveFormat();
-    var exportCanvas = document.createElement('canvas');
-    exportCanvas.width = fmt.w;
-    exportCanvas.height = fmt.h;
-    var expCtx = exportCanvas.getContext('2d');
-    drawCanvas(expCtx, fmt.w, fmt.h, { overlayOnly: true });
-
+    var exportCanvas = renderToExportCanvas(true);
     var filename = 'tracker-overlay-' + state.format + '-' + Date.now() + '.png';
     triggerDownload(exportCanvas, filename);
   }

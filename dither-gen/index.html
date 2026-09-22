@@ -130,24 +130,10 @@
             <button class="btn-block" id="replaceFileBtn">Select / Replace File</button>
             <input type="file" id="fileInput" style="display:none" />
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+            <div style="margin-bottom: 8px;">
               <button class="btn-block-outline" id="cropBtn" title="Crop or frame the source image">
                 <i class="ri-crop-line"></i> Crop Image
               </button>
-              <button class="btn-block-outline" id="loadSampleBtn" title="Choose a demo photo from library">
-                <i class="ri-gallery-line"></i> Demo Library
-              </button>
-            </div>
-
-            <!-- Demo Library Dropdown -->
-            <div id="demoPickerPanel" style="display:none; background: rgba(5,6,15,0.7); border: 1px solid var(--color-glass-edge); border-radius: 6px; padding: 8px; margin-bottom: 10px;">
-              <span class="field-sublabel" style="display:block; margin-bottom: 6px; color: var(--color-moon-mist); font-size:9.5px;">SELECT DEMO PHOTO:</span>
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <button class="btn-demo-item" data-demo="street">1. Cyber Street (Tokyo Night)</button>
-                <button class="btn-demo-item" data-demo="arch">2. Architecture (Brutalist Form)</button>
-                <button class="btn-demo-item" data-demo="portrait">3. Studio Portrait (High Contrast)</button>
-                <button class="btn-demo-item" data-demo="procedural">4. Procedural Vector Target</button>
-              </div>
             </div>
 
             <div class="control-group" style="margin-top:10px">
@@ -385,11 +371,11 @@
             <div class="control-group">
               <div class="toggle-row">
                 <label for="toggleFrameText">STUDIO 4-CORNER LABELS</label>
-                <input type="checkbox" id="toggleFrameText" checked />
+                <input type="checkbox" id="toggleFrameText" />
               </div>
             </div>
 
-            <div id="frameTextControls">
+            <div id="frameTextControls" style="display:none;">
               <div class="control-group">
                 <div class="control-header"><label>TOP LEFT</label></div>
                 <input type="text" id="frameTL" value="Design &amp; Strategy" class="text-input" />
@@ -466,7 +452,6 @@
           <div class="empty-icon"><i class="ri-grid-line"></i></div>
           <h2>Drop a file to synthesize</h2>
           <p>Local in-browser computing. Zero server dependency.</p>
-          <button class="btn-block-outline empty-load-btn" id="emptyLoadSampleBtn">Load Demo Graphic</button>
         </div>
       </div>
 

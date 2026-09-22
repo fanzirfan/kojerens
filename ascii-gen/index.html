@@ -160,16 +160,14 @@
         <div class="glyphtrix-logo" id="glyphtrixLogo">KOJERENS</div>
         <h2 id="uploadPanelTitle" class="initially-hidden">Upload</h2>
         <div class="condensed-upload-zone" id="condensedUploadZone" style="display: none;">
-          <label for="condensedImageUpload">
-            <div class="filename-container">
-              <span id="condensedFilename"><i class="ri-check-line"></i> Select Image</span>
-              <div style="display: flex; gap: 4px;">
-                <button class="btn-base btn-action change-image-button" type="button" onclick="openCropModal()" title="Crop Image"><i class="ri-crop-line"></i> Crop</button>
-                <button class="btn-base btn-action change-image-button" type="button" onclick="document.getElementById('imageUpload').click()"><i class="ri-upload-2-fill"></i> New Upload</button>
-              </div>
+          <div class="filename-container">
+            <span id="condensedFilename"><i class="ri-check-line"></i> Select Image</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn-base btn-action change-image-button" type="button" onclick="openCropModal()" title="Crop Image"><i class="ri-crop-line"></i> Crop</button>
+              <button class="btn-base btn-action change-image-button" type="button" onclick="document.getElementById('imageUpload').click()"><i class="ri-upload-2-fill"></i> New Upload</button>
             </div>
-            <input type="file" id="condensedImageUpload" accept="image/* video/*">
-          </label>
+          </div>
+          <input type="file" id="condensedImageUpload" accept="image/* video/*" style="display: none;">
         </div>
       </div>
 

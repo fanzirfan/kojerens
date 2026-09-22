@@ -95,16 +95,50 @@
     }, duration);
   }
 
+  function safeSessionStorageSet(key, value, onComplete) {
+    try {
+      sessionStorage.setItem(key, value);
+      if (onComplete) onComplete();
+    } catch (e) {
+      // If quota exceeded, try compression fallback
+      try {
+        var img = new Image();
+        img.onload = function () {
+          var cv = document.createElement('canvas');
+          var maxDim = 1200;
+          var w = img.width;
+          var h = img.height;
+          if (w > maxDim || h > maxDim) {
+            var scale = Math.min(maxDim / w, maxDim / h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+          cv.width = w;
+          cv.height = h;
+          var ctx = cv.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          try {
+            sessionStorage.setItem(key, cv.toDataURL('image/jpeg', 0.82));
+          } catch (err) {}
+          if (onComplete) onComplete();
+        };
+        img.onerror = function () {
+          if (onComplete) onComplete();
+        };
+        img.src = value;
+      } catch (err2) {
+        if (onComplete) onComplete();
+      }
+    }
+  }
+
   function sendImage(dataUrl, targetUrl, toolName) {
     showToast('Routing render to ' + (toolName || 'tool') + '...');
     openDB().then(function (db) {
       if (!db) {
-        try {
-          sessionStorage.setItem(TRANSFER_KEY, dataUrl);
-        } catch (e) {
-          console.warn('SessionStorage quota exceeded, continuing direct', e);
-        }
-        window.location.href = targetUrl;
+        safeSessionStorageSet(TRANSFER_KEY, dataUrl, function () {
+          window.location.href = targetUrl;
+        });
         return;
       }
 
@@ -116,16 +150,14 @@
           window.location.href = targetUrl;
         };
         tx.onerror = function () {
-          try {
-            sessionStorage.setItem(TRANSFER_KEY, dataUrl);
-          } catch (e) {}
-          window.location.href = targetUrl;
+          safeSessionStorageSet(TRANSFER_KEY, dataUrl, function () {
+            window.location.href = targetUrl;
+          });
         };
       } catch (err) {
-        try {
-          sessionStorage.setItem(TRANSFER_KEY, dataUrl);
-        } catch (e) {}
-        window.location.href = targetUrl;
+        safeSessionStorageSet(TRANSFER_KEY, dataUrl, function () {
+          window.location.href = targetUrl;
+        });
       }
     });
   }
