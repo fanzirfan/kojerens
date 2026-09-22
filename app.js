@@ -2262,9 +2262,9 @@
     canvas.height = fmt.h;
 
     var wrapRect = wrap.getBoundingClientRect();
-    var pad = 40;
-    var maxW = Math.max(200, wrapRect.width - pad);
-    var maxH = Math.max(200, wrapRect.height - pad);
+    var pad = wrapRect.width < 600 ? 16 : 40;
+    var maxW = Math.max(80, wrapRect.width - pad);
+    var maxH = Math.max(80, wrapRect.height - pad);
     var ratio = fmt.w / fmt.h;
 
     var dispW = maxW;
