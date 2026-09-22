@@ -46,6 +46,31 @@ Sintesis karakter Unicode dan seni ASCII interaktif secara *real-time*:
 
 ---
 
+### 3. 1-Bit Dither Matrix (`/dither-gen/`)
+Sintesis grafis bitmap 1-bit retro dan error-diffusion kuantisasi tingkat tinggi langsung di peramban:
+
+- **15 Algoritma Dithering Komprehensif**:
+  - *Error Diffusion*: Atkinson (klasik Apple Mac OS 1984), Floyd-Steinberg, Sierra-3, Sierra Lite, Stucki, Burkes, Jarvis-Judice-Ninke (JJN).
+  - *Ordered / Matrix*: Bayer 8x8, Bayer 4x4, Bayer 2x2.
+  - *Halftone Screens*: Halftone Dot Screen (raster percetakan koran), Halftone Line Screen (garis scanline litografi).
+  - *Noise & Threshold*: Blue Noise, Random Stochastic, Pure Threshold.
+- **12 Palet Warna Retro Terkalibrasi**:
+  - Macintosh 1984, Game Boy Original/Pocket, Phosphor Green CRT, Amber Terminal, Cyberpunk Neon, Blueprint Cyan, Solarized Dark, Tokyo Neon, Newsprint Vintage, Thermal Camera, Commodore 64, ZX Spectrum.
+  - Mode custom 2 warna bebas dengan dukungan inversi palet.
+- **Kontrol Citra & Penskalaan Piksel**:
+  - Penskalaan piksel integer murni (1x, 2x, 3x, 4x, 6x, 8x).
+  - Optimasi level: Brightness, Contrast, Gamma Correction, Threshold Bias, Sobel Edge Boost, dan Serpentine scanning toggle.
+- **Tipografi Telemetri 4 Sudut**:
+  - Watermark teknis di setiap sudut kanvas dengan ukuran font adaptif dan label kustom.
+- **Ekspor Vektor & Raster Multi-Format**:
+  - Unduh PNG resolusi tinggi (`tracker-dither-...png`).
+  - Mode transparan (*Overlay Dots Only*).
+  - Ekspor vektor SVG murni (`tracker-dither-...svg`) dengan kompresi run-length horizontal untuk software CAD/Illustrator/Figma.
+- **Mobile Split-Pane Fixed Layout**:
+  - Tampilan kanvas preview selalu terpancang (*pinned stage*) di bagian atas layar dengan kontrol drawer di bawahnya, bebas tumpang tindih.
+
+---
+
 ## ⚡ Prinsip & Arsitektur
 
 1. **Privasi & Keamanan Penuh**: 100% berjalan *in-browser*. Tidak ada data citra, video, atau teks pengguna yang dikirim ke server.

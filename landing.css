@@ -374,8 +374,8 @@ button {
 /* Tools Grid */
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
 
 .tool-card {
@@ -660,12 +660,18 @@ button {
    9. RESPONSIVE DESIGN (R-03 MOBILE)
    ============================================================================ */
 
-@media (max-width: 960px) {
+@media (max-width: 1080px) {
+  .tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
   .tools-grid {
     grid-template-columns: 1fr;
   }
   .features-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
   .manifesto-card {
     grid-template-columns: 1fr;
