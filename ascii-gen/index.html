@@ -95,12 +95,20 @@
                 <i class="ri-webcam-line"></i> Connect Live Webcam
               </button>
               <div class="preset-buttons-row">
-                <button class="btn-base btn-preset" onclick="loadExampleImage()">
-                  <i class="ri-image-line"></i> Sample Image
+                <button class="btn-base btn-preset" id="cropInputBtn" onclick="openCropModal()">
+                  <i class="ri-crop-line"></i> Crop Image
                 </button>
-                <button class="btn-base btn-preset" onclick="loadExampleVideo()">
-                  <i class="ri-movie-line"></i> Sample Video
+                <button class="btn-base btn-preset" id="demoPickerBtn" onclick="toggleDemoPicker()">
+                  <i class="ri-gallery-line"></i> Demo Library
                 </button>
+              </div>
+              <div id="demoPickerPanel" style="display:none; background: rgba(5,6,15,0.9); border: 1px solid var(--color-glass-edge); border-radius: 6px; padding: 8px; margin: 8px 0;">
+                <span style="display:block; margin-bottom: 6px; color: var(--color-moon-mist); font-size:10px; font-family: monospace;">SELECT DEMO PHOTO:</span>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('street')">1. Cyber Street (Tokyo Night)</button>
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('arch')">2. Architecture (Brutalist Form)</button>
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('portrait')">3. Studio Portrait (High Contrast)</button>
+                </div>
               </div>
             </div>
           </div>
@@ -155,10 +163,26 @@
           <label for="condensedImageUpload">
             <div class="filename-container">
               <span id="condensedFilename"><i class="ri-check-line"></i> Select Image</span>
-              <button class="btn-base btn-action change-image-button" onclick="document.getElementById('imageUpload').click()"><i class="ri-upload-2-fill"></i> New Upload</button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-base btn-action change-image-button" type="button" onclick="openCropModal()" title="Crop Image"><i class="ri-crop-line"></i> Crop</button>
+                <button class="btn-base btn-action change-image-button" type="button" onclick="document.getElementById('imageUpload').click()"><i class="ri-upload-2-fill"></i> New Upload</button>
+              </div>
             </div>
             <input type="file" id="condensedImageUpload" accept="image/* video/*">
           </label>
+        </div>
+      </div>
+
+      <!-- SECTION 0: ASCII STYLE PRESETS (RIGHT PANEL) -->
+      <div class="settings-panel-section-content" id="asciiPresetsSection" style="padding-bottom: 14px; border-bottom: 1px solid var(--color-glass-edge);">
+        <h2>Style Presets</h2>
+        <div class="preset-pill-grid">
+          <button class="preset-pill-btn active" type="button" onclick="applyAsciiStylePreset('classic')">Classic Mono</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('matrix')">Green Matrix</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('cyberpunk')">Cyber Neon</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('amber')">Amber CRT</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('blocks')">Unicode Blocks</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('dense')">High-Density</button>
         </div>
       </div>
 
@@ -589,6 +613,36 @@
         <p style="margin-top: 20px; line-height: 1.6; font-size: 0.9em;">
           The recording will capture your <strong>webcam input</strong> (not the ASCII output) and save it temporarily in your browser's memory for privacy. After recording, you can fine-tune all settings on the captured video.
         </p>
+      </div>
+    </div>
+  <!-- INTERACTIVE CROP MODAL -->
+  <div class="crop-modal-backdrop" id="cropModal" style="display:none;">
+    <div class="crop-modal-content">
+      <div class="crop-modal-header">
+        <div class="crop-modal-title">
+          <i class="ri-crop-line"></i>
+          <span>Interactive Image Cropper</span>
+        </div>
+        <div class="crop-ratio-group">
+          <button class="crop-ratio-btn active" data-ratio="free" onclick="setCropRatio('free')">Free</button>
+          <button class="crop-ratio-btn" data-ratio="1:1" onclick="setCropRatio('1:1')">1:1</button>
+          <button class="crop-ratio-btn" data-ratio="4:3" onclick="setCropRatio('4:3')">4:3</button>
+          <button class="crop-ratio-btn" data-ratio="16:9" onclick="setCropRatio('16:9')">16:9</button>
+          <button class="crop-ratio-btn" data-ratio="3:4" onclick="setCropRatio('3:4')">3:4</button>
+        </div>
+        <button class="crop-close-btn" id="cropCancelBtn" onclick="closeCropModal()" aria-label="Cancel Crop"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div class="crop-stage-wrap" id="cropStageWrap">
+        <canvas id="cropCanvas"></canvas>
+      </div>
+
+      <div class="crop-modal-footer">
+        <span class="crop-info-text" id="cropInfoText">Drag to adjust crop boundary</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-base btn-preset" id="cropResetBtn" onclick="resetCropBox()" style="width:auto; padding: 6px 14px; margin:0;">Reset</button>
+          <button class="btn-base btn-action upload-btn-primary" id="cropApplyBtn" onclick="applyAsciiCrop()" style="width:auto; padding: 6px 20px; margin:0;">Apply Crop</button>
+        </div>
       </div>
     </div>
   </div>

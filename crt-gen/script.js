@@ -10,6 +10,7 @@
   // Application State
   var state = {
     image: null,
+    rawImage: null,      // Preserves original image for crop resets
     preset: 'trinitron',
     fileOpacity: 1.0,
 
@@ -46,8 +47,6 @@
 
     // Dimensions
     format: 'ntsc_4_3',
-    customW: 1600,
-    customH: 1200,
 
     // OSD & Telemetry
     showOsd: true,
@@ -58,6 +57,16 @@
     frameTR: 'Fanz Irfan',
     frameBL: 'manji.eu.org',
     frameBR: 'Indonesia'
+  };
+
+  // Zoom & Pan State
+  var zoomState = {
+    scale: 1.0,
+    panX: 0,
+    panY: 0,
+    isPanning: false,
+    startX: 0,
+    startY: 0
   };
 
   var PRESETS = {
@@ -264,6 +273,12 @@
     original: { w: 1600, h: 1200, name: 'Original Image' }
   };
 
+  var DEMO_FILES = {
+    street: '../assets/demo/dmytro-koplyk-kdN49Gc01_0-unsplash.jpg',
+    arch: '../assets/demo/jack-berry-aVu_orLM3Mc-unsplash.jpg',
+    portrait: '../assets/demo/karsten-winegeart-MB2JolPeFcg-unsplash.jpg'
+  };
+
   // DOM Elements
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -273,7 +288,15 @@
   var replaceFileBtn = document.getElementById('replaceFileBtn');
   var loadSampleBtn = document.getElementById('loadSampleBtn');
   var emptyLoadSampleBtn = document.getElementById('emptyLoadSampleBtn');
+  var demoPickerPanel = document.getElementById('demoPickerPanel');
+  var cropBtn = document.getElementById('cropBtn');
   var panelDrawer = document.getElementById('panelDrawer');
+
+  // Zoom Controls
+  var zoomOutBtn = document.getElementById('zoomOutBtn');
+  var zoomInBtn = document.getElementById('zoomInBtn');
+  var zoomFitBtn = document.getElementById('zoomFitBtn');
+  var zoomValText = document.getElementById('zoomVal');
 
   // Value Display Elements
   var fileOpacityEl = document.getElementById('fileOpacity');
@@ -345,6 +368,31 @@
   var sendToDitherBtn = document.getElementById('sendToDitherBtn');
   var sharePresetBtn = document.getElementById('sharePresetBtn');
 
+  // Crop Modal Elements
+  var cropModal = document.getElementById('cropModal');
+  var cropCanvas = document.getElementById('cropCanvas');
+  var cropCtx = cropCanvas ? cropCanvas.getContext('2d') : null;
+  var cropApplyBtn = document.getElementById('cropApplyBtn');
+  var cropCancelBtn = document.getElementById('cropCancelBtn');
+  var cropResetBtn = document.getElementById('cropResetBtn');
+  var cropInfoText = document.getElementById('cropInfoText');
+
+  // Crop Internal State
+  var cropState = {
+    ratio: 'free',
+    startX: 0,
+    startY: 0,
+    w: 0,
+    h: 0,
+    dragging: false,
+    dragMode: null, // 'move', 'nw', 'ne', 'sw', 'se'
+    imgW: 0,
+    imgH: 0,
+    scale: 1.0,
+    offsetX: 0,
+    offsetY: 0
+  };
+
   // Offscreen Buffers
   var bufferCanvas = document.createElement('canvas');
   var bufferCtx = bufferCanvas.getContext('2d', { willReadFrequently: true });
@@ -383,7 +431,7 @@
     return { w: fmt.w, h: fmt.h, name: fmt.name };
   }
 
-  // Viewport resize
+  // Viewport resize and Zoom Transform Application
   function resizeCanvasViewport() {
     var dim = getActiveDimensions();
     canvas.width = dim.w;
@@ -404,6 +452,16 @@
 
     canvas.style.width = Math.round(dispW) + 'px';
     canvas.style.height = Math.round(dispH) + 'px';
+    applyZoomTransform();
+  }
+
+  function applyZoomTransform() {
+    canvas.style.transform = 'translate(' + zoomState.panX + 'px, ' + zoomState.panY + 'px) scale(' + zoomState.scale + ')';
+    canvas.style.transformOrigin = 'center center';
+    canvas.style.cursor = zoomState.scale > 1 ? (zoomState.isPanning ? 'grabbing' : 'grab') : 'default';
+    if (zoomValText) {
+      zoomValText.textContent = Math.round(zoomState.scale * 100) + '%';
+    }
   }
 
   // Procedural Demo Graphic
@@ -465,13 +523,9 @@
     cx.lineWidth = 3;
     var bSize = 340;
     var bArm = 40;
-    // TL
     cx.beginPath(); cx.moveTo(-bSize, -bSize + bArm); cx.lineTo(-bSize, -bSize); cx.lineTo(-bSize + bArm, -bSize); cx.stroke();
-    // TR
     cx.beginPath(); cx.moveTo(bSize - bArm, -bSize); cx.lineTo(bSize, -bSize); cx.lineTo(bSize, -bSize + bArm); cx.stroke();
-    // BL
     cx.beginPath(); cx.moveTo(-bSize, bSize - bArm); cx.lineTo(-bSize, bSize); cx.lineTo(-bSize + bArm, bSize); cx.stroke();
-    // BR
     cx.beginPath(); cx.moveTo(bSize - bArm, bSize); cx.lineTo(bSize, bSize); cx.lineTo(bSize, bSize - bArm); cx.stroke();
 
     // Central core
@@ -503,12 +557,37 @@
     var img = new Image();
     img.src = c.toDataURL('image/png');
     img.onload = function () {
+      state.rawImage = img;
       applyLoadedFile(img);
     };
   }
 
+  function loadDemoAsset(key) {
+    if (key === 'procedural') {
+      createDemoImage();
+      return;
+    }
+    var path = DEMO_FILES[key];
+    if (!path) return;
+
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function () {
+      state.rawImage = img;
+      applyLoadedFile(img);
+      if (window.StudioPipeline) {
+        StudioPipeline.showToast('Loaded ' + key + ' demo graphic');
+      }
+    };
+    img.onerror = function () {
+      createDemoImage();
+    };
+    img.src = path;
+  }
+
   function applyLoadedFile(img) {
     state.image = img;
+    if (!state.rawImage) state.rawImage = img;
     emptyState.classList.add('hidden');
     resizeCanvasViewport();
     scheduleUpdate();
@@ -520,6 +599,7 @@
     reader.onload = function (ev) {
       var img = new Image();
       img.onload = function () {
+        state.rawImage = img;
         applyLoadedFile(img);
       };
       img.onerror = function () {
@@ -530,13 +610,120 @@
     reader.readAsDataURL(file);
   }
 
+  // ==========================================================================
+  // INTERACTIVE CROP TOOL
+  // ==========================================================================
+  function openCropModal() {
+    var sourceImg = state.rawImage || state.image;
+    if (!sourceImg) {
+      if (window.StudioPipeline) StudioPipeline.showToast('Please load an image to crop');
+      return;
+    }
+
+    cropModal.style.display = 'flex';
+    var wrapRect = document.getElementById('cropStageWrap').getBoundingClientRect();
+    var maxW = Math.min(800, wrapRect.width - 32);
+    var maxH = Math.min(500, wrapRect.height - 32);
+
+    cropState.imgW = sourceImg.naturalWidth || sourceImg.width;
+    cropState.imgH = sourceImg.naturalHeight || sourceImg.height;
+
+    var s = Math.min(maxW / cropState.imgW, maxH / cropState.imgH, 1);
+    cropState.scale = s;
+    cropCanvas.width = Math.round(cropState.imgW * s);
+    cropCanvas.height = Math.round(cropState.imgH * s);
+
+    // Default crop box (80% centered)
+    cropState.startX = Math.round(cropCanvas.width * 0.1);
+    cropState.startY = Math.round(cropCanvas.height * 0.1);
+    cropState.w = Math.round(cropCanvas.width * 0.8);
+    cropState.h = Math.round(cropCanvas.height * 0.8);
+
+    drawCropCanvas();
+  }
+
+  function drawCropCanvas() {
+    if (!cropCtx) return;
+    var sourceImg = state.rawImage || state.image;
+    var cw = cropCanvas.width;
+    var ch = cropCanvas.height;
+
+    cropCtx.clearRect(0, 0, cw, ch);
+    // Draw base scaled image
+    cropCtx.drawImage(sourceImg, 0, 0, cw, ch);
+
+    // Dimmed overlay outside crop box
+    cropCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    cropCtx.fillRect(0, 0, cw, cropState.startY);
+    cropCtx.fillRect(0, cropState.startY + cropState.h, cw, ch - (cropState.startY + cropState.h));
+    cropCtx.fillRect(0, cropState.startY, cropState.startX, cropState.h);
+    cropCtx.fillRect(cropState.startX + cropState.w, cropState.startY, cw - (cropState.startX + cropState.w), cropState.h);
+
+    // Crop box outline
+    cropCtx.strokeStyle = '#ffffff';
+    cropCtx.lineWidth = 1.5;
+    cropCtx.strokeRect(cropState.startX, cropState.startY, cropState.w, cropState.h);
+
+    // Rule of thirds grid
+    cropCtx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    cropCtx.lineWidth = 1;
+    var thirdW = cropState.w / 3;
+    var thirdH = cropState.h / 3;
+    cropCtx.beginPath();
+    cropCtx.moveTo(cropState.startX + thirdW, cropState.startY); cropCtx.lineTo(cropState.startX + thirdW, cropState.startY + cropState.h);
+    cropCtx.moveTo(cropState.startX + thirdW * 2, cropState.startY); cropCtx.lineTo(cropState.startX + thirdW * 2, cropState.startY + cropState.h);
+    cropCtx.moveTo(cropState.startX, cropState.startY + thirdH); cropCtx.lineTo(cropState.startX + cropState.w, cropState.startY + thirdH);
+    cropCtx.moveTo(cropState.startX, cropState.startY + thirdH * 2); cropCtx.lineTo(cropState.startX + cropState.w, cropState.startY + thirdH * 2);
+    cropCtx.stroke();
+
+    // Corner handle blocks
+    cropCtx.fillStyle = '#663af3';
+    var handleSize = 8;
+    cropCtx.fillRect(cropState.startX - handleSize/2, cropState.startY - handleSize/2, handleSize, handleSize);
+    cropCtx.fillRect(cropState.startX + cropState.w - handleSize/2, cropState.startY - handleSize/2, handleSize, handleSize);
+    cropCtx.fillRect(cropState.startX - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
+    cropCtx.fillRect(cropState.startX + cropState.w - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
+
+    // Pixel readout
+    var origW = Math.round(cropState.w / cropState.scale);
+    var origH = Math.round(cropState.h / cropState.scale);
+    if (cropInfoText) {
+      cropInfoText.textContent = 'Crop Area: ' + origW + ' × ' + origH + ' px (' + cropState.ratio.toUpperCase() + ')';
+    }
+  }
+
+  function applyCrop() {
+    var sourceImg = state.rawImage || state.image;
+    if (!sourceImg) return;
+
+    var origX = Math.round(cropState.startX / cropState.scale);
+    var origY = Math.round(cropState.startY / cropState.scale);
+    var origW = Math.round(cropState.w / cropState.scale);
+    var origH = Math.round(cropState.h / cropState.scale);
+
+    var cCanvas = document.createElement('canvas');
+    cCanvas.width = origW;
+    cCanvas.height = origH;
+    var cCtx = cCanvas.getContext('2d');
+    cCtx.drawImage(sourceImg, origX, origY, origW, origH, 0, 0, origW, origH);
+
+    var croppedImg = new Image();
+    croppedImg.onload = function () {
+      applyLoadedFile(croppedImg);
+      cropModal.style.display = 'none';
+      if (window.StudioPipeline) {
+        StudioPipeline.showToast('Applied image crop (' + origW + 'x' + origH + ')');
+      }
+    };
+    croppedImg.src = cCanvas.toDataURL('image/png');
+  }
+
   // Build Phosphor Mask Pattern
   function createPhosphorPattern(maskType, pitch, opacity) {
     if (maskType === 'none' || opacity <= 0) return null;
     pitch = Math.max(1, pitch);
 
     if (maskType === 'aperture') {
-      // Sony Trinitron vertical stripes: R - G - B with fine black gap
       var pW = pitch * 3;
       var pH = 2;
       maskPatternCanvas.width = pW;
@@ -556,7 +743,6 @@
     }
 
     if (maskType === 'shadow') {
-      // Triad dot matrix (staggered dot pattern)
       var sW = pitch * 4;
       var sH = pitch * 4;
       maskPatternCanvas.width = sW;
@@ -565,13 +751,11 @@
       maskPatternCtx.fillRect(0, 0, sW, sH);
 
       var dotR = pitch * 0.9;
-      // Row 1
       maskPatternCtx.fillStyle = 'rgba(255, 40, 40, ' + opacity + ')';
       maskPatternCtx.beginPath(); maskPatternCtx.arc(pitch, pitch, dotR, 0, Math.PI * 2); maskPatternCtx.fill();
       maskPatternCtx.fillStyle = 'rgba(40, 255, 40, ' + opacity + ')';
       maskPatternCtx.beginPath(); maskPatternCtx.arc(pitch * 3, pitch, dotR, 0, Math.PI * 2); maskPatternCtx.fill();
 
-      // Row 2 (offset)
       maskPatternCtx.fillStyle = 'rgba(40, 80, 255, ' + opacity + ')';
       maskPatternCtx.beginPath(); maskPatternCtx.arc(pitch * 2, pitch * 3, dotR, 0, Math.PI * 2); maskPatternCtx.fill();
 
@@ -579,7 +763,6 @@
     }
 
     if (maskType === 'slot') {
-      // Arcade slot mask: vertical bricks offset by row
       var bW = pitch * 3;
       var bH = pitch * 4;
       maskPatternCanvas.width = bW;
@@ -598,7 +781,6 @@
     }
 
     if (maskType === 'mesh') {
-      // Fine micro-mesh grid
       var mW = pitch * 2;
       var mH = pitch * 2;
       maskPatternCanvas.width = mW;
@@ -628,9 +810,8 @@
     bufferCanvas.height = H;
     bufferCtx.clearRect(0, 0, W, H);
 
-    // 1. BASE IMAGE DRAWING (if not overlay only)
+    // 1. BASE IMAGE DRAWING
     if (!isOverlayOnly && state.image) {
-      // Image source sizing
       var imgW = state.image.naturalWidth || state.image.width || W;
       var imgH = state.image.naturalHeight || state.image.height || H;
       var scale = Math.max(W / imgW, H / imgH);
@@ -639,10 +820,8 @@
       var drawX = (W - drawW) / 2;
       var drawY = (H - drawH) / 2;
 
-      // Draw base image to buffer
       bufferCtx.drawImage(state.image, drawX, drawY, drawW, drawH);
 
-      // Multipath Ghosting
       if (state.ghosting > 0) {
         var ghostOffset = Math.round(W * 0.025);
         bufferCtx.save();
@@ -651,10 +830,8 @@
         bufferCtx.restore();
       }
 
-      // Pixel processing: Phosphor Palette, Tone, RGB Split, Jitter & VHS Static
       applyPixelProcessing(bufferCtx, W, H);
     } else {
-      // Transparent or dark background for overlay
       bufferCtx.fillStyle = isOverlayOnly ? 'rgba(0, 0, 0, 0)' : '#020308';
       bufferCtx.fillRect(0, 0, W, H);
     }
@@ -697,7 +874,6 @@
     destCtx.save();
     destCtx.clearRect(0, 0, W, H);
 
-    // If curvature > 0, apply barrel distortion mapping
     if (state.curvature > 0) {
       applyBarrelDistortion(destCtx, bufferCanvas, W, H, state.curvature / 100);
     } else {
@@ -714,7 +890,7 @@
       applyGlassGlow(destCtx, W, H, state.glassGlow / 100);
     }
 
-    // 8. CORNER BEZEL ROUNDING (Chassis mask)
+    // 8. CORNER BEZEL ROUNDING
     if (state.cornerRound > 0) {
       applyCornerRounding(destCtx, W, H, state.cornerRound);
     }
@@ -742,61 +918,38 @@
     var data = imgData.data;
     var len = data.length;
 
-    // Palette & Tone factors
     var bAdd = state.brightness * 2.5;
     var cFactor = (259 * (state.contrast + 255)) / (255 * (259 - state.contrast));
     var sat = state.saturation / 100;
     var pal = state.palette;
 
-    // 1. Color adjustments & Phosphor Tint
     for (var i = 0; i < len; i += 4) {
       var r = data[i];
       var g = data[i + 1];
       var b = data[i + 2];
 
-      // Contrast & Brightness
       r = cFactor * (r - 128) + 128 + bAdd;
       g = cFactor * (g - 128) + 128 + bAdd;
       b = cFactor * (b - 128) + 128 + bAdd;
 
-      // Luminance
       var luma = 0.299 * r + 0.587 * g + 0.114 * b;
 
-      // Saturation
       if (pal === 'rgb') {
         r = luma + sat * (r - luma);
         g = luma + sat * (g - luma);
         b = luma + sat * (b - luma);
       } else if (pal === 'green_p1') {
-        // Emerald Phosphor 525nm: high green, subtle blue
-        r = luma * 0.15;
-        g = luma * 1.15;
-        b = luma * 0.35;
+        r = luma * 0.15; g = luma * 1.15; b = luma * 0.35;
       } else if (pal === 'amber_p3') {
-        // Amber Phosphor 600nm: high red & gold
-        r = luma * 1.15;
-        g = luma * 0.72;
-        b = luma * 0.04;
+        r = luma * 1.15; g = luma * 0.72; b = luma * 0.04;
       } else if (pal === 'white_p4') {
-        // B&W Monochrome
-        r = luma;
-        g = luma;
-        b = luma;
+        r = luma; g = luma; b = luma;
       } else if (pal === 'cyan') {
-        // Cyberpunk Cyan
-        r = luma * 0.05;
-        g = luma * 0.95;
-        b = luma * 1.10;
+        r = luma * 0.05; g = luma * 0.95; b = luma * 1.10;
       } else if (pal === 'plasma') {
-        // Neon Orange Plasma
-        r = luma * 1.25;
-        g = luma * 0.45;
-        b = luma * 0.05;
+        r = luma * 1.25; g = luma * 0.45; b = luma * 0.05;
       } else if (pal === 'blood') {
-        // Crimson Nightvision
-        r = luma * 1.25;
-        g = luma * 0.12;
-        b = luma * 0.18;
+        r = luma * 1.25; g = luma * 0.12; b = luma * 0.18;
       }
 
       data[i] = r < 0 ? 0 : r > 255 ? 255 : r;
@@ -804,7 +957,7 @@
       data[i + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
     }
 
-    // 2. Chromatic Aberration (RGB Horizontal Shift)
+    // Chromatic Aberration
     if (state.rgbSplit > 0) {
       var shift = Math.round(state.rgbSplit);
       var srcData = new Uint8ClampedArray(data);
@@ -812,29 +965,22 @@
         var rowStart = y * W * 4;
         for (var x = 0; x < W; x++) {
           var idx = rowStart + x * 4;
-          // Red shifted left
           var redX = Math.max(0, x - shift);
-          var redIdx = rowStart + redX * 4;
-          data[idx] = srcData[redIdx];
-
-          // Blue shifted right
+          data[idx] = srcData[rowStart + redX * 4];
           var blueX = Math.min(W - 1, x + shift);
-          var blueIdx = rowStart + blueX * 4;
-          data[idx + 2] = srcData[blueIdx + 2];
+          data[idx + 2] = srcData[rowStart + blueX * 4 + 2];
         }
       }
     }
 
-    // 3. NTSC Chroma Bleed (Horizontal color smear)
+    // NTSC Chroma Bleed
     if (state.chromaBleed > 0) {
       var bleed = Math.round(state.chromaBleed);
-      var bleedSrc = new Uint8ClampedArray(data);
       for (var cy = 0; cy < H; cy++) {
         var cRow = cy * W * 4;
         for (var cx = 1; cx < W; cx++) {
           var cIdx = cRow + cx * 4;
           var prevIdx = cRow + (cx - 1) * 4;
-          // Smear color channels horizontally
           var bleedWeight = Math.min(0.7, bleed * 0.05);
           data[cIdx] = data[cIdx] * (1 - bleedWeight) + data[prevIdx] * bleedWeight;
           data[cIdx + 2] = data[cIdx + 2] * (1 - bleedWeight) + data[prevIdx + 2] * bleedWeight;
@@ -842,12 +988,11 @@
       }
     }
 
-    // 4. Horizontal Sync Jitter (Line Tearing)
+    // Sync Jitter
     if (state.syncJitter > 0) {
       var jitterMax = Math.round(state.syncJitter);
       var jitSrc = new Uint8ClampedArray(data);
       for (var jy = 0; jy < H; jy++) {
-        // Random wave displacement per scanline
         var lineShift = 0;
         if (Math.random() < 0.35) {
           lineShift = Math.round((Math.random() - 0.5) * jitterMax * 2);
@@ -871,10 +1016,10 @@
       }
     }
 
-    // 5. VHS Tracking Noise Bar
+    // VHS Tracking Noise
     if (state.vhsNoise > 0) {
       var barH = Math.round(H * 0.06);
-      var barY = Math.round(H * 0.72); // classic VHS bottom tracking position
+      var barY = Math.round(H * 0.72);
       var noiseStrength = state.vhsNoise / 100;
       for (var vy = barY; vy < barY + barH && vy < H; vy++) {
         var vRow = vy * W * 4;
@@ -896,7 +1041,7 @@
       }
     }
 
-    // 6. RF Snow & Thermal White Noise
+    // RF Snow
     if (state.rfSnow > 0) {
       var snowIntensity = (state.rfSnow / 100) * 0.25;
       for (var n = 0; n < len; n += 4) {
@@ -923,19 +1068,17 @@
     var isOff = state.interlace === 'off';
 
     bCtx.save();
-    bCtx.fillStyle = 'rgba(0, 0, 0, ' + opacity + ')';
-
     for (var i = 0; i < count; i++) {
       var y = i * scanHeight;
-      // If interlaced, vary even/odd field intensity
       if (!isOff) {
         var isFieldLine = (i % 2 === (isOdd ? 1 : 0));
         var lineAlpha = isFieldLine ? opacity * 0.4 : opacity;
         bCtx.fillStyle = 'rgba(0, 0, 0, ' + lineAlpha + ')';
+      } else {
+        bCtx.fillStyle = 'rgba(0, 0, 0, ' + opacity + ')';
       }
       bCtx.fillRect(0, y + scanHeight * 0.45, W, scanHeight * 0.55);
     }
-
     bCtx.restore();
   }
 
@@ -956,8 +1099,6 @@
     var cy = H / 2;
     var invCx = 1 / cx;
     var invCy = 1 / cy;
-
-    // k distortion curve factor (scaled for natural CRT curvature)
     var distFactor = k * 0.28;
 
     for (var y = 0; y < H; y++) {
@@ -968,8 +1109,6 @@
       for (var x = 0; x < W; x++) {
         var dx = (x - cx) * invCx;
         var r2 = dx * dx + dy2;
-
-        // Inverse mapping: (u, v) = (x, y) * (1 + k * r2)
         var f = 1 + distFactor * r2;
         var sx = Math.round(cx + dx * f * cx);
         var sy = Math.round(cy + dy * f * cy);
@@ -977,7 +1116,6 @@
         if (sx >= 0 && sx < sw && sy >= 0 && sy < sh) {
           destPixels[rowOffset + x] = srcPixels[sy * sw + sx];
         } else {
-          // Chassis black outside curved screen tube
           destPixels[rowOffset + x] = 0xff000000;
         }
       }
@@ -986,9 +1124,6 @@
     destCtx.putImageData(destData, 0, 0);
   }
 
-  // ==========================================================================
-  // VIGNETTE & CHASSIS EDGE DARKENING
-  // ==========================================================================
   function applyVignette(dCtx, W, H, intensity) {
     dCtx.save();
     var maxR = Math.sqrt(W * W + H * H) * 0.5;
@@ -996,66 +1131,34 @@
     vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
     vigGrad.addColorStop(0.7, 'rgba(0, 0, 0, ' + (intensity * 0.45) + ')');
     vigGrad.addColorStop(1, 'rgba(0, 0, 0, ' + (intensity * 0.98) + ')');
-
     dCtx.fillStyle = vigGrad;
     dCtx.fillRect(0, 0, W, H);
     dCtx.restore();
   }
 
-  // ==========================================================================
-  // GLASS SPECULAR GLOW (Curved Screen Reflection)
-  // ==========================================================================
   function applyGlassGlow(dCtx, W, H, intensity) {
     dCtx.save();
     var glowGrad = dCtx.createLinearGradient(0, 0, W * 0.6, H * 0.45);
     glowGrad.addColorStop(0, 'rgba(255, 255, 255, ' + (intensity * 0.28) + ')');
     glowGrad.addColorStop(0.35, 'rgba(200, 225, 255, ' + (intensity * 0.08) + ')');
     glowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
     dCtx.fillStyle = glowGrad;
     dCtx.fillRect(0, 0, W, H);
     dCtx.restore();
   }
 
-  // ==========================================================================
-  // CORNER BEZEL ROUNDING
-  // ==========================================================================
   function applyCornerRounding(dCtx, W, H, r) {
     dCtx.save();
     dCtx.fillStyle = '#05060f';
-    // TL
-    dCtx.beginPath();
-    dCtx.moveTo(0, 0);
-    dCtx.lineTo(r, 0);
-    dCtx.arcTo(0, 0, 0, r, r);
-    dCtx.closePath();
-    dCtx.fill();
-    // TR
-    dCtx.beginPath();
-    dCtx.moveTo(W, 0);
-    dCtx.lineTo(W - r, 0);
-    dCtx.arcTo(W, 0, W, r, r);
-    dCtx.closePath();
-    dCtx.fill();
-    // BL
-    dCtx.beginPath();
-    dCtx.moveTo(0, H);
-    dCtx.lineTo(r, H);
-    dCtx.arcTo(0, H, 0, H - r, r);
-    dCtx.closePath();
-    dCtx.fill();
-    // BR
-    dCtx.beginPath();
-    dCtx.moveTo(W, H);
-    dCtx.lineTo(W - r, H);
-    dCtx.arcTo(W, H, W, H - r, r);
-    dCtx.closePath();
-    dCtx.fill();
+    dCtx.beginPath(); dCtx.moveTo(0, 0); dCtx.lineTo(r, 0); dCtx.arcTo(0, 0, 0, r, r); dCtx.closePath(); dCtx.fill();
+    dCtx.beginPath(); dCtx.moveTo(W, 0); dCtx.lineTo(W - r, 0); dCtx.arcTo(W, 0, W, r, r); dCtx.closePath(); dCtx.fill();
+    dCtx.beginPath(); dCtx.moveTo(0, H); dCtx.lineTo(r, H); dCtx.arcTo(0, H, 0, H - r, r); dCtx.closePath(); dCtx.fill();
+    dCtx.beginPath(); dCtx.moveTo(W, H); dCtx.lineTo(W - r, H); dCtx.arcTo(W, H, W, H - r, r); dCtx.closePath(); dCtx.fill();
     dCtx.restore();
   }
 
   // ==========================================================================
-  // OSD HUD OVERLAY (Vintage Broadcast On-Screen Display)
+  // OSD HUD OVERLAY (NO EMOJI)
   // ==========================================================================
   function drawOsdHud(dCtx, W, H) {
     dCtx.save();
@@ -1066,26 +1169,25 @@
     dCtx.shadowBlur = 8;
     dCtx.textAlign = 'left';
 
-    // Channel & Frequency
     var margin = Math.round(W * 0.035);
     dCtx.fillText(state.osdText, margin, margin + osdSize);
 
-    // Rec indicator & Timecode
+    // Canvas-drawn red circle for REC (No unicode emoji)
     dCtx.textAlign = 'right';
+    var recTextX = W - margin - 120;
     dCtx.fillStyle = '#ff3344';
     dCtx.shadowColor = '#ff3344';
-    dCtx.fillText('● REC', W - margin - 110, margin + osdSize);
+    dCtx.beginPath();
+    dCtx.arc(recTextX - 44, margin + osdSize - osdSize * 0.35, osdSize * 0.32, 0, Math.PI * 2);
+    dCtx.fill();
+    dCtx.fillText('REC', recTextX, margin + osdSize);
 
     dCtx.fillStyle = '#ffffff';
     dCtx.shadowColor = '#ffffff';
     dCtx.fillText('00:24:18:09', W - margin, margin + osdSize);
-
     dCtx.restore();
   }
 
-  // ==========================================================================
-  // SMPTE CALIBRATION COLOR BARS BADGE
-  // ==========================================================================
   function drawSmpteBadge(dCtx, W, H) {
     dCtx.save();
     var barColors = ['#ffffff', '#ffff00', '#00ffff', '#00ff00', '#ff00ff', '#ff0000', '#0000ff', '#111111'];
@@ -1095,7 +1197,6 @@
     var startX = margin;
     var startY = H - margin - barH;
 
-    // Outer border
     dCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     dCtx.lineWidth = 1;
     dCtx.strokeRect(startX - 1, startY - 1, barColors.length * barW + 2, barH + 2);
@@ -1107,9 +1208,6 @@
     dCtx.restore();
   }
 
-  // ==========================================================================
-  // STUDIO 4-CORNER TELEMETRY
-  // ==========================================================================
   function drawFrameTelemetry(dCtx, W, H) {
     dCtx.save();
     var fSize = Math.max(10, Math.round(W * 0.009));
@@ -1121,26 +1219,20 @@
     var padX = Math.round(W * 0.035);
     var padY = Math.round(H * 0.035);
 
-    // Top Left
     dCtx.textAlign = 'left';
     dCtx.fillText(state.frameTL, padX, padY + (state.showOsd ? fSize * 2.8 : 0));
 
-    // Top Right
     dCtx.textAlign = 'right';
     dCtx.fillText(state.frameTR, W - padX, padY + (state.showOsd ? fSize * 2.8 : 0));
 
-    // Bottom Left
     dCtx.textAlign = 'left';
     dCtx.fillText(state.frameBL, padX + (state.showSmpte ? 90 : 0), H - padY);
 
-    // Bottom Right
     dCtx.textAlign = 'right';
     dCtx.fillText(state.frameBR, W - padX, H - padY);
-
     dCtx.restore();
   }
 
-  // Update Status Text
   function updateStatusFooter() {
     var dim = getActiveDimensions();
     var pName = PRESETS[state.preset] ? PRESETS[state.preset].name : 'Custom CRT';
@@ -1214,10 +1306,10 @@
       interlaceVal.textContent = state.interlace === 'even' ? 'Even Fields' : state.interlace === 'odd' ? 'Odd Fields' : 'Progressive';
     }
 
-    // Topbar mode tabs
-    var modeTabs = document.querySelectorAll('.mode-tab');
-    modeTabs.forEach(function (tab) {
-      tab.classList.toggle('active', tab.getAttribute('data-preset') === state.preset);
+    // Preset pills in right panel
+    var presetPills = document.querySelectorAll('.preset-pill-btn');
+    presetPills.forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-preset') === state.preset);
     });
   }
 
@@ -1225,16 +1317,16 @@
   // EVENT LISTENERS & UI WIRING
   // ==========================================================================
   function initEventListeners() {
-    // Mode tabs
-    var modeTabs = document.querySelectorAll('.mode-tab');
-    modeTabs.forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        var pKey = tab.getAttribute('data-preset');
+    // Preset pill buttons in right panel
+    var presetPills = document.querySelectorAll('.preset-pill-btn');
+    presetPills.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var pKey = btn.getAttribute('data-preset');
         applyPreset(pKey);
       });
     });
 
-    // Icon Rail navigation
+    // Icon Rail navigation (far right)
     var railBtns = document.querySelectorAll('.rail-btn');
     railBtns.forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -1283,12 +1375,28 @@
       });
     }
 
+    // Demo Library Picker
     if (loadSampleBtn) {
-      loadSampleBtn.addEventListener('click', createDemoImage);
+      loadSampleBtn.addEventListener('click', function () {
+        if (demoPickerPanel) {
+          demoPickerPanel.style.display = demoPickerPanel.style.display === 'none' ? 'block' : 'none';
+        }
+      });
     }
     if (emptyLoadSampleBtn) {
-      emptyLoadSampleBtn.addEventListener('click', createDemoImage);
+      emptyLoadSampleBtn.addEventListener('click', function () {
+        loadDemoAsset('street');
+      });
     }
+
+    var demoItems = document.querySelectorAll('.btn-demo-item');
+    demoItems.forEach(function (item) {
+      item.addEventListener('click', function () {
+        var demoKey = item.getAttribute('data-demo');
+        loadDemoAsset(demoKey);
+        if (demoPickerPanel) demoPickerPanel.style.display = 'none';
+      });
+    });
 
     // Drag and Drop
     wrap.addEventListener('dragover', function (e) {
@@ -1305,6 +1413,163 @@
         loadFile(e.dataTransfer.files[0]);
       }
     });
+
+    // ========================================================================
+    // ZOOM & PAN CONTROLS
+    // ========================================================================
+    function setZoom(newScale) {
+      zoomState.scale = Math.min(5.0, Math.max(0.25, parseFloat(newScale.toFixed(2))));
+      if (zoomState.scale <= 1.0) {
+        zoomState.panX = 0;
+        zoomState.panY = 0;
+      }
+      applyZoomTransform();
+    }
+
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', function () { setZoom(zoomState.scale + 0.25); });
+    }
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', function () { setZoom(zoomState.scale - 0.25); });
+    }
+    if (zoomFitBtn) {
+      zoomFitBtn.addEventListener('click', function () {
+        zoomState.scale = 1.0;
+        zoomState.panX = 0;
+        zoomState.panY = 0;
+        applyZoomTransform();
+      });
+    }
+
+    // Mouse Wheel Zoom
+    wrap.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var delta = e.deltaY < 0 ? 0.15 : -0.15;
+      setZoom(zoomState.scale + delta);
+    }, { passive: false });
+
+    // Drag to Pan when Zoomed In
+    wrap.addEventListener('mousedown', function (e) {
+      if (zoomState.scale > 1.0) {
+        zoomState.isPanning = true;
+        zoomState.startX = e.clientX - zoomState.panX;
+        zoomState.startY = e.clientY - zoomState.panY;
+        applyZoomTransform();
+      }
+    });
+
+    window.addEventListener('mousemove', function (e) {
+      if (zoomState.isPanning) {
+        zoomState.panX = e.clientX - zoomState.startX;
+        zoomState.panY = e.clientY - zoomState.startY;
+        applyZoomTransform();
+      }
+    });
+
+    window.addEventListener('mouseup', function () {
+      if (zoomState.isPanning) {
+        zoomState.isPanning = false;
+        applyZoomTransform();
+      }
+    });
+
+    // ========================================================================
+    // CROP TOOL WIRING
+    // ========================================================================
+    if (cropBtn) {
+      cropBtn.addEventListener('click', openCropModal);
+    }
+    if (cropCancelBtn) {
+      cropCancelBtn.addEventListener('click', function () { cropModal.style.display = 'none'; });
+    }
+    if (cropResetBtn) {
+      cropResetBtn.addEventListener('click', function () {
+        cropState.startX = Math.round(cropCanvas.width * 0.1);
+        cropState.startY = Math.round(cropCanvas.height * 0.1);
+        cropState.w = Math.round(cropCanvas.width * 0.8);
+        cropState.h = Math.round(cropCanvas.height * 0.8);
+        drawCropCanvas();
+      });
+    }
+    if (cropApplyBtn) {
+      cropApplyBtn.addEventListener('click', applyCrop);
+    }
+
+    var cropRatioBtns = document.querySelectorAll('.crop-ratio-btn');
+    cropRatioBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        cropRatioBtns.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        cropState.ratio = btn.getAttribute('data-ratio');
+
+        if (cropState.ratio === '1:1') {
+          var side = Math.min(cropState.w, cropState.h);
+          cropState.w = side; cropState.h = side;
+        } else if (cropState.ratio === '4:3') {
+          cropState.h = Math.round(cropState.w * (3 / 4));
+        } else if (cropState.ratio === '16:9') {
+          cropState.h = Math.round(cropState.w * (9 / 16));
+        } else if (cropState.ratio === '3:4') {
+          cropState.h = Math.round(cropState.w * (4 / 3));
+        }
+        drawCropCanvas();
+      });
+    });
+
+    // Crop Canvas Dragging
+    if (cropCanvas) {
+      cropCanvas.addEventListener('mousedown', function (e) {
+        var rect = cropCanvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+
+        // Check if clicked near corners or inside box
+        var hs = 14;
+        if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - cropState.startY) < hs) {
+          cropState.dragMode = 'nw';
+        } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - cropState.startY) < hs) {
+          cropState.dragMode = 'ne';
+        } else if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
+          cropState.dragMode = 'sw';
+        } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
+          cropState.dragMode = 'se';
+        } else if (mx >= cropState.startX && mx <= cropState.startX + cropState.w && my >= cropState.startY && my <= cropState.startY + cropState.h) {
+          cropState.dragMode = 'move';
+        } else {
+          cropState.dragMode = null;
+          return;
+        }
+
+        cropState.dragging = true;
+        cropState.offsetX = mx - cropState.startX;
+        cropState.offsetY = my - cropState.startY;
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!cropState.dragging || !cropCanvas || cropModal.style.display === 'none') return;
+        var rect = cropCanvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+
+        if (cropState.dragMode === 'move') {
+          cropState.startX = Math.max(0, Math.min(cropCanvas.width - cropState.w, mx - cropState.offsetX));
+          cropState.startY = Math.max(0, Math.min(cropCanvas.height - cropState.h, my - cropState.offsetY));
+        } else if (cropState.dragMode === 'se') {
+          cropState.w = Math.max(40, Math.min(cropCanvas.width - cropState.startX, mx - cropState.startX));
+          if (cropState.ratio === '1:1') cropState.h = cropState.w;
+          else if (cropState.ratio === '4:3') cropState.h = Math.round(cropState.w * (3 / 4));
+          else if (cropState.ratio === '16:9') cropState.h = Math.round(cropState.w * (9 / 16));
+          else if (cropState.ratio === '3:4') cropState.h = Math.round(cropState.w * (4 / 3));
+          else cropState.h = Math.max(40, Math.min(cropCanvas.height - cropState.startY, my - cropState.startY));
+        }
+        drawCropCanvas();
+      });
+
+      window.addEventListener('mouseup', function () {
+        cropState.dragging = false;
+        cropState.dragMode = null;
+      });
+    }
 
     // Range Slider Inputs
     function bindSlider(el, valEl, prop, unit, scale) {
@@ -1595,6 +1860,7 @@
     StudioPipeline.receiveImage(function (dataUrl) {
       var pImg = new Image();
       pImg.onload = function () {
+        state.rawImage = pImg;
         applyLoadedFile(pImg);
       };
       pImg.src = dataUrl;

@@ -1821,3 +1821,171 @@ input[type="range"]::-moz-range-thumb {
     min-width: 360px;
   }
 }
+
+/* ==========================================================================
+   PRESET PILL GRID & DEMO ITEMS
+   ========================================================================== */
+.preset-pill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.preset-pill-btn {
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-buttons);
+  color: var(--color-moon-mist);
+  font-family: var(--font-untitled-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 7px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.18s ease;
+}
+.preset-pill-btn:hover {
+  color: var(--color-pure-white);
+  background: var(--color-glass-fill-hover);
+  border-color: var(--color-glass-edge-active);
+}
+.preset-pill-btn.active {
+  background: var(--color-steel-plate);
+  color: var(--color-pure-white);
+  border-color: var(--color-frost-glow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.btn-demo-item {
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--color-moon-mist);
+  background: rgba(186, 214, 247, 0.04);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-inputs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-demo-item:hover {
+  color: var(--color-pure-white);
+  background: rgba(102, 58, 243, 0.2);
+  border-color: var(--color-void-violet);
+}
+
+/* ==========================================================================
+   INTERACTIVE CROP MODAL
+   ========================================================================== */
+.crop-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 5, 12, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.crop-modal-content {
+  background: rgba(10, 14, 30, 0.96);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-cards);
+  box-shadow: var(--shadow-glass-pop);
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.crop-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--color-glass-edge);
+  background: rgba(5, 6, 15, 0.6);
+}
+
+.crop-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-aeonikpro);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-pure-white);
+}
+
+.crop-ratio-group {
+  display: flex;
+  gap: 4px;
+}
+
+.crop-ratio-btn {
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-buttons);
+  color: var(--color-fog-veil);
+  font-family: var(--font-untitled-sans);
+  font-size: 10.5px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.crop-ratio-btn.active {
+  background: var(--color-steel-plate);
+  color: var(--color-pure-white);
+  border-color: var(--color-frost-glow);
+}
+
+.crop-close-btn {
+  background: none;
+  border: none;
+  color: var(--color-fog-veil);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.crop-close-btn:hover { color: var(--color-pure-white); }
+
+.crop-stage-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  background: #020308;
+  position: relative;
+  min-height: 380px;
+}
+
+#cropCanvas {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  cursor: crosshair;
+}
+
+.crop-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--color-glass-edge);
+  background: rgba(5, 6, 15, 0.6);
+}
+
+.crop-info-text {
+  font-family: monospace;
+  font-size: 10.5px;
+  color: var(--color-fog-veil);
+}

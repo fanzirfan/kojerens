@@ -77,7 +77,7 @@
       'gap: 8px'
     ].join(';');
 
-    var icon = '<span style="color:#885dfc;font-size:14px;line-height:1;">⚡</span>';
+    var icon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#885dfc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
     toast.innerHTML = icon + '<span>' + message + '</span>';
     document.body.appendChild(toast);
 

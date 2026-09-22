@@ -7,7 +7,7 @@ KOJERENS adalah laboratorium visual generatif dan komputasi grafis berbasis brow
 
 ---
 
-## 🛠️ Modul & Alat Desain
+## Modul & Alat Desain
 
 ### 1. Blob Tracker (`/blob-tracker/`)
 Alat analisis kontras dan detektor fitur citra dengan 4 mesin generatif visual:
@@ -104,7 +104,7 @@ Sintesis tabung sinar katoda (CRT) fisik dan prosesor analog video glitch langsu
 
 ---
 
-## ⚡ Prinsip & Arsitektur
+## Prinsip & Arsitektur
 
 1. **Privasi & Keamanan Penuh**: 100% berjalan *in-browser*. Tidak ada data citra, video, atau teks pengguna yang dikirim ke server.
 2. **Kinerja Tinggi**:
@@ -119,7 +119,7 @@ Sintesis tabung sinar katoda (CRT) fisik dan prosesor analog video glitch langsu
 
 ---
 
-## 🚀 Menjalankan Secara Lokal
+## Menjalankan Secara Lokal
 
 Karena dibangun dengan web standar tanpa dependensi bundler atau npm, Anda dapat langsung membukanya di browser atau menggunakan server lokal sederhana:
 
@@ -135,7 +135,7 @@ Buka peramban di `http://localhost:3000`.
 
 ---
 
-## 🗺️ Roadmap Pengembangan Studio
+## Roadmap Pengembangan Studio
 
 Berikut adalah daftar rencana fitur dan modul baru yang dijadwalkan untuk pengembangan selanjutnya:
 
@@ -151,7 +151,7 @@ Berikut adalah daftar rencana fitur dan modul baru yang dijadwalkan untuk pengem
 
 ---
 
-## 📜 Lisensi & Atribusi
+## Lisensi & Atribusi
 
 - **Konsep, Desain & Pengembangan**: **Fanz Irfan**
 - **Website**: [manji.eu.org](https://manji.eu.org)
