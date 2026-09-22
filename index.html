@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KOJERENS | Generative Visual & Computational Design Studio</title>
-  <meta name="description" content="KOJERENS: A browser-native generative visual laboratory featuring high-performance contrast centroid tracking, HUD telemetry, and real-time Unicode ASCII art synthesis." />
-  <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, computer vision, hud telemetry, creative coding, browser-native" />
+  <meta name="description" content="KOJERENS: A browser-native generative visual laboratory featuring high-performance contrast centroid tracking, HUD telemetry, real-time Unicode ASCII art, and 1-bit error-diffusion dithering." />
+  <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, dither, 1-bit, atkinson, bayer matrix, halftone, creative coding, browser-native" />
   <meta name="author" content="Fanz Irfan" />
   <meta name="robots" content="index,follow" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="KOJERENS | Generative Visual & Design Studio" />
-  <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker & ASCII Matrix Generator." />
+  <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker, ASCII Matrix Generator & 1-Bit Dither Matrix." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://manji.eu.org" />
 
@@ -59,7 +59,7 @@
     </h1>
 
     <p class="hero-description">
-      KOJERENS is a browser-native generative laboratory engineered for luminance contrast centroid tracking, technical vector telemetry, and real-time Unicode ASCII art synthesis.
+      KOJERENS is a browser-native generative laboratory engineered for luminance contrast centroid tracking, technical vector telemetry, real-time Unicode ASCII art synthesis, and 1-bit error-diffusion dithering.
     </p>
 
     <div class="hero-buttons">
@@ -157,6 +157,38 @@
             <span class="tool-spec-badge">Webcam · Video · Text Export</span>
             <a href="ascii-gen/index.html" class="btn-cta">
               Open ASCII Matrix <i class="ri-arrow-right-line"></i>
+            </a>
+          </div>
+        </article>
+
+        <!-- TOOL 3: 1-BIT DITHER MATRIX -->
+        <article class="tool-card">
+          <span class="tool-card-corner-bracket">[03]</span>
+          
+          <div class="tool-header">
+            <span class="tool-index">1-BIT ERROR DIFFUSION &amp; ORDERED DITHERING</span>
+            <h3 class="tool-title">1-Bit Dither</h3>
+            <p class="tool-description">
+              Synthesize photographs into high-contrast retro bitmap graphics using 15 dithering algorithms. Atkinson, Floyd-Steinberg, Bayer matrices, halftone screens, retro palettes, and vector SVG export.
+            </p>
+          </div>
+
+          <div class="tool-preview-box">
+            <canvas id="ditherPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
+          </div>
+
+          <div class="tool-tags">
+            <span class="tool-tag">15 Dither Engines</span>
+            <span class="tool-tag">Bayer 8x8 &amp; Halftone</span>
+            <span class="tool-tag">12 Retro Palettes</span>
+            <span class="tool-tag">Scalable SVG Export</span>
+            <span class="tool-tag">Integer Pixel Scale</span>
+          </div>
+
+          <div class="tool-cta-row">
+            <span class="tool-spec-badge">15 Engines · SVG &amp; PNG</span>
+            <a href="dither-gen/index.html" class="btn-cta">
+              Open 1-Bit Dither <i class="ri-arrow-right-line"></i>
             </a>
           </div>
         </article>
@@ -272,6 +304,7 @@
       <div class="footer-links">
         <a href="blob-tracker/index.html">Blob Tracker</a>
         <a href="ascii-gen/index.html">ASCII Matrix</a>
+        <a href="dither-gen/index.html">1-Bit Dither</a>
         <a href="https://github.com/fanzirfan/blob-track" target="_blank" rel="noopener">GitHub</a>
         <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org</a>
       </div>
@@ -513,6 +546,59 @@
           requestAnimationFrame(renderAsciiPreview);
         }
         renderAsciiPreview();
+      }
+
+      // 4. 1-Bit Dither Preview Simulation
+      var ditherCanvas = document.getElementById('ditherPreviewCanvas');
+      if (ditherCanvas) {
+        var dctx = ditherCanvas.getContext('2d');
+        var dw = ditherCanvas.width;
+        var dh = ditherCanvas.height;
+        var dt = 0;
+        var bayer4 = [
+          [ 0,  8,  2, 10],
+          [12,  4, 14,  6],
+          [ 3, 11,  1,  9],
+          [15,  7, 13,  5]
+        ];
+
+        function renderDitherPreview() {
+          dt += 0.03;
+          dctx.clearRect(0, 0, dw, dh);
+
+          var pixelSize = 6;
+          var cols = Math.floor(dw / pixelSize);
+          var rows = Math.floor(dh / pixelSize);
+          var cx = cols / 2;
+          var cy = rows / 2;
+          var radius = Math.min(cols, rows) * 0.42;
+
+          for (var y = 0; y < rows; y++) {
+            for (var x = 0; x < cols; x++) {
+              var dx = x - cx;
+              var dy = y - cy;
+              var dist = Math.sqrt(dx * dx + dy * dy);
+              var lum = 0.5 + 0.45 * Math.sin(dist * 0.25 - dt) * Math.cos(x * 0.08 + dt * 0.5);
+              lum = Math.max(0, Math.min(1, lum));
+
+              var threshold = (bayer4[y % 4][x % 4] + 0.5) / 16;
+              if (lum > threshold) {
+                dctx.fillStyle = (dist < radius * 0.6) ? '#ffffff' : '#885dfc';
+                dctx.fillRect(x * pixelSize, y * pixelSize, pixelSize - 1, pixelSize - 1);
+              } else {
+                dctx.fillStyle = '#0a0d1d';
+                dctx.fillRect(x * pixelSize, y * pixelSize, pixelSize - 1, pixelSize - 1);
+              }
+            }
+          }
+
+          dctx.font = '9px "JetBrains Mono", monospace';
+          dctx.fillStyle = '#a6b2c8';
+          dctx.fillText('1-BIT // BAYER 4x4 // 80x33 CELLS', 10, dh - 10);
+
+          requestAnimationFrame(renderDitherPreview);
+        }
+        renderDitherPreview();
       }
     })();
   </script>
