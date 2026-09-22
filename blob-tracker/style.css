@@ -92,7 +92,47 @@ body {
 
 .topbar-brand {
   flex-shrink: 0;
-  width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.15s ease;
+}
+.topbar-brand-link:hover {
+  opacity: 0.85;
+}
+
+.topbar-logo {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.topbar-brand-title {
+  font-family: var(--font-aeonikpro);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-pure-white);
+}
+
+.topbar-subtool-badge {
+  font-family: var(--font-dotdigital);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--color-moon-mist);
+  background: rgba(102, 58, 243, 0.18);
+  border: 1px solid rgba(102, 58, 243, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .topbar-wordmark {
@@ -144,11 +184,31 @@ body {
 
 .topbar-actions {
   flex-shrink: 0;
-  width: 140px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.topbar-tool-switch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(186, 214, 247, 0.05);
+  border: 1px solid var(--color-glass-edge);
+  color: var(--color-moon-mist);
+  text-decoration: none;
+  font-family: var(--font-untitled-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--radius-buttons);
+  transition: all 0.15s ease;
+}
+.topbar-tool-switch:hover {
+  color: var(--color-pure-white);
+  background: var(--color-glass-fill-hover);
+  border-color: var(--color-glass-edge-active);
 }
 
 .topbar-btn {
