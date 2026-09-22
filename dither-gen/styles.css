@@ -135,48 +135,13 @@ html, body {
   border-radius: 4px;
 }
 
-/* MODES IN TOPBAR */
-.topbar-modes {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.topbar-modes::-webkit-scrollbar { display: none; }
-
-.mode-tab {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--color-fog-veil);
-  font-family: var(--font-untitled-sans);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 5px 12px;
-  border-radius: var(--radius-buttons);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-}
-.mode-tab:hover {
-  color: var(--color-frost-glow);
-  background: var(--color-glass-fill);
-}
-.mode-tab.active {
-  background: var(--color-steel-plate);
-  border-color: rgba(186, 215, 247, 0.28);
-  color: var(--color-pure-white);
-  box-shadow: inset 0 1px 1px rgba(216, 236, 248, 0.22), 0 2px 6px rgba(0, 0, 0, 0.35);
-}
-
-/* ACTIONS IN TOPBAR */
+/* ACTIONS IN TOPBAR (RIGHT) */
 .topbar-actions {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-left: auto;
 }
 
 .topbar-tool-switch {
@@ -318,7 +283,7 @@ html, body {
 }
 
 /* ==========================================================================
-   PANEL DRAWER (Sidebar controls)
+   PANEL DRAWER (Sidebar controls - Left Hand)
    ========================================================================== */
 .panel-drawer {
   flex-shrink: 0;
@@ -327,6 +292,7 @@ html, body {
   transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 15;
+  border-right: 1px solid var(--color-glass-edge);
 }
 .panel-drawer.open {
   width: 295px;
@@ -341,7 +307,6 @@ html, body {
 
 .sidebar {
   background: rgba(5, 6, 15, 0.97);
-  border-right: 1px solid var(--color-glass-edge);
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -1011,6 +976,333 @@ canvas {
   letter-spacing: 0.06em;
 }
 
+/* FLOATING STAGE ZOOM CONTROLS */
+.stage-zoom-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(5, 6, 15, 0.9);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-buttons);
+  padding: 3px 6px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-glass-card);
+  z-index: 25;
+  user-select: none;
+}
+
+.zoom-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-moon-mist);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+.zoom-btn:hover {
+  color: var(--color-pure-white);
+  background: var(--color-glass-fill-hover);
+}
+
+.zoom-val {
+  font-family: var(--font-dotdigital);
+  font-size: 10px;
+  color: var(--color-frost-glow);
+  min-width: 44px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.zoom-fit {
+  width: auto;
+  border-radius: var(--radius-buttons);
+  padding: 0 8px;
+  font-family: var(--font-dotdigital);
+  font-size: 9.5px;
+  border: 1px solid var(--color-glass-edge);
+}
+
+/* PRESET PILL GRID (RIGHT PANEL) */
+.preset-pill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.preset-pill-btn {
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-buttons);
+  color: var(--color-moon-mist);
+  font-family: var(--font-untitled-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 7px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.18s ease;
+}
+.preset-pill-btn:hover {
+  color: var(--color-pure-white);
+  background: var(--color-glass-fill-hover);
+  border-color: var(--color-glass-edge-active);
+}
+.preset-pill-btn.active {
+  background: var(--color-steel-plate);
+  color: var(--color-pure-white);
+  border-color: var(--color-frost-glow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* DEMO ITEM BUTTONS */
+.btn-demo-item {
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  font-family: var(--font-dotdigital);
+  font-size: 10px;
+  color: var(--color-moon-mist);
+  background: rgba(186, 214, 247, 0.04);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-inputs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-demo-item:hover {
+  color: var(--color-pure-white);
+  background: rgba(102, 58, 243, 0.2);
+  border-color: var(--color-void-violet);
+}
+
+/* ==========================================================================
+   INTERACTIVE CROP MODAL
+   ========================================================================== */
+.crop-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 5, 12, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.crop-modal-content {
+  background: rgba(10, 14, 30, 0.96);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-cards);
+  box-shadow: var(--shadow-glass-pop);
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.crop-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--color-glass-edge);
+  background: rgba(5, 6, 15, 0.6);
+}
+
+.crop-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-aeonikpro);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-pure-white);
+}
+
+.crop-ratio-group {
+  display: flex;
+  gap: 4px;
+}
+
+.crop-ratio-btn {
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: var(--radius-buttons);
+  color: var(--color-fog-veil);
+  font-family: var(--font-untitled-sans);
+  font-size: 10.5px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.crop-ratio-btn.active {
+  background: var(--color-steel-plate);
+  color: var(--color-pure-white);
+  border-color: var(--color-frost-glow);
+}
+
+.crop-close-btn {
+  background: none;
+  border: none;
+  color: var(--color-fog-veil);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.crop-close-btn:hover { color: var(--color-pure-white); }
+
+.crop-stage-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  background: #020308;
+  position: relative;
+  min-height: 380px;
+}
+
+#cropCanvas {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  cursor: crosshair;
+}
+
+.crop-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--color-glass-edge);
+  background: rgba(5, 6, 15, 0.6);
+}
+
+.crop-info-text {
+  font-family: var(--font-dotdigital);
+  font-size: 10.5px;
+  color: var(--color-fog-veil);
+}
+
+/* ==========================================================================
+   PRESETS SIDEBAR (RIGHT)
+   ========================================================================== */
+.presets-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(5, 6, 15, 0.96);
+  border-left: 1px solid var(--color-glass-edge);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 15;
+  user-select: none;
+}
+
+.presets-sidebar-header {
+  height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-glass-edge);
+  flex-shrink: 0;
+}
+
+.presets-sidebar-title {
+  font-family: var(--font-dotdigital);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-moon-mist);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.presets-sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(186, 215, 247, 0.18) transparent;
+}
+
+.presets-sidebar-list::-webkit-scrollbar {
+  width: 4px;
+}
+.presets-sidebar-list::-webkit-scrollbar-thumb {
+  background: rgba(186, 215, 247, 0.18);
+  border-radius: 4px;
+}
+
+.preset-card-btn {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: all 0.15s ease;
+  color: var(--color-fog-veil);
+  font-family: var(--font-untitled-sans);
+}
+
+.preset-card-btn:hover {
+  background: var(--color-glass-fill-hover);
+  border-color: var(--color-glass-edge-active);
+  color: var(--color-pure-white);
+  transform: translateY(-1px);
+}
+
+.preset-card-btn.active {
+  background: var(--color-steel-plate);
+  border-color: rgba(186, 215, 247, 0.35);
+  color: var(--color-pure-white);
+  box-shadow: inset 0 1px 1px rgba(216, 236, 248, 0.22), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.preset-card-btn .preset-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.preset-card-btn .preset-desc {
+  font-size: 9.5px;
+  color: var(--color-fog-veil);
+  line-height: 1.3;
+}
+
+.preset-card-btn.active .preset-desc {
+  color: var(--color-blueprint-blue);
+}
+
 /* ==========================================================================
    MOBILE & RESPONSIVE LAYOUT (R-03)
    Split-Pane Architecture: Topbar + Stage + Rail pinned, Drawer scrolls freely
@@ -1032,20 +1324,18 @@ canvas {
     position: relative;
   }
 
-  /* TOPBAR 2-ROW HEADER */
+  /* TOPBAR HEADER */
   .topbar {
-    height: auto;
-    min-height: 40px;
+    height: 44px;
+    min-height: 44px;
     flex-shrink: 0;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 10px 4px;
+    padding: 0 10px;
     background: rgba(5, 6, 15, 0.98);
     border-bottom: 1px solid var(--color-glass-edge);
     z-index: 30;
-    gap: 4px 0;
   }
   .topbar-brand {
     flex-shrink: 0;
@@ -1062,54 +1352,9 @@ canvas {
     align-items: center;
     gap: 5px;
   }
-  .topbar-tool-switch {
-    padding: 4px 8px;
-    font-size: 10px;
-    min-height: 28px;
-  }
-  .topbar-btn {
-    padding: 4px 8px;
-    font-size: 10px;
-    min-height: 28px;
-  }
-  .topbar-btn .btn-text {
-    display: none;
-  }
-  .topbar-cta {
-    padding: 4px 10px;
-    font-size: 10.5px;
-    min-height: 28px;
-  }
 
-  /* FULL-WIDTH DITHER ENGINE MODES */
-  .topbar-modes {
-    order: 3;
-    flex-basis: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-    padding-top: 4px;
-    border-top: 1px solid rgba(186, 215, 247, 0.06);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .topbar-modes::-webkit-scrollbar { display: none; }
-  .mode-tab {
-    flex: 1;
-    min-height: 32px;
-    padding: 4px 6px;
-    font-size: 10px;
-    font-weight: 500;
-    text-align: center;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(186, 214, 247, 0.04);
-    border: 1px solid var(--color-glass-edge);
-    border-radius: var(--radius-buttons);
+  .presets-sidebar {
+    display: none;
   }
   .mode-tab.active {
     background: var(--color-steel-plate);
@@ -1146,6 +1391,13 @@ canvas {
     justify-content: center;
   }
   .stage-attribution { display: none; }
+  .stage-zoom-bar {
+    bottom: 8px;
+    left: 10px;
+    padding: 2px 4px;
+    transform: scale(0.9);
+    transform-origin: bottom left;
+  }
   .canvas-wrap {
     width: 100%;
     height: 100%;
@@ -1173,6 +1425,7 @@ canvas {
     overflow-x: auto;
     overflow-y: hidden;
     padding: 0 6px;
+    border-left: none;
     border-right: none;
     border-top: 1px solid var(--color-glass-edge);
     border-bottom: 1px solid var(--color-glass-edge);

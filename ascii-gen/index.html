@@ -14,6 +14,8 @@
   <meta property="og:description" content="Transform images and videos into ASCII glyph art locally in your browser.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/kojerens-logo.svg">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#05060f">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <link rel="stylesheet" href="styles.css">
@@ -39,6 +41,10 @@
       <a href="../dither-gen/index.html" class="topbar-tool-switch" title="Switch to 1-Bit Dither Matrix">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         <span>1-Bit Dither</span>
+      </a>
+      <a href="../crt-gen/index.html" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>CRT Gen</span>
       </a>
       <button class="topbar-btn" onclick="toggleFullscreen()" id="topbarFullscreenBtn" title="Toggle Fullscreen">
         <i class="ri-fullscreen-line"></i> Fullscreen
@@ -89,12 +95,20 @@
                 <i class="ri-webcam-line"></i> Connect Live Webcam
               </button>
               <div class="preset-buttons-row">
-                <button class="btn-base btn-preset" onclick="loadExampleImage()">
-                  <i class="ri-image-line"></i> Sample Image
+                <button class="btn-base btn-preset" id="cropInputBtn" onclick="openCropModal()">
+                  <i class="ri-crop-line"></i> Crop Image
                 </button>
-                <button class="btn-base btn-preset" onclick="loadExampleVideo()">
-                  <i class="ri-movie-line"></i> Sample Video
+                <button class="btn-base btn-preset" id="demoPickerBtn" onclick="toggleDemoPicker()">
+                  <i class="ri-gallery-line"></i> Demo Library
                 </button>
+              </div>
+              <div id="demoPickerPanel" style="display:none; background: rgba(5,6,15,0.9); border: 1px solid var(--color-glass-edge); border-radius: 6px; padding: 8px; margin: 8px 0;">
+                <span style="display:block; margin-bottom: 6px; color: var(--color-moon-mist); font-size:10px; font-family: monospace;">SELECT DEMO PHOTO:</span>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('street')">1. Cyber Street (Tokyo Night)</button>
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('arch')">2. Architecture (Brutalist Form)</button>
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('portrait')">3. Studio Portrait (High Contrast)</button>
+                </div>
               </div>
             </div>
           </div>
@@ -149,10 +163,26 @@
           <label for="condensedImageUpload">
             <div class="filename-container">
               <span id="condensedFilename"><i class="ri-check-line"></i> Select Image</span>
-              <button class="btn-base btn-action change-image-button" onclick="document.getElementById('imageUpload').click()"><i class="ri-upload-2-fill"></i> New Upload</button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-base btn-action change-image-button" type="button" onclick="openCropModal()" title="Crop Image"><i class="ri-crop-line"></i> Crop</button>
+                <button class="btn-base btn-action change-image-button" type="button" onclick="document.getElementById('imageUpload').click()"><i class="ri-upload-2-fill"></i> New Upload</button>
+              </div>
             </div>
             <input type="file" id="condensedImageUpload" accept="image/* video/*">
           </label>
+        </div>
+      </div>
+
+      <!-- SECTION 0: ASCII STYLE PRESETS (RIGHT PANEL) -->
+      <div class="settings-panel-section-content" id="asciiPresetsSection" style="padding-bottom: 14px; border-bottom: 1px solid var(--color-glass-edge);">
+        <h2>Style Presets</h2>
+        <div class="preset-pill-grid">
+          <button class="preset-pill-btn active" type="button" onclick="applyAsciiStylePreset('classic')">Classic Mono</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('matrix')">Green Matrix</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('cyberpunk')">Cyber Neon</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('amber')">Amber CRT</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('blocks')">Unicode Blocks</button>
+          <button class="preset-pill-btn" type="button" onclick="applyAsciiStylePreset('dense')">High-Density</button>
         </div>
       </div>
 
@@ -468,6 +498,25 @@
             </button>
           </div>
 
+          <!-- Inter-Tool Studio Pipeline -->
+          <div class="pipeline-routing-box" style="margin: 14px 0 6px 0; border-top: 1px solid rgba(186,215,247,0.12); padding-top: 12px;">
+            <span class="field-sublabel" style="display:block; margin-bottom: 8px; font-size: 10px; letter-spacing: 0.08em; color: #a1afc7;">STUDIO PIPELINE ROUTING</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+              <button class="btn-base btn-secondary" id="sendToTrackerBtn" onclick="routeToTracker()" style="font-size:10.5px; padding:6px 4px;" title="Route ASCII render to Blob Tracker">
+                <i class="ri-radar-line"></i> To Tracker
+              </button>
+              <button class="btn-base btn-secondary" id="sendToDitherBtn" onclick="routeToDither()" style="font-size:10.5px; padding:6px 4px;" title="Route ASCII render to 1-Bit Dither Matrix">
+                <i class="ri-grid-fill"></i> To Dither
+              </button>
+              <button class="btn-base btn-secondary" id="sendToCrtBtn" onclick="routeToCrt()" style="font-size:10.5px; padding:6px 4px;" title="Route ASCII render to CRT Synthesizer">
+                <i class="ri-tv-line"></i> To CRT
+              </button>
+            </div>
+            <button class="btn-base btn-secondary" onclick="copyPresetShareLink()" style="width: 100%;" title="Copy shareable preset URL for current configuration">
+              <i class="ri-share-forward-line"></i> Copy Preset Link
+            </button>
+          </div>
+
           <input type="file" id="importSettingsInput" accept=".json,application/json" style="display: none;" onchange="handleImportSettings(event)">
 
           <button class="btn-base btn-ghost about-btn" onclick="openInfoModal()" id="openInfoButton">
@@ -566,9 +615,48 @@
         </p>
       </div>
     </div>
+  <!-- INTERACTIVE CROP MODAL -->
+  <div class="crop-modal-backdrop" id="cropModal" style="display:none;">
+    <div class="crop-modal-content">
+      <div class="crop-modal-header">
+        <div class="crop-modal-title">
+          <i class="ri-crop-line"></i>
+          <span>Interactive Image Cropper</span>
+        </div>
+        <div class="crop-ratio-group">
+          <button class="crop-ratio-btn active" data-ratio="free" onclick="setCropRatio('free')">Free</button>
+          <button class="crop-ratio-btn" data-ratio="1:1" onclick="setCropRatio('1:1')">1:1</button>
+          <button class="crop-ratio-btn" data-ratio="4:3" onclick="setCropRatio('4:3')">4:3</button>
+          <button class="crop-ratio-btn" data-ratio="16:9" onclick="setCropRatio('16:9')">16:9</button>
+          <button class="crop-ratio-btn" data-ratio="3:4" onclick="setCropRatio('3:4')">3:4</button>
+        </div>
+        <button class="crop-close-btn" id="cropCancelBtn" onclick="closeCropModal()" aria-label="Cancel Crop"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div class="crop-stage-wrap" id="cropStageWrap">
+        <canvas id="cropCanvas"></canvas>
+      </div>
+
+      <div class="crop-modal-footer">
+        <span class="crop-info-text" id="cropInfoText">Drag to adjust crop boundary</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-base btn-preset" id="cropResetBtn" onclick="resetCropBox()" style="width:auto; padding: 6px 14px; margin:0;">Reset</button>
+          <button class="btn-base btn-action upload-btn-primary" id="cropApplyBtn" onclick="applyAsciiCrop()" style="width:auto; padding: 6px 20px; margin:0;">Apply Crop</button>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <script src="../assets/pipeline.js"></script>
+  <script src="../assets/demo/demo-assets.js"></script>
   <script src="assets/example-assets.js"></script>
   <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('../sw.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

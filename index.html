@@ -4,18 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KOJERENS | Generative Visual & Computational Design Studio</title>
-  <meta name="description" content="KOJERENS: A browser-native generative visual laboratory featuring high-performance contrast centroid tracking, HUD telemetry, real-time Unicode ASCII art, and 1-bit error-diffusion dithering." />
-  <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, dither, 1-bit, atkinson, bayer matrix, halftone, creative coding, browser-native" />
+  <meta name="description" content="KOJERENS: A browser-native generative visual laboratory featuring high-performance contrast centroid tracking, HUD telemetry, Unicode ASCII art, 1-bit error-diffusion dithering, and analog CRT beam glitch synthesis." />
+  <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, dither, 1-bit, crt synthesizer, scanlines, trinitron, analog glitch, creative coding, browser-native" />
   <meta name="author" content="Fanz Irfan" />
   <meta name="robots" content="index,follow" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="KOJERENS | Generative Visual & Design Studio" />
-  <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker, ASCII Matrix Generator & 1-Bit Dither Matrix." />
+  <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker, ASCII Matrix Generator, 1-Bit Dither Matrix & Analog CRT Synthesizer." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://manji.eu.org" />
 
   <link rel="icon" type="image/svg+xml" href="assets/kojerens-logo.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#05060f" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
   <link rel="stylesheet" href="landing.css" />
 </head>
@@ -193,6 +195,38 @@
           </div>
         </article>
 
+        <!-- TOOL 4: ANALOG CRT BEAM & GLITCH SYNTHESIZER -->
+        <article class="tool-card">
+          <span class="tool-card-corner-bracket">[04]</span>
+          
+          <div class="tool-header">
+            <span class="tool-index">ANALOG BEAM DYNAMICS &amp; GLITCH</span>
+            <h3 class="tool-title">CRT Synthesizer</h3>
+            <p class="tool-description">
+              Simulate cathode ray tube physics, Trinitron aperture grilles, triad shadow masks, electron beam bloom, chromatic aberration, NTSC composite color bleed, and VHS tracking jitter.
+            </p>
+          </div>
+
+          <div class="tool-preview-box">
+            <canvas id="crtPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
+          </div>
+
+          <div class="tool-tags">
+            <span class="tool-tag">Trinitron Aperture Grille</span>
+            <span class="tool-tag">Triad Shadow Mask</span>
+            <span class="tool-tag">Barrel Tube Curvature</span>
+            <span class="tool-tag">VHS Sync Jitter</span>
+            <span class="tool-tag">Transparent Overlay Export</span>
+          </div>
+
+          <div class="tool-cta-row">
+            <span class="tool-spec-badge">8 Presets · Broadcast OSD</span>
+            <a href="crt-gen/index.html" class="btn-cta">
+              Open CRT Synthesizer <i class="ri-arrow-right-line"></i>
+            </a>
+          </div>
+        </article>
+
       </div>
     </section>
 
@@ -305,6 +339,7 @@
         <a href="blob-tracker/index.html">Blob Tracker</a>
         <a href="ascii-gen/index.html">ASCII Matrix</a>
         <a href="dither-gen/index.html">1-Bit Dither</a>
+        <a href="crt-gen/index.html">CRT Synthesizer</a>
         <a href="https://github.com/fanzirfan/blob-track" target="_blank" rel="noopener">GitHub</a>
         <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org</a>
       </div>
@@ -600,7 +635,97 @@
         }
         renderDitherPreview();
       }
+
+      // 5. CRT Synthesizer Preview Simulation
+      var crtCanvas = document.getElementById('crtPreviewCanvas');
+      if (crtCanvas) {
+        var cctx = crtCanvas.getContext('2d');
+        var cw = crtCanvas.width;
+        var ch = crtCanvas.height;
+        var ct = 0;
+
+        function renderCrtPreview() {
+          ct += 0.04;
+          cctx.clearRect(0, 0, cw, ch);
+
+          // Dark CRT tube backdrop
+          cctx.fillStyle = '#03050c';
+          cctx.fillRect(0, 0, cw, ch);
+
+          // Glowing oscilloscope / radar wave
+          var cx = cw / 2;
+          var cy = ch / 2;
+
+          // Waveform
+          cctx.lineWidth = 2.5;
+          // Red channel split
+          cctx.strokeStyle = 'rgba(255, 50, 50, 0.7)';
+          cctx.beginPath();
+          for (var x = 0; x < cw; x += 4) {
+            var yR = cy + Math.sin(x * 0.04 + ct) * 35 + Math.cos(x * 0.02 - ct * 1.5) * 18;
+            if (x === 0) cctx.moveTo(x - 3, yR); else cctx.lineTo(x - 3, yR);
+          }
+          cctx.stroke();
+
+          // Blue channel split
+          cctx.strokeStyle = 'rgba(50, 150, 255, 0.7)';
+          cctx.beginPath();
+          for (var bx = 0; bx < cw; bx += 4) {
+            var yB = cy + Math.sin(bx * 0.04 + ct) * 35 + Math.cos(bx * 0.02 - ct * 1.5) * 18;
+            if (bx === 0) cctx.moveTo(bx + 3, yB); else cctx.lineTo(bx + 3, yB);
+          }
+          cctx.stroke();
+
+          // Green primary beam
+          cctx.strokeStyle = '#33ff66';
+          cctx.beginPath();
+          for (var gx = 0; gx < cw; gx += 4) {
+            var yG = cy + Math.sin(gx * 0.04 + ct) * 35 + Math.cos(gx * 0.02 - ct * 1.5) * 18;
+            if (gx === 0) cctx.moveTo(gx, yG); else cctx.lineTo(gx, yG);
+          }
+          cctx.stroke();
+
+          // Scanlines
+          cctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+          for (var sl = 0; sl < ch; sl += 4) {
+            cctx.fillRect(0, sl + 2, cw, 2);
+          }
+
+          // Subtle aperture grille stripes
+          cctx.fillStyle = 'rgba(182, 217, 252, 0.04)';
+          for (var ag = 0; ag < cw; ag += 6) {
+            cctx.fillRect(ag, 0, 2, ch);
+          }
+
+          // OSD Text
+          cctx.font = 'bold 10px "JetBrains Mono", monospace';
+          cctx.fillStyle = '#33ff66';
+          cctx.shadowColor = '#33ff66';
+          cctx.shadowBlur = 6;
+          cctx.fillText('CH 03 [NTSC] · 15.75 kHz', 14, 22);
+          cctx.shadowBlur = 0;
+
+          // Corner vignette
+          var vig = cctx.createRadialGradient(cx, cy, ch * 0.35, cx, cy, ch * 0.85);
+          vig.addColorStop(0, 'rgba(0,0,0,0)');
+          vig.addColorStop(1, 'rgba(0,0,0,0.75)');
+          cctx.fillStyle = vig;
+          cctx.fillRect(0, 0, cw, ch);
+
+          requestAnimationFrame(renderCrtPreview);
+        }
+        renderCrtPreview();
+      }
     })();
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function (err) {
+          console.log('SW registration skipped:', err);
+        });
+      });
+    }
   </script>
 </body>
 </html>

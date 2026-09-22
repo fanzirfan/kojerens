@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analog CRT Beam &amp; Glitch Synthesizer : KOJERENS</title>
+  <meta name="description" content="KOJERENS Analog CRT Beam &amp; Glitch Synthesizer: High-performance browser-native cathode ray tube simulator featuring Trinitron aperture grille, shadow mask phosphors, scanlines, chromatic aberration, NTSC chroma bleed, and VHS tracking jitter." />
+  <meta name="author" content="Fanz Irfan" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="assets/kojerens-logo.svg" />
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#05060f" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=2.0" />
+</head>
+<body class="theme-midnight">
+<div class="app">
+
+  <!-- TOPBAR (Clean Header: Brand on left, Navigation & Actions on right) -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a href="../index.html" class="topbar-brand-link" title="Back to KOJERENS Studio">
+        <img src="assets/kojerens-logo.svg" alt="KOJERENS" class="topbar-logo" width="26" height="26" />
+        <span class="topbar-brand-title">KOJERENS</span>
+      </a>
+      <span class="topbar-subtool-badge">CRT BEAM &amp; GLITCH</span>
+    </div>
+
+    <!-- ACTIONS ON RIGHT -->
+    <div class="topbar-actions">
+      <a href="../blob-tracker/index.html" class="topbar-tool-switch" title="Switch to Blob Tracker">
+        <i class="ri-radar-line"></i>
+        <span>Blob Tracker</span>
+      </a>
+      <a href="../ascii-gen/index.html" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">
+        <i class="ri-terminal-line"></i>
+        <span>ASCII Gen</span>
+      </a>
+      <a href="../dither-gen/index.html" class="topbar-tool-switch" title="Switch to 1-Bit Dither Matrix">
+        <i class="ri-grid-fill"></i>
+        <span>1-Bit Dither</span>
+      </a>
+      <button class="topbar-btn" id="topbarRandomBtn" title="Randomize CRT parameters">
+        <i class="ri-dice-line"></i>
+        <span class="btn-text">Random</span>
+      </button>
+      <button class="topbar-cta" id="topbarDownloadBtn">Export PNG</button>
+    </div>
+  </header>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+
+    <!-- ICON RAIL (FAR LEFT) -->
+    <nav class="rail" aria-label="Panel navigation">
+      <button class="rail-btn active" data-panel="presets" title="CRT Style Presets" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        <span class="rail-label">Style</span>
+      </button>
+      <button class="rail-btn" data-panel="file" title="Source File &amp; Crop" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="rail-label">File</span>
+      </button>
+      <button class="rail-btn" data-panel="tube" title="Tube Geometry &amp; Curve" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="4"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span class="rail-label">Tube</span>
+      </button>
+      <button class="rail-btn" data-panel="beam" title="Scanlines &amp; Electron Beam" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <span class="rail-label">Beam</span>
+      </button>
+      <button class="rail-btn" data-panel="mask" title="Phosphor Mask Grid" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        <span class="rail-label">Mask</span>
+      </button>
+      <button class="rail-btn" data-panel="glitch" title="Analog Glitch &amp; Jitter" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="rail-label">Glitch</span>
+      </button>
+      <button class="rail-btn" data-panel="tone" title="Phosphor &amp; Color Tone" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z"/></svg>
+        <span class="rail-label">Tone</span>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="rail-btn" data-panel="size" title="Canvas Format" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        <span class="rail-label">Size</span>
+      </button>
+      <button class="rail-btn" data-panel="osd" title="Telemetry &amp; OSD" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="rail-label">OSD</span>
+      </button>
+      <button class="rail-btn" data-panel="export" title="Production Export" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="rail-label">Export</span>
+      </button>
+    </nav>
+
+    <!-- PANEL DRAWER (MIDDLE LEFT) -->
+    <aside class="panel-drawer open" id="panelDrawer">
+      <div class="drawer-inner sidebar">
+
+        <!-- SECTION 0: PRESET STYLES (MOVED TO RIGHT PANEL) -->
+        <section class="panel" data-section="presets">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> CRT STYLE PRESETS</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <p class="hint">Instant cathode ray tube hardware profiles</p>
+            <div class="preset-pill-grid">
+              <button class="preset-pill-btn active" data-preset="trinitron">Trinitron PVM</button>
+              <button class="preset-pill-btn" data-preset="consumer">Consumer 90s</button>
+              <button class="preset-pill-btn" data-preset="green_p1">P1 Emerald</button>
+              <button class="preset-pill-btn" data-preset="amber_p3">P3 Amber</button>
+              <button class="preset-pill-btn" data-preset="vhs_glitch">VHS Glitch</button>
+              <button class="preset-pill-btn" data-preset="cyberpunk">Cyber Fringes</button>
+              <button class="preset-pill-btn" data-preset="arcade_slot">Arcade 240p</button>
+              <button class="preset-pill-btn" data-preset="lofi_rf">Lo-Fi Broadcast</button>
+              <button class="preset-pill-btn" data-preset="nokia">Nokia 3310</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 1: FILE SOURCE & CROP -->
+        <section class="panel" data-section="file">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> FILE SOURCE &amp; CROP</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <button class="btn-block" id="replaceFileBtn">Select / Replace Image</button>
+            <input type="file" id="fileInput" accept="image/*" style="display:none" />
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <button class="btn-block-outline" id="cropBtn" title="Crop or frame the source image">
+                <i class="ri-crop-line"></i> Crop Image
+              </button>
+              <button class="btn-block-outline" id="loadSampleBtn" title="Choose a demo photo from library">
+                <i class="ri-gallery-line"></i> Demo Library
+              </button>
+            </div>
+
+            <!-- Demo Library Dropdown / Buttons -->
+            <div id="demoPickerPanel" style="display:none; background: rgba(5,6,15,0.7); border: 1px solid var(--color-glass-edge); border-radius: 6px; padding: 8px; margin-bottom: 10px;">
+              <span class="field-sublabel" style="display:block; margin-bottom: 6px; color: var(--color-moon-mist); font-size:9.5px;">SELECT DEMO PHOTO:</span>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <button class="btn-demo-item" data-demo="street">1. Cyber Street (Tokyo Night)</button>
+                <button class="btn-demo-item" data-demo="arch">2. Architecture (Brutalist Form)</button>
+                <button class="btn-demo-item" data-demo="portrait">3. Studio Portrait (High Contrast)</button>
+                <button class="btn-demo-item" data-demo="procedural">4. Procedural Vector Target</button>
+              </div>
+            </div>
+
+            <div class="control-group" style="margin-top:10px">
+              <div class="control-header">
+                <label>INPUT BLEND OPACITY</label>
+                <span class="val" id="fileOpacityVal">1.00</span>
+              </div>
+              <p class="hint">Blend level of CRT beam output against canvas</p>
+              <input type="range" id="fileOpacity" min="0.1" max="1" step="0.01" value="1.00" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: TUBE GEOMETRY & CURVATURE -->
+        <section class="panel" data-section="tube">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> TUBE GEOMETRY</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>BARREL CURVATURE</label>
+                <span class="val" id="curvatureVal">14%</span>
+              </div>
+              <p class="hint">Simulates spherical cathode ray tube glass bulging</p>
+              <input type="range" id="curvature" min="0" max="40" step="1" value="14" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>CORNER BEZEL ROUNDING</label>
+                <span class="val" id="cornerRoundVal">12px</span>
+              </div>
+              <p class="hint">Curved mask at the monitor chassis corners</p>
+              <input type="range" id="cornerRound" min="0" max="48" step="2" value="12" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>BEZEL VIGNETTE</label>
+                <span class="val" id="vignetteVal">50%</span>
+              </div>
+              <p class="hint">Edge darkening caused by curved electron beam travel</p>
+              <input type="range" id="vignette" min="0" max="100" step="1" value="50" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>GLASS SPECULAR GLOW</label>
+                <span class="val" id="glassGlowVal">25%</span>
+              </div>
+              <p class="hint">Subtle ambient highlight reflection on outer tube surface</p>
+              <input type="range" id="glassGlow" min="0" max="80" step="1" value="25" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: SCANLINES & BEAM -->
+        <section class="panel" data-section="beam">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> SCANLINES &amp; BEAM</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>SCANLINE DENSITY</label>
+                <span class="val" id="scanlineCountVal">320 lines</span>
+              </div>
+              <p class="hint">Raster frequency (240 lines retro console to 576 lines broadcast)</p>
+              <input type="range" id="scanlineCount" min="120" max="640" step="10" value="320" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>SCANLINE INTENSITY</label>
+                <span class="val" id="scanlineOpacityVal">65%</span>
+              </div>
+              <p class="hint">Depth of dark raster gap between phosphor scans</p>
+              <input type="range" id="scanlineOpacity" min="0" max="100" step="1" value="65" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>ELECTRON BEAM BLOOM</label>
+                <span class="val" id="beamBloomVal">45%</span>
+              </div>
+              <p class="hint">Halation and vertical beam spread on intense bright pixels</p>
+              <input type="range" id="beamBloom" min="0" max="100" step="1" value="45" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>INTERLACING FLICKER FIELD</label>
+                <span class="val" id="interlaceVal">Even Fields</span>
+              </div>
+              <p class="hint">Simulates alternate field scanning of NTSC/PAL standard</p>
+              <div class="seg-row">
+                <button class="seg-btn active" data-interlace="even">Even Field</button>
+                <button class="seg-btn" data-interlace="odd">Odd Field</button>
+                <button class="seg-btn" data-interlace="off">Progressive</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: PHOSPHOR MASK -->
+        <section class="panel" data-section="mask">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> PHOSPHOR MASK GRID</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>MASK STRUCTURE</label>
+                <span class="val" id="maskTypeVal">Aperture Grille</span>
+              </div>
+              <div class="select-wrap">
+                <select id="maskTypeSelect" aria-label="Select Phosphor Mask">
+                  <option value="aperture" selected>Aperture Grille (Sony Trinitron Stripes)</option>
+                  <option value="shadow">Shadow Mask (Triad Delta Dot Matrix)</option>
+                  <option value="slot">Slot Mask (Arcade Cromaclear Bricks)</option>
+                  <option value="mesh">Fine Micro-Mesh</option>
+                  <option value="none">None (Clean Beam Only)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>PHOSPHOR MASK PITCH</label>
+                <span class="val" id="maskPitchVal">2px</span>
+              </div>
+              <p class="hint">Width of RGB subpixel phosphor elements</p>
+              <input type="range" id="maskPitch" min="1" max="6" step="1" value="2" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>MASK DARKENING</label>
+                <span class="val" id="maskOpacityVal">50%</span>
+              </div>
+              <p class="hint">Absorption strength of black matrix between phosphors</p>
+              <input type="range" id="maskOpacity" min="0" max="90" step="1" value="50" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: ANALOG GLITCH & NOISE -->
+        <section class="panel" data-section="glitch">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> GLITCH &amp; JITTER</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>CHROMATIC ABERRATION (RGB SPLIT)</label>
+                <span class="val" id="rgbSplitVal">4px</span>
+              </div>
+              <p class="hint">Horizontal electron gun convergence misalignment</p>
+              <input type="range" id="rgbSplit" min="0" max="24" step="1" value="4" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>SYNC JITTER &amp; LINE TEARING</label>
+                <span class="val" id="syncJitterVal">6px</span>
+              </div>
+              <p class="hint">Analog horizontal time-base error and scanline displacement</p>
+              <input type="range" id="syncJitter" min="0" max="32" step="1" value="6" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>NTSC COLOR BLEED (CHROMA SMEAR)</label>
+                <span class="val" id="chromaBleedVal">8px</span>
+              </div>
+              <p class="hint">Composite signal low-pass color smearing</p>
+              <input type="range" id="chromaBleed" min="0" max="28" step="1" value="8" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>VHS TRACKING NOISE BAR</label>
+                <span class="val" id="vhsNoiseVal">20%</span>
+              </div>
+              <p class="hint">Horizontal static tearing band across helical scan</p>
+              <input type="range" id="vhsNoise" min="0" max="100" step="1" value="20" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>RF SNOW &amp; GRAIN</label>
+                <span class="val" id="rfSnowVal">15%</span>
+              </div>
+              <p class="hint">High-frequency antenna interference &amp; thermal white noise</p>
+              <input type="range" id="rfSnow" min="0" max="70" step="1" value="15" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>SIGNAL GHOSTING (MULTIPATH ECHO)</label>
+                <span class="val" id="ghostingVal">0%</span>
+              </div>
+              <p class="hint">Secondary faint image reflection from broadcast antennas</p>
+              <input type="range" id="ghosting" min="0" max="60" step="1" value="0" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 6: PHOSPHOR TINT & TONE -->
+        <section class="panel" data-section="tone">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> PHOSPHOR &amp; TONE</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>PHOSPHOR EMISSION PALETTE</label>
+                <span class="val" id="paletteNameVal">Natural RGB Color</span>
+              </div>
+              <div class="select-wrap">
+                <select id="paletteSelect" aria-label="Phosphor Palette">
+                  <option value="rgb" selected>Natural RGB Phosphors (Full Color)</option>
+                  <option value="green_p1">P1 Emerald Phosphor (IBM 5151 / Apple III 525nm)</option>
+                  <option value="amber_p3">P3 Amber Phosphor (Vintage Terminal 600nm)</option>
+                  <option value="white_p4">P4 B&amp;W Phosphor (Monochrome Television)</option>
+                  <option value="cyan">Cyberpunk Cyan (Sci-Fi Military HUD)</option>
+                  <option value="plasma">Plasma Orange (Early Gas-Plasma Display)</option>
+                  <option value="blood">Crimson Nightvision (Submarine Red)</option>
+                  <option value="nokia">Nokia 3310 LCD (Monochrome Olive Matrix)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>BRIGHTNESS / BEAM CURRENT</label>
+                <span class="val" id="brightnessVal">0</span>
+              </div>
+              <input type="range" id="brightness" min="-50" max="50" step="1" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>CONTRAST</label>
+                <span class="val" id="contrastVal">10</span>
+              </div>
+              <input type="range" id="contrast" min="-40" max="60" step="1" value="10" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>SATURATION</label>
+                <span class="val" id="saturationVal">110%</span>
+              </div>
+              <input type="range" id="saturation" min="0" max="250" step="5" value="110" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 7: CANVAS FORMAT -->
+        <section class="panel" data-section="size">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> CANVAS FORMAT</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>DIMENSIONS &amp; ASPECT RATIO</label>
+                <span class="val" id="formatVal">4:3 Vintage NTSC</span>
+              </div>
+              <div class="select-wrap">
+                <select id="canvasFormat" aria-label="Canvas Format">
+                  <option value="ntsc_4_3" selected>4:3 Vintage NTSC (1600 x 1200)</option>
+                  <option value="square_1_1">1:1 Square (1400 x 1400)</option>
+                  <option value="broadcast_16_9">16:9 Broadcast HD (1920 x 1080)</option>
+                  <option value="portrait_9_16">9:16 Story Mobile (1080 x 1920)</option>
+                  <option value="portrait_3_4">3:4 Retro Portrait (1200 x 1600)</option>
+                  <option value="original">Original Image Aspect Ratio</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 8: TELEMETRY & OSD -->
+        <section class="panel" data-section="osd">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> TELEMETRY &amp; OSD</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="toggle-row">
+                <label for="toggleOsd">VINTAGE OSD HUD OVERLAY</label>
+                <input type="checkbox" id="toggleOsd" checked />
+              </div>
+              <p class="hint">On-Screen Display channel, mode, and timecode graphics</p>
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>OSD BROADCAST TEXT</label>
+              </div>
+              <input type="text" id="osdText" value="CH 03 [NTSC] · STEREO · 15.75 kHz" class="text-input" />
+            </div>
+
+            <div class="control-group">
+              <div class="toggle-row">
+                <label for="toggleSmpte">SMPTE CALIBRATION BADGE</label>
+                <input type="checkbox" id="toggleSmpte" checked />
+              </div>
+              <p class="hint">Broadcast color-bar calibration strip in corner</p>
+            </div>
+
+            <div class="control-group">
+              <div class="toggle-row">
+                <label for="toggleFrameText">STUDIO 4-CORNER TELEMETRY</label>
+                <input type="checkbox" id="toggleFrameText" checked />
+              </div>
+            </div>
+
+            <div id="frameTextControls">
+              <div class="control-group">
+                <div class="control-header"><label>TOP LEFT</label></div>
+                <input type="text" id="frameTL" value="Design &amp; Strategy" class="text-input" />
+              </div>
+              <div class="control-group">
+                <div class="control-header"><label>TOP RIGHT</label></div>
+                <input type="text" id="frameTR" value="Fanz Irfan" class="text-input" />
+              </div>
+              <div class="control-group">
+                <div class="control-header"><label>BOTTOM LEFT</label></div>
+                <input type="text" id="frameBL" value="manji.eu.org" class="text-input" />
+              </div>
+              <div class="control-group">
+                <div class="control-header"><label>BOTTOM RIGHT</label></div>
+                <input type="text" id="frameBR" value="Indonesia" class="text-input" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 9: EXPORT & ACTIONS -->
+        <section class="panel" data-section="export" style="border-bottom:none">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> PRODUCTION EXPORT</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <button class="btn-download" id="downloadBtn">Download Full CRT PNG</button>
+            <button class="btn-download-secondary" id="downloadOverlayBtn">Download Transparent CRT Overlay</button>
+            <button class="btn-action-random" id="randomizeSettingsBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+              Randomize CRT Parameters
+            </button>
+
+            <!-- Inter-Tool Studio Pipeline -->
+            <div style="margin: 14px 0 6px 0; border-top: 1px solid var(--color-glass-edge); padding-top: 12px;">
+              <span class="field-sublabel" style="display:block; margin-bottom: 8px; color: var(--color-moon-mist);">STUDIO PIPELINE ROUTING</span>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                <button class="btn-download-secondary" id="sendToTrackerBtn" style="margin-bottom:0; font-size:10.5px; padding: 6px 4px;" title="Route current CRT render to Blob Tracker">
+                  <i class="ri-radar-line"></i> To Tracker
+                </button>
+                <button class="btn-download-secondary" id="sendToAsciiBtn" style="margin-bottom:0; font-size:10.5px; padding: 6px 4px;" title="Route current CRT render to ASCII Matrix">
+                  <i class="ri-terminal-box-line"></i> To ASCII
+                </button>
+                <button class="btn-download-secondary" id="sendToDitherBtn" style="margin-bottom:0; font-size:10.5px; padding: 6px 4px;" title="Route current CRT render to 1-Bit Dither">
+                  <i class="ri-grid-line"></i> To Dither
+                </button>
+              </div>
+              <button class="btn-download-secondary" id="sharePresetBtn" style="margin-bottom:0;" title="Copy shareable preset URL for current CRT configuration">
+                <i class="ri-share-forward-line"></i> Copy Preset Link
+              </button>
+            </div>
+
+            <p class="status-footer" id="exportStatusText">1600 x 1200 · Trinitron PVM · Aperture Grille</p>
+          </div>
+        </section>
+
+      </div><!-- /.drawer-inner.sidebar -->
+    </aside><!-- /.panel-drawer -->
+
+    <!-- MAIN STAGE (RIGHT) -->
+    <main class="stage" id="stageMain">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="canvas"></canvas>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon"><i class="ri-tv-line"></i></div>
+          <h2>Drop an image to synthesize CRT Beam</h2>
+          <p>Local in-browser computing. Zero server dependency.</p>
+          <button class="btn-block-outline empty-load-btn" id="emptyLoadSampleBtn">Load Demo Graphic</button>
+        </div>
+      </div>
+
+      <!-- Stage Floating Zoom Controls -->
+      <div class="stage-zoom-bar" id="stageZoomBar">
+        <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out" aria-label="Zoom Out">
+          <i class="ri-subtract-line"></i>
+        </button>
+        <span class="zoom-val" id="zoomVal">100%</span>
+        <button class="zoom-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In">
+          <i class="ri-add-line"></i>
+        </button>
+        <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
+      </div>
+
+      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
+    </main>
+
+    <!-- PRESETS SIDEBAR (RIGHT) -->
+    <aside class="presets-sidebar" id="presetsSidebar" aria-label="Style Presets">
+      <div class="presets-sidebar-header">
+        <span class="presets-sidebar-title"><i class="ri-palette-line"></i> STYLE PRESETS</span>
+      </div>
+      <div class="presets-sidebar-list">
+        <button class="preset-card-btn active" data-preset="trinitron">
+          <span class="preset-name">Trinitron PVM</span>
+          <span class="preset-desc">Aperture grille, high scanline focus</span>
+        </button>
+        <button class="preset-card-btn" data-preset="consumer">
+          <span class="preset-name">Consumer 90s</span>
+          <span class="preset-desc">Curved shadow mask, composite bleed</span>
+        </button>
+        <button class="preset-card-btn" data-preset="green_p1">
+          <span class="preset-name">P1 Emerald</span>
+          <span class="preset-desc">Monochrome green phosphor persistence</span>
+        </button>
+        <button class="preset-card-btn" data-preset="amber_p3">
+          <span class="preset-name">P3 Amber</span>
+          <span class="preset-desc">Warm amber mainframe terminal</span>
+        </button>
+        <button class="preset-card-btn" data-preset="vhs_glitch">
+          <span class="preset-name">VHS Tape</span>
+          <span class="preset-desc">Tracking jitter, sync noise, tape roll</span>
+        </button>
+        <button class="preset-card-btn" data-preset="cyberpunk">
+          <span class="preset-name">Cyber Fringes</span>
+          <span class="preset-desc">Chromatic split, neon glow</span>
+        </button>
+        <button class="preset-card-btn" data-preset="arcade_slot">
+          <span class="preset-name">Arcade 240p</span>
+          <span class="preset-desc">Slot mask, crisp arcade beam grid</span>
+        </button>
+        <button class="preset-card-btn" data-preset="lofi_rf">
+          <span class="preset-name">Lo-Fi Broadcast</span>
+          <span class="preset-desc">RF antenna static, ghosting, drift</span>
+        </button>
+        <button class="preset-card-btn" data-preset="nokia">
+          <span class="preset-name">Nokia 3310</span>
+          <span class="preset-desc">Monochrome olive LCD dot matrix screen</span>
+        </button>
+      </div>
+    </aside>
+
+  </div><!-- /.workspace -->
+
+  <!-- INTERACTIVE CROP MODAL -->
+  <div class="crop-modal-backdrop" id="cropModal" style="display:none;">
+    <div class="crop-modal-content">
+      <div class="crop-modal-header">
+        <div class="crop-modal-title">
+          <i class="ri-crop-line"></i>
+          <span>Interactive Image Cropper</span>
+        </div>
+        <div class="crop-ratio-group">
+          <button class="crop-ratio-btn active" data-ratio="free">Free</button>
+          <button class="crop-ratio-btn" data-ratio="1:1">1:1</button>
+          <button class="crop-ratio-btn" data-ratio="4:3">4:3</button>
+          <button class="crop-ratio-btn" data-ratio="16:9">16:9</button>
+          <button class="crop-ratio-btn" data-ratio="3:4">3:4</button>
+        </div>
+        <button class="crop-close-btn" id="cropCancelBtn" aria-label="Cancel Crop"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div class="crop-stage-wrap" id="cropStageWrap">
+        <canvas id="cropCanvas"></canvas>
+      </div>
+
+      <div class="crop-modal-footer">
+        <span class="crop-info-text" id="cropInfoText">Drag to adjust crop boundary</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-block-outline" id="cropResetBtn" style="width:auto; padding: 6px 14px; margin:0;">Reset</button>
+          <button class="btn-download" id="cropApplyBtn" style="width:auto; padding: 6px 20px; margin:0;">Apply Crop</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.app -->
+
+<script src="../assets/pipeline.js"></script>
+<script src="../assets/demo/demo-assets.js"></script>
+<script src="script.js?v=2.0"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('../sw.js').catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>

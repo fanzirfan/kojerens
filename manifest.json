@@ -1,0 +1,20 @@
+{
+  "name": "KOJERENS Generative Visual Studio",
+  "short_name": "KOJERENS",
+  "description": "High-performance browser-native generative visual and computational design studio.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#05060f",
+  "theme_color": "#05060f",
+  "orientation": "any",
+  "categories": ["design", "photo", "utilities"],
+  "icons": [
+    {
+      "src": "assets/kojerens-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

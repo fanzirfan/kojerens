@@ -11,6 +11,7 @@
   var state = {
     file: null,
     image: null,
+    rawImage: null, // Preserves source image for crop resets
     engine: 'atkinson',
     palette: 'mac',
     customBg: '#05060f',
@@ -86,6 +87,38 @@
     [63, 31, 55, 23, 61, 29, 53, 21]
   ];
 
+  var DEMO_FILES = {
+    street: '../assets/demo/jack-berry-aVu_orLM3Mc-unsplash.jpg',
+    arch: '../assets/demo/dmytro-koplyk-kdN49Gc01_0-unsplash.jpg',
+    portrait: '../assets/demo/karsten-winegeart-MB2JolPeFcg-unsplash.jpg'
+  };
+
+  // Zoom & Pan State
+  var zoomState = {
+    scale: 1.0,
+    panX: 0,
+    panY: 0,
+    isPanning: false,
+    startX: 0,
+    startY: 0
+  };
+
+  // Interactive Crop State
+  var cropState = {
+    scale: 1,
+    startX: 0,
+    startY: 0,
+    w: 0,
+    h: 0,
+    imgW: 0,
+    imgH: 0,
+    dragging: false,
+    dragMode: null,
+    offsetX: 0,
+    offsetY: 0,
+    ratio: 'free'
+  };
+
   // DOM Elements
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -95,7 +128,24 @@
   var replaceFileBtn = document.getElementById('replaceFileBtn');
   var loadSampleBtn = document.getElementById('loadSampleBtn');
   var emptyLoadSampleBtn = document.getElementById('emptyLoadSampleBtn');
+  var demoPickerPanel = document.getElementById('demoPickerPanel');
   var panelDrawer = document.getElementById('panelDrawer');
+
+  // Zoom DOM Elements
+  var zoomInBtn = document.getElementById('zoomInBtn');
+  var zoomOutBtn = document.getElementById('zoomOutBtn');
+  var zoomFitBtn = document.getElementById('zoomFitBtn');
+  var zoomVal = document.getElementById('zoomVal');
+
+  // Crop DOM Elements
+  var cropBtn = document.getElementById('cropBtn');
+  var cropModal = document.getElementById('cropModal');
+  var cropCanvas = document.getElementById('cropCanvas');
+  var cropCtx = cropCanvas ? cropCanvas.getContext('2d') : null;
+  var cropCancelBtn = document.getElementById('cropCancelBtn');
+  var cropResetBtn = document.getElementById('cropResetBtn');
+  var cropApplyBtn = document.getElementById('cropApplyBtn');
+  var cropInfoText = document.getElementById('cropInfoText');
 
   // Value Displays
   var engineSelect = document.getElementById('engineSelect');
@@ -289,13 +339,40 @@
     var img = new Image();
     img.src = c.toDataURL('image/png');
     img.onload = function () {
+      state.rawImage = img;
       applyLoadedFile(img);
     };
+  }
+
+  function loadDemoAsset(key) {
+    if (demoPickerPanel) {
+      demoPickerPanel.style.display = 'none';
+    }
+    if (key === 'procedural') {
+      createDemoImage();
+      return;
+    }
+    var src = (typeof window !== 'undefined' && window.DEMO_ASSETS && window.DEMO_ASSETS[key]) || DEMO_FILES[key];
+    if (!src) return;
+
+    var img = new Image();
+    img.onload = function () {
+      state.rawImage = img;
+      applyLoadedFile(img);
+      if (window.StudioPipeline) {
+        StudioPipeline.showToast('Loaded ' + key + ' demo asset');
+      }
+    };
+    img.onerror = function () {
+      createDemoImage();
+    };
+    img.src = src;
   }
 
   // Load Source File
   function applyLoadedFile(img) {
     state.image = img;
+    state.rawImage = img;
     emptyState.classList.add('hidden');
     resizeCanvasViewport();
     scheduleUpdate();
@@ -307,6 +384,7 @@
     reader.onload = function (ev) {
       var img = new Image();
       img.onload = function () {
+        state.rawImage = img;
         applyLoadedFile(img);
       };
       img.onerror = function () {
@@ -315,6 +393,15 @@
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
+  }
+
+  function applyZoomTransform() {
+    canvas.style.transform = 'translate(' + zoomState.panX + 'px, ' + zoomState.panY + 'px) scale(' + zoomState.scale + ')';
+    canvas.style.transformOrigin = 'center center';
+    canvas.style.cursor = zoomState.scale > 1 ? (zoomState.isPanning ? 'grabbing' : 'grab') : 'crosshair';
+    if (zoomVal) {
+      zoomVal.textContent = Math.round(zoomState.scale * 100) + '%';
+    }
   }
 
   // Resize Viewport Canvas to fit inside .stage
@@ -338,6 +425,114 @@
 
     canvas.style.width = Math.round(dispW) + 'px';
     canvas.style.height = Math.round(dispH) + 'px';
+    applyZoomTransform();
+  }
+
+  // ==========================================================================
+  // INTERACTIVE CROP TOOL
+  // ==========================================================================
+  function openCropModal() {
+    var sourceImg = state.rawImage || state.image;
+    if (!sourceImg) {
+      if (window.StudioPipeline) StudioPipeline.showToast('Please load an image to crop');
+      return;
+    }
+
+    cropModal.style.display = 'flex';
+    var wrapRect = document.getElementById('cropStageWrap').getBoundingClientRect();
+    var maxW = Math.min(800, wrapRect.width - 32);
+    var maxH = Math.min(500, wrapRect.height - 32);
+
+    cropState.imgW = sourceImg.naturalWidth || sourceImg.width;
+    cropState.imgH = sourceImg.naturalHeight || sourceImg.height;
+
+    var s = Math.min(maxW / cropState.imgW, maxH / cropState.imgH, 1);
+    cropState.scale = s;
+    cropCanvas.width = Math.round(cropState.imgW * s);
+    cropCanvas.height = Math.round(cropState.imgH * s);
+
+    // Default crop box (80% centered)
+    cropState.startX = Math.round(cropCanvas.width * 0.1);
+    cropState.startY = Math.round(cropCanvas.height * 0.1);
+    cropState.w = Math.round(cropCanvas.width * 0.8);
+    cropState.h = Math.round(cropCanvas.height * 0.8);
+
+    drawCropCanvas();
+  }
+
+  function drawCropCanvas() {
+    if (!cropCtx) return;
+    var sourceImg = state.rawImage || state.image;
+    var cw = cropCanvas.width;
+    var ch = cropCanvas.height;
+
+    cropCtx.clearRect(0, 0, cw, ch);
+    cropCtx.drawImage(sourceImg, 0, 0, cw, ch);
+
+    // Dim overlay
+    cropCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    cropCtx.fillRect(0, 0, cw, cropState.startY);
+    cropCtx.fillRect(0, cropState.startY + cropState.h, cw, ch - (cropState.startY + cropState.h));
+    cropCtx.fillRect(0, cropState.startY, cropState.startX, cropState.h);
+    cropCtx.fillRect(cropState.startX + cropState.w, cropState.startY, cw - (cropState.startX + cropState.w), cropState.h);
+
+    // Crop box outline
+    cropCtx.strokeStyle = '#ffffff';
+    cropCtx.lineWidth = 1.5;
+    cropCtx.strokeRect(cropState.startX, cropState.startY, cropState.w, cropState.h);
+
+    // Rule of thirds
+    cropCtx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    cropCtx.lineWidth = 1;
+    var thirdW = cropState.w / 3;
+    var thirdH = cropState.h / 3;
+    cropCtx.beginPath();
+    cropCtx.moveTo(cropState.startX + thirdW, cropState.startY); cropCtx.lineTo(cropState.startX + thirdW, cropState.startY + cropState.h);
+    cropCtx.moveTo(cropState.startX + thirdW * 2, cropState.startY); cropCtx.lineTo(cropState.startX + thirdW * 2, cropState.startY + cropState.h);
+    cropCtx.moveTo(cropState.startX, cropState.startY + thirdH); cropCtx.lineTo(cropState.startX + cropState.w, cropState.startY + thirdH);
+    cropCtx.moveTo(cropState.startX, cropState.startY + thirdH * 2); cropCtx.lineTo(cropState.startX + cropState.w, cropState.startY + thirdH * 2);
+    cropCtx.stroke();
+
+    // Corner handle blocks
+    cropCtx.fillStyle = '#663af3';
+    var handleSize = 8;
+    cropCtx.fillRect(cropState.startX - handleSize/2, cropState.startY - handleSize/2, handleSize, handleSize);
+    cropCtx.fillRect(cropState.startX + cropState.w - handleSize/2, cropState.startY - handleSize/2, handleSize, handleSize);
+    cropCtx.fillRect(cropState.startX - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
+    cropCtx.fillRect(cropState.startX + cropState.w - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
+
+    // Pixel readout
+    var origW = Math.round(cropState.w / cropState.scale);
+    var origH = Math.round(cropState.h / cropState.scale);
+    if (cropInfoText) {
+      cropInfoText.textContent = 'Crop Area: ' + origW + ' × ' + origH + ' px (' + cropState.ratio.toUpperCase() + ')';
+    }
+  }
+
+  function applyCrop() {
+    var sourceImg = state.rawImage || state.image;
+    if (!sourceImg) return;
+
+    var origX = Math.round(cropState.startX / cropState.scale);
+    var origY = Math.round(cropState.startY / cropState.scale);
+    var origW = Math.round(cropState.w / cropState.scale);
+    var origH = Math.round(cropState.h / cropState.scale);
+
+    var cCanvas = document.createElement('canvas');
+    cCanvas.width = origW;
+    cCanvas.height = origH;
+    var cCtx = cCanvas.getContext('2d');
+    cCtx.drawImage(sourceImg, origX, origY, origW, origH, 0, 0, origW, origH);
+
+    var croppedImg = new Image();
+    croppedImg.onload = function () {
+      applyLoadedFile(croppedImg);
+      cropModal.style.display = 'none';
+      if (window.StudioPipeline) {
+        StudioPipeline.showToast('Applied image crop (' + origW + 'x' + origH + ')');
+      }
+    };
+    croppedImg.src = cCanvas.toDataURL('image/png');
   }
 
   // CORE RENDER PIPELINE
@@ -1081,14 +1276,9 @@
     engineSelect.value = state.engine;
     engineNameVal.textContent = engineSelect.options[engineSelect.selectedIndex] ? engineSelect.options[engineSelect.selectedIndex].text.split(' (')[0] : state.engine;
 
-    document.querySelectorAll('.topbar-modes .mode-tab').forEach(function (tab) {
-      if (tab.dataset.engine === state.engine) {
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-      } else {
-        tab.classList.remove('active');
-        tab.setAttribute('aria-selected', 'false');
-      }
+    // Engine Tabs, Pills, & Right Sidebar Cards
+    document.querySelectorAll('.mode-tab, .preset-pill-btn, .preset-card-btn').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.engine === state.engine);
     });
 
     // Halftone group visibility
@@ -1126,10 +1316,10 @@
 
   // EVENT LISTENERS
   function initEventListeners() {
-    // Mode tabs in Topbar
-    document.querySelectorAll('.topbar-modes .mode-tab').forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        state.engine = tab.dataset.engine;
+    // Engine Preset Pills, Tabs, & Cards
+    document.querySelectorAll('.mode-tab, .preset-pill-btn, .preset-card-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state.engine = btn.dataset.engine;
         syncUiWithState();
         scheduleUpdate();
       });
@@ -1350,11 +1540,188 @@
       }
     });
 
-    // Sample File Buttons
-    loadSampleBtn.addEventListener('click', function () { createDemoImage(); });
-    emptyLoadSampleBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      createDemoImage();
+    // ========================================================================
+    // ZOOM CONTROLS WIRING
+    // ========================================================================
+    function setZoom(newScale) {
+      zoomState.scale = Math.min(5.0, Math.max(0.25, parseFloat(newScale.toFixed(2))));
+      if (zoomState.scale <= 1.0) {
+        zoomState.panX = 0;
+        zoomState.panY = 0;
+      }
+      applyZoomTransform();
+    }
+
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', function () { setZoom(zoomState.scale + 0.25); });
+    }
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', function () { setZoom(zoomState.scale - 0.25); });
+    }
+    if (zoomFitBtn) {
+      zoomFitBtn.addEventListener('click', function () {
+        zoomState.scale = 1.0;
+        zoomState.panX = 0;
+        zoomState.panY = 0;
+        applyZoomTransform();
+      });
+    }
+
+    // Mouse Wheel Zoom
+    wrap.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var delta = e.deltaY < 0 ? 0.15 : -0.15;
+      setZoom(zoomState.scale + delta);
+    }, { passive: false });
+
+    // Drag to Pan when Zoomed In
+    wrap.addEventListener('mousedown', function (e) {
+      if (zoomState.scale > 1.0) {
+        zoomState.isPanning = true;
+        zoomState.startX = e.clientX - zoomState.panX;
+        zoomState.startY = e.clientY - zoomState.panY;
+        applyZoomTransform();
+      }
+    });
+
+    window.addEventListener('mousemove', function (e) {
+      if (zoomState.isPanning) {
+        zoomState.panX = e.clientX - zoomState.startX;
+        zoomState.panY = e.clientY - zoomState.startY;
+        applyZoomTransform();
+      }
+    });
+
+    window.addEventListener('mouseup', function () {
+      if (zoomState.isPanning) {
+        zoomState.isPanning = false;
+        applyZoomTransform();
+      }
+    });
+
+    // ========================================================================
+    // CROP TOOL WIRING
+    // ========================================================================
+    if (cropBtn) {
+      cropBtn.addEventListener('click', openCropModal);
+    }
+    if (cropCancelBtn) {
+      cropCancelBtn.addEventListener('click', function () { cropModal.style.display = 'none'; });
+    }
+    if (cropResetBtn) {
+      cropResetBtn.addEventListener('click', function () {
+        cropState.startX = Math.round(cropCanvas.width * 0.1);
+        cropState.startY = Math.round(cropCanvas.height * 0.1);
+        cropState.w = Math.round(cropCanvas.width * 0.8);
+        cropState.h = Math.round(cropCanvas.height * 0.8);
+        drawCropCanvas();
+      });
+    }
+    if (cropApplyBtn) {
+      cropApplyBtn.addEventListener('click', applyCrop);
+    }
+
+    var cropRatioBtns = document.querySelectorAll('.crop-ratio-btn');
+    cropRatioBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        cropRatioBtns.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        cropState.ratio = btn.dataset.ratio;
+
+        var maxW = cropCanvas.width;
+        var maxH = cropCanvas.height;
+        if (cropState.ratio === '1:1') {
+          var side = Math.min(cropState.w, cropState.h);
+          cropState.w = side;
+          cropState.h = side;
+        } else if (cropState.ratio === '4:3') {
+          cropState.h = Math.round(cropState.w * (3 / 4));
+        } else if (cropState.ratio === '16:9') {
+          cropState.h = Math.round(cropState.w * (9 / 16));
+        } else if (cropState.ratio === '3:4') {
+          cropState.h = Math.round(cropState.w * (4 / 3));
+        }
+        if (cropState.startY + cropState.h > maxH) {
+          cropState.startY = Math.max(0, maxH - cropState.h);
+        }
+        drawCropCanvas();
+      });
+    });
+
+    // Crop Canvas Dragging
+    if (cropCanvas) {
+      cropCanvas.addEventListener('mousedown', function (e) {
+        var rect = cropCanvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+
+        var hs = 14;
+        if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - cropState.startY) < hs) {
+          cropState.dragMode = 'nw';
+        } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - cropState.startY) < hs) {
+          cropState.dragMode = 'ne';
+        } else if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
+          cropState.dragMode = 'sw';
+        } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
+          cropState.dragMode = 'se';
+        } else if (mx >= cropState.startX && mx <= cropState.startX + cropState.w && my >= cropState.startY && my <= cropState.startY + cropState.h) {
+          cropState.dragMode = 'move';
+        } else {
+          cropState.dragMode = null;
+          return;
+        }
+
+        cropState.dragging = true;
+        cropState.offsetX = mx - cropState.startX;
+        cropState.offsetY = my - cropState.startY;
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!cropState.dragging || !cropCanvas || cropModal.style.display === 'none') return;
+        var rect = cropCanvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+
+        if (cropState.dragMode === 'move') {
+          cropState.startX = Math.max(0, Math.min(cropCanvas.width - cropState.w, mx - cropState.offsetX));
+          cropState.startY = Math.max(0, Math.min(cropCanvas.height - cropState.h, my - cropState.offsetY));
+        } else if (cropState.dragMode === 'se') {
+          cropState.w = Math.max(40, Math.min(cropCanvas.width - cropState.startX, mx - cropState.startX));
+          if (cropState.ratio === '1:1') cropState.h = cropState.w;
+          else if (cropState.ratio === '4:3') cropState.h = Math.round(cropState.w * (3 / 4));
+          else if (cropState.ratio === '16:9') cropState.h = Math.round(cropState.w * (9 / 16));
+          else if (cropState.ratio === '3:4') cropState.h = Math.round(cropState.w * (4 / 3));
+          else cropState.h = Math.max(40, Math.min(cropCanvas.height - cropState.startY, my - cropState.startY));
+        }
+        drawCropCanvas();
+      });
+
+      window.addEventListener('mouseup', function () {
+        cropState.dragging = false;
+        cropState.dragMode = null;
+      });
+    }
+
+    // Sample File & Demo Picker
+    if (loadSampleBtn) {
+      loadSampleBtn.addEventListener('click', function () {
+        if (demoPickerPanel) {
+          demoPickerPanel.style.display = demoPickerPanel.style.display === 'none' ? 'block' : 'none';
+        }
+      });
+    }
+    if (emptyLoadSampleBtn) {
+      emptyLoadSampleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        loadDemoAsset('street');
+      });
+    }
+    document.querySelectorAll('.btn-demo-item').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var demoKey = btn.dataset.demo;
+        loadDemoAsset(demoKey);
+        if (demoPickerPanel) demoPickerPanel.style.display = 'none';
+      });
     });
 
     // Empty state & canvas click
@@ -1403,6 +1770,65 @@
     randomizeSettingsBtn.addEventListener('click', function () { randomizeAll(); });
     topbarRandomBtn.addEventListener('click', function () { randomizeAll(); });
 
+    // Inter-Tool Pipeline Routing & Preset Share
+    var sendToAsciiBtn = document.getElementById('sendToAsciiBtn');
+    if (sendToAsciiBtn) {
+      sendToAsciiBtn.addEventListener('click', function () {
+        if (!state.image) {
+          if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+          return;
+        }
+        var dataUrl = canvas.toDataURL('image/png');
+        if (window.StudioPipeline) {
+          StudioPipeline.sendImage(dataUrl, '../ascii-gen/index.html', 'ASCII Matrix');
+        } else {
+          window.location.href = '../ascii-gen/index.html';
+        }
+      });
+    }
+
+    var sendToTrackerBtn = document.getElementById('sendToTrackerBtn');
+    if (sendToTrackerBtn) {
+      sendToTrackerBtn.addEventListener('click', function () {
+        if (!state.image) {
+          if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+          return;
+        }
+        var dataUrl = canvas.toDataURL('image/png');
+        if (window.StudioPipeline) {
+          StudioPipeline.sendImage(dataUrl, '../blob-tracker/index.html', 'Blob Tracker');
+        } else {
+          window.location.href = '../blob-tracker/index.html';
+        }
+      });
+    }
+
+    var sendToCrtBtn = document.getElementById('sendToCrtBtn');
+    if (sendToCrtBtn) {
+      sendToCrtBtn.addEventListener('click', function () {
+        if (!state.image) {
+          if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+          return;
+        }
+        var dataUrl = canvas.toDataURL('image/png');
+        if (window.StudioPipeline) {
+          StudioPipeline.sendImage(dataUrl, '../crt-gen/index.html', 'CRT Synthesizer');
+        } else {
+          window.location.href = '../crt-gen/index.html';
+        }
+      });
+    }
+
+    var sharePresetBtn = document.getElementById('sharePresetBtn');
+    if (sharePresetBtn) {
+      sharePresetBtn.addEventListener('click', function () {
+        var url = getShareablePresetUrl();
+        if (window.StudioPipeline) {
+          StudioPipeline.copyTextToClipboard(url, 'Preset share link copied to clipboard!');
+        }
+      });
+    }
+
     // Window Resize
     window.addEventListener('resize', function () {
       resizeCanvasViewport();
@@ -1410,19 +1836,104 @@
     });
   }
 
+  function parseUrlHashPreset() {
+    if (!window.location.hash || window.location.hash.length < 2) return;
+    try {
+      var hashStr = window.location.hash.substring(1);
+      var params = new URLSearchParams(hashStr);
+      if (params.has('engine')) {
+        state.engine = params.get('engine');
+        var modeTabs = document.querySelectorAll('.mode-tab');
+        modeTabs.forEach(function (tab) {
+          tab.classList.toggle('active', tab.getAttribute('data-engine') === state.engine);
+        });
+      }
+      if (params.has('palette')) {
+        state.palette = params.get('palette');
+        updatePaletteSelection(state.palette);
+      }
+      if (params.has('pixelScale')) {
+        state.pixelScale = parseInt(params.get('pixelScale'), 10) || 1;
+        var psEl = document.getElementById('pixelScale');
+        var psVal = document.getElementById('pixelScaleVal');
+        if (psEl) psEl.value = state.pixelScale;
+        if (psVal) psVal.textContent = state.pixelScale + 'x';
+      }
+      if (params.has('brightness')) {
+        state.brightness = parseInt(params.get('brightness'), 10) || 0;
+        var bEl = document.getElementById('brightness');
+        var bVal = document.getElementById('brightnessVal');
+        if (bEl) bEl.value = state.brightness;
+        if (bVal) bVal.textContent = state.brightness;
+      }
+      if (params.has('contrast')) {
+        state.contrast = parseInt(params.get('contrast'), 10) || 0;
+        var cEl = document.getElementById('contrast');
+        var cVal = document.getElementById('contrastVal');
+        if (cEl) cEl.value = state.contrast;
+        if (cVal) cVal.textContent = state.contrast;
+      }
+      if (params.has('gamma')) {
+        state.gamma = parseFloat(params.get('gamma')) || 1.0;
+        var gEl = document.getElementById('gamma');
+        var gVal = document.getElementById('gammaVal');
+        if (gEl) gEl.value = state.gamma;
+        if (gVal) gVal.textContent = state.gamma.toFixed(2);
+      }
+      if (params.has('thresholdBias')) {
+        state.thresholdBias = parseInt(params.get('thresholdBias'), 10) || 0;
+        var tbEl = document.getElementById('thresholdBias');
+        var tbVal = document.getElementById('thresholdBiasVal');
+        if (tbEl) tbEl.value = state.thresholdBias;
+        if (tbVal) tbVal.textContent = state.thresholdBias;
+      }
+      if (params.has('edgeSharpen')) {
+        state.edgeSharpen = parseInt(params.get('edgeSharpen'), 10) || 0;
+        var esEl = document.getElementById('edgeSharpen');
+        var esVal = document.getElementById('edgeSharpenVal');
+        if (esEl) esEl.value = state.edgeSharpen;
+        if (esVal) esVal.textContent = state.edgeSharpen;
+      }
+      if (params.has('format')) {
+        state.format = params.get('format');
+        var canvasFormatEl = document.getElementById('canvasFormat');
+        if (canvasFormatEl) canvasFormatEl.value = state.format;
+      }
+      updateStatusFooter();
+    } catch (e) {
+      console.warn('Could not parse URL hash preset', e);
+    }
+  }
+
+  function getShareablePresetUrl() {
+    var params = new URLSearchParams();
+    params.set('engine', state.engine);
+    params.set('palette', state.palette);
+    params.set('pixelScale', state.pixelScale);
+    params.set('brightness', state.brightness);
+    params.set('contrast', state.contrast);
+    params.set('gamma', state.gamma);
+    params.set('thresholdBias', state.thresholdBias);
+    params.set('edgeSharpen', state.edgeSharpen);
+    params.set('format', state.format);
+    return window.location.origin + window.location.pathname + '#' + params.toString();
+  }
+
   // Initialization
   initPaletteGrid();
   initEventListeners();
   resizeCanvasViewport();
+  parseUrlHashPreset();
 
-  // Try auto-loading preset-sample.png if available, else ready in clean state
-  var initialImg = new Image();
-  initialImg.onload = function () {
-    applyLoadedFile(initialImg);
-  };
-  initialImg.onerror = function () {
-    // Keep clean empty state if not available
-  };
-  initialImg.src = 'assets/preset-sample.png';
+  // Pipeline check for incoming shared image
+  if (window.StudioPipeline) {
+    StudioPipeline.receiveImage(function (dataUrl) {
+      var pipelineImg = new Image();
+      pipelineImg.onload = function () {
+        applyLoadedFile(pipelineImg);
+      };
+      pipelineImg.src = dataUrl;
+    });
+  }
 
 })();
