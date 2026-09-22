@@ -1135,6 +1135,10 @@ input[type="range"]:focus-visible {
    MOBILE & RESPONSIVE LAYOUT (R-03)
    ========================================================================== */
 @media (max-width: 860px) {
+  :root {
+    --mobile-stage-h: clamp(200px, 33vh, 270px);
+    --mobile-rail-h: 46px;
+  }
   html, body {
     height: auto;
     overflow-y: auto;
@@ -1143,6 +1147,7 @@ input[type="range"]:focus-visible {
   .app {
     height: auto;
     min-height: 100dvh;
+    overflow: visible;
   }
   .topbar {
     height: auto;
@@ -1168,47 +1173,55 @@ input[type="range"]:focus-visible {
   .workspace {
     flex-direction: column;
     min-height: 0;
+    overflow: visible;
   }
   .stage {
     order: 1;
     width: 100%;
-    min-height: 280px;
-    height: 42vh;
-    max-height: 480px;
+    height: var(--mobile-stage-h);
+    min-height: 200px;
+    max-height: 270px;
     flex-shrink: 0;
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 25;
     background-color: var(--color-midnight-canvas);
     border-bottom: 1px solid var(--color-glass-edge);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.65);
   }
   .stage-attribution { display: none; }
-  .canvas-wrap { padding: 12px; }
+  .canvas-wrap { padding: 10px; }
   .rail {
     order: 2;
     width: 100%;
-    height: auto;
+    height: var(--mobile-rail-h);
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 6px 8px;
+    padding: 3px 8px;
     border-right: none;
     border-top: 1px solid var(--color-glass-edge);
     border-bottom: 1px solid var(--color-glass-edge);
-    background: rgba(5, 6, 15, 0.95);
+    background: rgba(5, 6, 15, 0.96);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     position: sticky;
-    top: 0;
-    z-index: 20;
+    top: var(--mobile-stage-h);
+    z-index: 24;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar {
+    display: none;
   }
   .rail-btn {
     flex-shrink: 0;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
   .rail-sep {
     width: 1px;
-    height: 28px;
+    height: 24px;
     margin: 0 4px;
   }
   .panel-drawer {
@@ -1230,7 +1243,7 @@ input[type="range"]:focus-visible {
     overflow-y: visible;
   }
   .panel {
-    scroll-margin-top: 56px;
+    scroll-margin-top: calc(var(--mobile-stage-h) + var(--mobile-rail-h) + 10px);
     padding: 14px 16px 16px;
   }
   /* 44px tap targets (R-03) */
@@ -1259,21 +1272,30 @@ input[type="range"]:focus-visible {
 }
 
 @media (max-width: 480px) {
+  :root {
+    --mobile-stage-h: clamp(180px, 30vh, 230px);
+    --mobile-rail-h: 42px;
+  }
   .topbar-wordmark { font-size: 12px; }
   .mode-tab { font-size: 10.5px; padding: 5px 10px; }
   .stage {
-    min-height: 240px;
-    height: 38vh;
-    max-height: 360px;
+    min-height: 180px;
+    max-height: 230px;
   }
-  .canvas-wrap { padding: 8px; }
+  .canvas-wrap { padding: 6px; }
+  .rail-btn {
+    width: 34px;
+    height: 34px;
+  }
   .empty-state {
-    padding: 20px 24px;
-    width: calc(100% - 32px);
-    max-width: 300px;
+    padding: 12px 16px;
+    width: calc(100% - 24px);
+    max-width: 260px;
     box-sizing: border-box;
+    gap: 4px;
   }
-  .empty-state h2 { font-size: 14px; }
-  .empty-state p { font-size: 11px; }
+  .empty-icon { font-size: 20px; margin-bottom: 0; }
+  .empty-state h2 { font-size: 12.5px; }
+  .empty-state p { font-size: 10px; }
 }
 
