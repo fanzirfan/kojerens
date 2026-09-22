@@ -30,8 +30,8 @@
     format: 'portrait_3_4',
     customW: 1200,
     customH: 1600,
-    frameText: true,
-    frameTL: 'Dither Matrix / Studio',
+    frameText: false,
+    frameTL: 'Design & Strategy',
     frameTR: 'Fanz Irfan',
     frameBL: 'manji.eu.org',
     frameBR: 'Indonesia',
@@ -87,12 +87,6 @@
     [63, 31, 55, 23, 61, 29, 53, 21]
   ];
 
-  var DEMO_FILES = {
-    street: '../assets/demo/jack-berry-aVu_orLM3Mc-unsplash.jpg',
-    arch: '../assets/demo/dmytro-koplyk-kdN49Gc01_0-unsplash.jpg',
-    portrait: '../assets/demo/karsten-winegeart-MB2JolPeFcg-unsplash.jpg'
-  };
-
   // Zoom & Pan State
   var zoomState = {
     scale: 1.0,
@@ -126,9 +120,6 @@
   var emptyState = document.getElementById('emptyState');
   var fileInput = document.getElementById('fileInput');
   var replaceFileBtn = document.getElementById('replaceFileBtn');
-  var loadSampleBtn = document.getElementById('loadSampleBtn');
-  var emptyLoadSampleBtn = document.getElementById('emptyLoadSampleBtn');
-  var demoPickerPanel = document.getElementById('demoPickerPanel');
   var panelDrawer = document.getElementById('panelDrawer');
 
   // Zoom DOM Elements
@@ -150,9 +141,8 @@
   // Value Displays
   var engineSelect = document.getElementById('engineSelect');
   var engineNameVal = document.getElementById('engineNameVal');
-  var serpentineVal = document.getElementById('serpentineVal');
-  var serpentineToggleBtn = document.getElementById('serpentineToggleBtn');
-  var halftoneControlsGroup = document.getElementById('halftoneControlsGroup');
+  var serpentineToggle = document.getElementById('serpentineToggle');
+  var halftoneControls = document.getElementById('halftoneControls');
   var halftoneAngleSlider = document.getElementById('halftoneAngle');
   var halftoneAngleVal = document.getElementById('halftoneAngleVal');
   var halftoneFreqSlider = document.getElementById('halftoneFreq');
@@ -162,15 +152,14 @@
 
   // Palette Controls
   var paletteGrid = document.getElementById('paletteGrid');
-  var palettePresetVal = document.getElementById('palettePresetVal');
-  var bgColorPicker = document.getElementById('bgColorPicker');
-  var bgColorText = document.getElementById('bgColorText');
-  var fgColorPicker = document.getElementById('fgColorPicker');
-  var fgColorText = document.getElementById('fgColorText');
-  var invertToggleBtn = document.getElementById('invertToggleBtn');
+  var paletteNameVal = document.getElementById('paletteNameVal');
+  var customBgColor = document.getElementById('customBgColor');
+  var customBgVal = document.getElementById('customBgVal');
+  var customFgColor = document.getElementById('customFgColor');
+  var customFgVal = document.getElementById('customFgVal');
+  var invertPaletteToggle = document.getElementById('invertPaletteToggle');
 
   // Scale Controls
-  var pixelScaleGroup = document.getElementById('pixelScaleGroup');
   var pixelScaleVal = document.getElementById('pixelScaleVal');
 
   // Telemetry
@@ -192,20 +181,16 @@
   var edgeSharpenVal = document.getElementById('edgeSharpenVal');
 
   // Size Controls
-  var formatSelect = document.getElementById('formatSelect');
-  var formatPresetVal = document.getElementById('formatPresetVal');
-  var customDimensionsGroup = document.getElementById('customDimensionsGroup');
-  var customWidthInput = document.getElementById('customWidthInput');
-  var customHeightInput = document.getElementById('customHeightInput');
+  var canvasFormat = document.getElementById('canvasFormat');
+  var formatVal = document.getElementById('formatVal');
 
   // Frame Text Controls
-  var frameTextToggleBtn = document.getElementById('frameTextToggleBtn');
-  var frameTextStateVal = document.getElementById('frameTextStateVal');
+  var toggleFrameText = document.getElementById('toggleFrameText');
   var frameTextControls = document.getElementById('frameTextControls');
-  var frameTextTL = document.getElementById('frameTextTL');
-  var frameTextTR = document.getElementById('frameTextTR');
-  var frameTextBL = document.getElementById('frameTextBL');
-  var frameTextBR = document.getElementById('frameTextBR');
+  var frameTL = document.getElementById('frameTL');
+  var frameTR = document.getElementById('frameTR');
+  var frameBL = document.getElementById('frameBL');
+  var frameBR = document.getElementById('frameBR');
   var frameTextSizeSlider = document.getElementById('frameTextSize');
   var frameTextSizeVal = document.getElementById('frameTextSizeVal');
 
@@ -283,97 +268,18 @@
     };
   }
 
-  // Procedural Demo Graphic
-  function createDemoImage() {
-    var c = document.createElement('canvas');
-    c.width = 1200;
-    c.height = 1600;
-    var cx = c.getContext('2d');
-
-    // Deep gradient background
-    var bgGrad = cx.createRadialGradient(600, 700, 50, 600, 800, 900);
-    bgGrad.addColorStop(0, '#ffffff');
-    bgGrad.addColorStop(0.35, '#888888');
-    bgGrad.addColorStop(0.7, '#222222');
-    bgGrad.addColorStop(1, '#000000');
-    cx.fillStyle = bgGrad;
-    cx.fillRect(0, 0, 1200, 1600);
-
-    // Cyber sphere / geometric composition
-    cx.save();
-    cx.strokeStyle = '#ffffff';
-    cx.lineWidth = 4;
-    cx.beginPath();
-    cx.arc(600, 680, 360, 0, Math.PI * 2);
-    cx.stroke();
-
-    for (var i = 1; i <= 8; i++) {
-      cx.beginPath();
-      cx.arc(600, 680, i * 42, 0, Math.PI * 2);
-      cx.strokeStyle = 'rgba(255, 255, 255, ' + (0.9 - i * 0.1) + ')';
-      cx.lineWidth = 2;
-      cx.stroke();
-    }
-
-    // Grid rays
-    for (var a = 0; a < 360; a += 15) {
-      var rad = (a * Math.PI) / 180;
-      cx.beginPath();
-      cx.moveTo(600 + Math.cos(rad) * 120, 680 + Math.sin(rad) * 120);
-      cx.lineTo(600 + Math.cos(rad) * 500, 680 + Math.sin(rad) * 500);
-      cx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      cx.stroke();
-    }
-
-    // Typography in demo
-    cx.fillStyle = '#ffffff';
-    cx.font = 'bold 72px "Space Grotesk", sans-serif';
-    cx.textAlign = 'center';
-    cx.fillText('KOJERENS', 600, 1250);
-
-    cx.font = '24px "JetBrains Mono", monospace';
-    cx.fillStyle = '#cccccc';
-    cx.fillText('1-BIT DITHER SYNTHESIZER', 600, 1310);
-    cx.restore();
-
-    var img = new Image();
-    img.src = c.toDataURL('image/png');
-    img.onload = function () {
-      state.rawImage = img;
-      applyLoadedFile(img);
-    };
-  }
-
-  function loadDemoAsset(key) {
-    if (demoPickerPanel) {
-      demoPickerPanel.style.display = 'none';
-    }
-    if (key === 'procedural') {
-      createDemoImage();
-      return;
-    }
-    var src = (typeof window !== 'undefined' && window.DEMO_ASSETS && window.DEMO_ASSETS[key]) || DEMO_FILES[key];
-    if (!src) return;
-
-    var img = new Image();
-    img.onload = function () {
-      state.rawImage = img;
-      applyLoadedFile(img);
-      if (window.StudioPipeline) {
-        StudioPipeline.showToast('Loaded ' + key + ' demo asset');
-      }
-    };
-    img.onerror = function () {
-      createDemoImage();
-    };
-    img.src = src;
-  }
-
   // Load Source File
   function applyLoadedFile(img) {
     state.image = img;
     state.rawImage = img;
-    emptyState.classList.add('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    resizeCanvasViewport();
+    scheduleUpdate();
+  }
+
+  function setCroppedImage(img) {
+    state.image = img;
+    if (emptyState) emptyState.classList.add('hidden');
     resizeCanvasViewport();
     scheduleUpdate();
   }
@@ -451,11 +357,18 @@
     cropCanvas.width = Math.round(cropState.imgW * s);
     cropCanvas.height = Math.round(cropState.imgH * s);
 
-    // Default crop box (80% centered)
-    cropState.startX = Math.round(cropCanvas.width * 0.1);
-    cropState.startY = Math.round(cropCanvas.height * 0.1);
-    cropState.w = Math.round(cropCanvas.width * 0.8);
-    cropState.h = Math.round(cropCanvas.height * 0.8);
+    cropState.ratio = 'free';
+    var rBtns = document.querySelectorAll('.crop-ratio-btn');
+    rBtns.forEach(function (b) {
+      if (b.dataset.ratio === 'free') b.classList.add('active');
+      else b.classList.remove('active');
+    });
+
+    // Default crop box: 88% centered frame so handles and move are immediately usable
+    cropState.w = Math.max(30, Math.round(cropCanvas.width * 0.88));
+    cropState.h = Math.max(30, Math.round(cropCanvas.height * 0.88));
+    cropState.startX = Math.round((cropCanvas.width - cropState.w) / 2);
+    cropState.startY = Math.round((cropCanvas.height - cropState.h) / 2);
 
     drawCropCanvas();
   }
@@ -501,6 +414,16 @@
     cropCtx.fillRect(cropState.startX - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
     cropCtx.fillRect(cropState.startX + cropState.w - handleSize/2, cropState.startY + cropState.h - handleSize/2, handleSize, handleSize);
 
+    // Mid-edge handle bars
+    var midX = cropState.startX + cropState.w / 2;
+    var midY = cropState.startY + cropState.h / 2;
+    var edgeLen = 14;
+    var edgeThick = 4;
+    cropCtx.fillRect(midX - edgeLen/2, cropState.startY - edgeThick/2, edgeLen, edgeThick);
+    cropCtx.fillRect(midX - edgeLen/2, cropState.startY + cropState.h - edgeThick/2, edgeLen, edgeThick);
+    cropCtx.fillRect(cropState.startX - edgeThick/2, midY - edgeLen/2, edgeThick, edgeLen);
+    cropCtx.fillRect(cropState.startX + cropState.w - edgeThick/2, midY - edgeLen/2, edgeThick, edgeLen);
+
     // Pixel readout
     var origW = Math.round(cropState.w / cropState.scale);
     var origH = Math.round(cropState.h / cropState.scale);
@@ -518,16 +441,29 @@
     var origW = Math.round(cropState.w / cropState.scale);
     var origH = Math.round(cropState.h / cropState.scale);
 
+    var imgFullW = sourceImg.naturalWidth || sourceImg.width;
+    var imgFullH = sourceImg.naturalHeight || sourceImg.height;
+
+    // Non-destructive: if full image or reset box selected, restore raw original image
+    if (origX <= 2 && origY <= 2 && origW >= imgFullW - 4 && origH >= imgFullH - 4) {
+      state.image = state.rawImage || sourceImg;
+      if (cropModal) cropModal.style.display = 'none';
+      if (window.StudioPipeline) StudioPipeline.showToast('Restored full original image');
+      resizeCanvasViewport();
+      scheduleUpdate();
+      return;
+    }
+
     var cCanvas = document.createElement('canvas');
-    cCanvas.width = origW;
-    cCanvas.height = origH;
+    cCanvas.width = Math.max(1, origW);
+    cCanvas.height = Math.max(1, origH);
     var cCtx = cCanvas.getContext('2d');
     cCtx.drawImage(sourceImg, origX, origY, origW, origH, 0, 0, origW, origH);
 
     var croppedImg = new Image();
     croppedImg.onload = function () {
-      applyLoadedFile(croppedImg);
-      cropModal.style.display = 'none';
+      setCroppedImage(croppedImg);
+      if (cropModal) cropModal.style.display = 'none';
       if (window.StudioPipeline) {
         StudioPipeline.showToast('Applied image crop (' + origW + 'x' + origH + ')');
       }
@@ -1273,8 +1209,12 @@
 
   function syncUiWithState() {
     // Engine tabs & select
-    engineSelect.value = state.engine;
-    engineNameVal.textContent = engineSelect.options[engineSelect.selectedIndex] ? engineSelect.options[engineSelect.selectedIndex].text.split(' (')[0] : state.engine;
+    if (engineSelect) {
+      engineSelect.value = state.engine;
+      if (engineNameVal) {
+        engineNameVal.textContent = engineSelect.options[engineSelect.selectedIndex] ? engineSelect.options[engineSelect.selectedIndex].text.split(' (')[0] : state.engine;
+      }
+    }
 
     // Engine Tabs, Pills, & Right Sidebar Cards
     document.querySelectorAll('.mode-tab, .preset-pill-btn, .preset-card-btn').forEach(function (btn) {
@@ -1282,36 +1222,82 @@
     });
 
     // Halftone group visibility
-    halftoneControlsGroup.style.display = (state.engine === 'halftone' || state.engine === 'line') ? 'block' : 'none';
+    if (halftoneControls) {
+      halftoneControls.style.display = (state.engine === 'halftone' || state.engine === 'line') ? 'block' : 'none';
+    }
 
     // Palette grid
     document.querySelectorAll('.palette-swatch').forEach(function (s) {
       s.classList.toggle('active', s.dataset.palette === state.palette);
     });
-    palettePresetVal.textContent = PALETTES[state.palette] ? PALETTES[state.palette].name : 'Custom';
+    if (paletteNameVal) {
+      paletteNameVal.textContent = PALETTES[state.palette] ? PALETTES[state.palette].name : 'Custom';
+    }
+
+    // Custom color pickers
+    if (customBgColor) customBgColor.value = state.customBg;
+    if (customBgVal) customBgVal.textContent = state.customBg;
+    if (customFgColor) customFgColor.value = state.customFg;
+    if (customFgVal) customFgVal.textContent = state.customFg;
+    if (invertPaletteToggle) invertPaletteToggle.checked = state.invertPalette;
+    if (serpentineToggle) serpentineToggle.checked = state.serpentine;
 
     // Pixel Scale buttons
-    document.querySelectorAll('#pixelScaleGroup .seg-btn').forEach(function (btn) {
+    document.querySelectorAll('[data-section="scale"] .seg-btn').forEach(function (btn) {
       btn.classList.toggle('active', parseInt(btn.dataset.scale, 10) === state.pixelScale);
     });
-    pixelScaleVal.textContent = state.pixelScale + 'x' + (state.pixelScale === 1 ? ' (Hi-Fi)' : '');
+    if (pixelScaleVal) {
+      pixelScaleVal.textContent = state.pixelScale + 'x' + (state.pixelScale === 1 ? ' (Hi-Fi)' : '');
+    }
 
     // Sliders
-    brightnessSlider.value = state.brightness;
-    brightnessVal.textContent = state.brightness;
-    contrastSlider.value = state.contrast;
-    contrastVal.textContent = state.contrast;
-    gammaSlider.value = state.gamma;
-    gammaVal.textContent = state.gamma.toFixed(2);
-    thresholdBiasSlider.value = state.thresholdBias;
-    thresholdBiasVal.textContent = state.thresholdBias;
-    edgeSharpenSlider.value = state.edgeSharpen;
-    edgeSharpenVal.textContent = state.edgeSharpen + '%';
+    if (brightnessSlider) {
+      brightnessSlider.value = state.brightness;
+      if (brightnessVal) brightnessVal.textContent = state.brightness;
+    }
+    if (contrastSlider) {
+      contrastSlider.value = state.contrast;
+      if (contrastVal) contrastVal.textContent = state.contrast;
+    }
+    if (gammaSlider) {
+      gammaSlider.value = state.gamma;
+      if (gammaVal) gammaVal.textContent = state.gamma.toFixed(2);
+    }
+    if (thresholdBiasSlider) {
+      thresholdBiasSlider.value = state.thresholdBias;
+      if (thresholdBiasVal) thresholdBiasVal.textContent = state.thresholdBias;
+    }
+    if (edgeSharpenSlider) {
+      edgeSharpenSlider.value = state.edgeSharpen;
+      if (edgeSharpenVal) edgeSharpenVal.textContent = state.edgeSharpen + '%';
+    }
 
-    halftoneAngleSlider.value = state.halftoneAngle;
-    halftoneAngleVal.textContent = state.halftoneAngle + '°';
-    halftoneFreqSlider.value = state.halftoneFreq;
-    halftoneFreqVal.textContent = state.halftoneFreq;
+    if (halftoneAngleSlider) {
+      halftoneAngleSlider.value = state.halftoneAngle;
+      if (halftoneAngleVal) halftoneAngleVal.textContent = state.halftoneAngle + '°';
+    }
+    if (halftoneFreqSlider) {
+      halftoneFreqSlider.value = state.halftoneFreq;
+      if (halftoneFreqVal) halftoneFreqVal.textContent = state.halftoneFreq;
+    }
+
+    if (canvasFormat) {
+      canvasFormat.value = state.format;
+      if (formatVal) {
+        formatVal.textContent = canvasFormat.options[canvasFormat.selectedIndex] ? canvasFormat.options[canvasFormat.selectedIndex].text.split(' (')[0] : state.format;
+      }
+    }
+
+    if (toggleFrameText) toggleFrameText.checked = state.frameText;
+    if (frameTextControls) frameTextControls.style.display = state.frameText ? 'block' : 'none';
+    if (frameTL) frameTL.value = state.frameTL;
+    if (frameTR) frameTR.value = state.frameTR;
+    if (frameBL) frameBL.value = state.frameBL;
+    if (frameBR) frameBR.value = state.frameBR;
+    if (frameTextSizeSlider) {
+      frameTextSizeSlider.value = state.frameTextSize;
+      if (frameTextSizeVal) frameTextSizeVal.textContent = state.frameTextSize;
+    }
   }
 
   // EVENT LISTENERS
@@ -1326,163 +1312,157 @@
     });
 
     // Engine Select
-    engineSelect.addEventListener('change', function () {
-      state.engine = engineSelect.value;
-      syncUiWithState();
-      scheduleUpdate();
-    });
+    if (engineSelect) {
+      engineSelect.addEventListener('change', function () {
+        state.engine = engineSelect.value;
+        syncUiWithState();
+        scheduleUpdate();
+      });
+    }
 
     // Serpentine Toggle
-    serpentineToggleBtn.addEventListener('click', function () {
-      state.serpentine = !state.serpentine;
-      serpentineToggleBtn.classList.toggle('active', state.serpentine);
-      serpentineToggleBtn.textContent = state.serpentine ? 'Serpentine Diffusion On' : 'Serpentine Diffusion Off';
-      serpentineVal.textContent = state.serpentine ? 'On' : 'Off';
-      scheduleUpdate();
-    });
+    if (serpentineToggle) {
+      serpentineToggle.addEventListener('change', function () {
+        state.serpentine = serpentineToggle.checked;
+        scheduleUpdate();
+      });
+    }
 
     // Halftone Sliders
-    halftoneAngleSlider.addEventListener('input', function () {
-      state.halftoneAngle = parseInt(halftoneAngleSlider.value, 10);
-      halftoneAngleVal.textContent = state.halftoneAngle + '°';
-      scheduleUpdate();
-    });
-    halftoneFreqSlider.addEventListener('input', function () {
-      state.halftoneFreq = parseInt(halftoneFreqSlider.value, 10);
-      halftoneFreqVal.textContent = state.halftoneFreq;
-      scheduleUpdate();
-    });
+    if (halftoneAngleSlider) {
+      halftoneAngleSlider.addEventListener('input', function () {
+        state.halftoneAngle = parseInt(halftoneAngleSlider.value, 10);
+        if (halftoneAngleVal) halftoneAngleVal.textContent = state.halftoneAngle + '°';
+        scheduleUpdate();
+      });
+    }
+    if (halftoneFreqSlider) {
+      halftoneFreqSlider.addEventListener('input', function () {
+        state.halftoneFreq = parseInt(halftoneFreqSlider.value, 10);
+        if (halftoneFreqVal) halftoneFreqVal.textContent = state.halftoneFreq;
+        scheduleUpdate();
+      });
+    }
 
     // File Opacity Slider
-    fileOpacitySlider.addEventListener('input', function () {
-      state.fileOpacity = parseFloat(fileOpacitySlider.value);
-      fileOpacityVal.textContent = state.fileOpacity.toFixed(2);
-      scheduleUpdate();
-    });
+    if (fileOpacitySlider) {
+      fileOpacitySlider.addEventListener('input', function () {
+        state.fileOpacity = parseFloat(fileOpacitySlider.value);
+        if (fileOpacityVal) fileOpacityVal.textContent = state.fileOpacity.toFixed(2);
+        scheduleUpdate();
+      });
+    }
 
     // Custom Color Pickers
-    bgColorPicker.addEventListener('input', function () {
-      state.customBg = bgColorPicker.value;
-      bgColorText.value = bgColorPicker.value.toUpperCase();
-      state.palette = 'custom';
-      document.querySelectorAll('.palette-swatch').forEach(function (s) { s.classList.remove('active'); });
-      palettePresetVal.textContent = 'Custom';
-      scheduleUpdate();
-    });
-    bgColorText.addEventListener('change', function () {
-      if (/^#[0-9A-F]{6}$/i.test(bgColorText.value)) {
-        state.customBg = bgColorText.value;
-        bgColorPicker.value = bgColorText.value;
+    if (customBgColor) {
+      customBgColor.addEventListener('input', function () {
+        state.customBg = customBgColor.value;
+        if (customBgVal) customBgVal.textContent = customBgColor.value;
         state.palette = 'custom';
+        document.querySelectorAll('.palette-swatch').forEach(function (s) { s.classList.remove('active'); });
+        if (paletteNameVal) paletteNameVal.textContent = 'Custom';
         scheduleUpdate();
-      }
-    });
+      });
+    }
 
-    fgColorPicker.addEventListener('input', function () {
-      state.customFg = fgColorPicker.value;
-      fgColorText.value = fgColorPicker.value.toUpperCase();
-      state.palette = 'custom';
-      document.querySelectorAll('.palette-swatch').forEach(function (s) { s.classList.remove('active'); });
-      palettePresetVal.textContent = 'Custom';
-      scheduleUpdate();
-    });
-    fgColorText.addEventListener('change', function () {
-      if (/^#[0-9A-F]{6}$/i.test(fgColorText.value)) {
-        state.customFg = fgColorText.value;
-        fgColorPicker.value = fgColorText.value;
+    if (customFgColor) {
+      customFgColor.addEventListener('input', function () {
+        state.customFg = customFgColor.value;
+        if (customFgVal) customFgVal.textContent = customFgColor.value;
         state.palette = 'custom';
+        document.querySelectorAll('.palette-swatch').forEach(function (s) { s.classList.remove('active'); });
+        if (paletteNameVal) paletteNameVal.textContent = 'Custom';
         scheduleUpdate();
-      }
-    });
+      });
+    }
 
     // Invert Colors
-    invertToggleBtn.addEventListener('click', function () {
-      state.invertPalette = !state.invertPalette;
-      invertToggleBtn.classList.toggle('active', state.invertPalette);
-      invertToggleBtn.textContent = state.invertPalette ? 'Palette Inverted' : 'Invert Palette (Dark / Light)';
-      scheduleUpdate();
-    });
+    if (invertPaletteToggle) {
+      invertPaletteToggle.addEventListener('change', function () {
+        state.invertPalette = invertPaletteToggle.checked;
+        scheduleUpdate();
+      });
+    }
 
     // Pixel Scale Group
-    document.querySelectorAll('#pixelScaleGroup .seg-btn').forEach(function (btn) {
+    document.querySelectorAll('[data-section="scale"] .seg-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        document.querySelectorAll('#pixelScaleGroup .seg-btn').forEach(function (b) { b.classList.remove('active'); });
+        document.querySelectorAll('[data-section="scale"] .seg-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         state.pixelScale = parseInt(btn.dataset.scale, 10);
-        pixelScaleVal.textContent = state.pixelScale + 'x' + (state.pixelScale === 1 ? ' (Hi-Fi)' : '');
+        if (pixelScaleVal) pixelScaleVal.textContent = state.pixelScale + 'x' + (state.pixelScale === 1 ? ' (Hi-Fi)' : '');
         scheduleUpdate();
       });
     });
 
     // Image Adjustment Sliders
-    brightnessSlider.addEventListener('input', function () {
-      state.brightness = parseInt(brightnessSlider.value, 10);
-      brightnessVal.textContent = state.brightness;
-      scheduleUpdate();
-    });
-    contrastSlider.addEventListener('input', function () {
-      state.contrast = parseInt(contrastSlider.value, 10);
-      contrastVal.textContent = state.contrast;
-      scheduleUpdate();
-    });
-    gammaSlider.addEventListener('input', function () {
-      state.gamma = parseFloat(gammaSlider.value);
-      gammaVal.textContent = state.gamma.toFixed(2);
-      scheduleUpdate();
-    });
-    thresholdBiasSlider.addEventListener('input', function () {
-      state.thresholdBias = parseInt(thresholdBiasSlider.value, 10);
-      thresholdBiasVal.textContent = state.thresholdBias;
-      scheduleUpdate();
-    });
-    edgeSharpenSlider.addEventListener('input', function () {
-      state.edgeSharpen = parseInt(edgeSharpenSlider.value, 10);
-      edgeSharpenVal.textContent = state.edgeSharpen + '%';
-      scheduleUpdate();
-    });
+    if (brightnessSlider) {
+      brightnessSlider.addEventListener('input', function () {
+        state.brightness = parseInt(brightnessSlider.value, 10);
+        if (brightnessVal) brightnessVal.textContent = state.brightness;
+        scheduleUpdate();
+      });
+    }
+    if (contrastSlider) {
+      contrastSlider.addEventListener('input', function () {
+        state.contrast = parseInt(contrastSlider.value, 10);
+        if (contrastVal) contrastVal.textContent = state.contrast;
+        scheduleUpdate();
+      });
+    }
+    if (gammaSlider) {
+      gammaSlider.addEventListener('input', function () {
+        state.gamma = parseFloat(gammaSlider.value);
+        if (gammaVal) gammaVal.textContent = state.gamma.toFixed(2);
+        scheduleUpdate();
+      });
+    }
+    if (thresholdBiasSlider) {
+      thresholdBiasSlider.addEventListener('input', function () {
+        state.thresholdBias = parseInt(thresholdBiasSlider.value, 10);
+        if (thresholdBiasVal) thresholdBiasVal.textContent = state.thresholdBias;
+        scheduleUpdate();
+      });
+    }
+    if (edgeSharpenSlider) {
+      edgeSharpenSlider.addEventListener('input', function () {
+        state.edgeSharpen = parseInt(edgeSharpenSlider.value, 10);
+        if (edgeSharpenVal) edgeSharpenVal.textContent = state.edgeSharpen + '%';
+        scheduleUpdate();
+      });
+    }
 
     // Format Select
-    formatSelect.addEventListener('change', function () {
-      state.format = formatSelect.value;
-      formatPresetVal.textContent = formatSelect.options[formatSelect.selectedIndex].text.split(' (')[0];
-      customDimensionsGroup.style.display = state.format === 'custom' ? 'block' : 'none';
-      resizeCanvasViewport();
-      scheduleUpdate();
-    });
-
-    customWidthInput.addEventListener('change', function () {
-      if (state.format === 'custom') {
+    if (canvasFormat) {
+      canvasFormat.addEventListener('change', function () {
+        state.format = canvasFormat.value;
+        if (formatVal) formatVal.textContent = canvasFormat.options[canvasFormat.selectedIndex].text.split(' (')[0];
         resizeCanvasViewport();
         scheduleUpdate();
-      }
-    });
-    customHeightInput.addEventListener('change', function () {
-      if (state.format === 'custom') {
-        resizeCanvasViewport();
-        scheduleUpdate();
-      }
-    });
+      });
+    }
 
     // Frame Text Toggle & Inputs
-    frameTextToggleBtn.addEventListener('click', function () {
-      state.frameText = !state.frameText;
-      frameTextToggleBtn.classList.toggle('active', state.frameText);
-      frameTextToggleBtn.textContent = state.frameText ? 'Corner Typography On' : 'Corner Typography Off';
-      frameTextStateVal.textContent = state.frameText ? 'On' : 'Off';
-      frameTextControls.style.display = state.frameText ? 'block' : 'none';
-      scheduleUpdate();
-    });
+    if (toggleFrameText) {
+      toggleFrameText.addEventListener('change', function () {
+        state.frameText = toggleFrameText.checked;
+        if (frameTextControls) frameTextControls.style.display = state.frameText ? 'block' : 'none';
+        scheduleUpdate();
+      });
+    }
 
-    frameTextTL.addEventListener('input', function () { state.frameTL = frameTextTL.value; scheduleUpdate(); });
-    frameTextTR.addEventListener('input', function () { state.frameTR = frameTextTR.value; scheduleUpdate(); });
-    frameTextBL.addEventListener('input', function () { state.frameBL = frameTextBL.value; scheduleUpdate(); });
-    frameTextBR.addEventListener('input', function () { state.frameBR = frameTextBR.value; scheduleUpdate(); });
+    if (frameTL) frameTL.addEventListener('input', function () { state.frameTL = frameTL.value; scheduleUpdate(); });
+    if (frameTR) frameTR.addEventListener('input', function () { state.frameTR = frameTR.value; scheduleUpdate(); });
+    if (frameBL) frameBL.addEventListener('input', function () { state.frameBL = frameBL.value; scheduleUpdate(); });
+    if (frameBR) frameBR.addEventListener('input', function () { state.frameBR = frameBR.value; scheduleUpdate(); });
 
-    frameTextSizeSlider.addEventListener('input', function () {
-      state.frameTextSize = parseInt(frameTextSizeSlider.value, 10);
-      frameTextSizeVal.textContent = state.frameTextSize;
-      scheduleUpdate();
-    });
+    if (frameTextSizeSlider) {
+      frameTextSizeSlider.addEventListener('input', function () {
+        state.frameTextSize = parseInt(frameTextSizeSlider.value, 10);
+        if (frameTextSizeVal) frameTextSizeVal.textContent = state.frameTextSize;
+        scheduleUpdate();
+      });
+    }
 
     // Icon Rail Navigation
     var activeRailPanel = 'file';
@@ -1610,10 +1590,10 @@
     }
     if (cropResetBtn) {
       cropResetBtn.addEventListener('click', function () {
-        cropState.startX = Math.round(cropCanvas.width * 0.1);
-        cropState.startY = Math.round(cropCanvas.height * 0.1);
-        cropState.w = Math.round(cropCanvas.width * 0.8);
-        cropState.h = Math.round(cropCanvas.height * 0.8);
+        cropState.startX = 0;
+        cropState.startY = 0;
+        cropState.w = cropCanvas.width;
+        cropState.h = cropCanvas.height;
         drawCropCanvas();
       });
     }
@@ -1648,50 +1628,214 @@
       });
     });
 
-    // Crop Canvas Dragging
-    if (cropCanvas) {
-      cropCanvas.addEventListener('mousedown', function (e) {
-        var rect = cropCanvas.getBoundingClientRect();
-        var mx = e.clientX - rect.left;
-        var my = e.clientY - rect.top;
+    // Crop Canvas Dragging & Precision Interaction
+    function getCropCoords(e) {
+      var rect = cropCanvas.getBoundingClientRect();
+      var scaleX = rect.width > 0 ? (cropCanvas.width / rect.width) : 1;
+      var scaleY = rect.height > 0 ? (cropCanvas.height / rect.height) : 1;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
 
-        var hs = 14;
-        if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - cropState.startY) < hs) {
-          cropState.dragMode = 'nw';
-        } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - cropState.startY) < hs) {
-          cropState.dragMode = 'ne';
-        } else if (Math.abs(mx - cropState.startX) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
-          cropState.dragMode = 'sw';
-        } else if (Math.abs(mx - (cropState.startX + cropState.w)) < hs && Math.abs(my - (cropState.startY + cropState.h)) < hs) {
-          cropState.dragMode = 'se';
-        } else if (mx >= cropState.startX && mx <= cropState.startX + cropState.w && my >= cropState.startY && my <= cropState.startY + cropState.h) {
-          cropState.dragMode = 'move';
-        } else {
-          cropState.dragMode = null;
-          return;
+    function getCropHitMode(mx, my) {
+      var x = cropState.startX;
+      var y = cropState.startY;
+      var w = cropState.w;
+      var h = cropState.h;
+      var hs = 16;
+
+      // Corners
+      var nearL = Math.abs(mx - x) <= hs;
+      var nearR = Math.abs(mx - (x + w)) <= hs;
+      var nearT = Math.abs(my - y) <= hs;
+      var nearB = Math.abs(my - (y + h)) <= hs;
+
+      if (nearT && nearL) return 'nw';
+      if (nearT && nearR) return 'ne';
+      if (nearB && nearL) return 'sw';
+      if (nearB && nearR) return 'se';
+
+      // Edges
+      var edgeHs = 12;
+      if (Math.abs(my - y) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 'n';
+      if (Math.abs(my - (y + h)) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 's';
+      if (Math.abs(mx - x) <= edgeHs && my >= y - hs && my <= y + h + hs) return 'w';
+      if (Math.abs(mx - (x + w)) <= edgeHs && my >= y - hs && my <= y + h + hs) return 'e';
+
+      // Inside
+      if (mx > x && mx < x + w && my > y && my < y + h) {
+        if (w >= cropCanvas.width - 4 && h >= cropCanvas.height - 4) {
+          return 'draw';
         }
+        return 'move';
+      }
+
+      // Outside
+      return 'draw';
+    }
+
+    if (cropCanvas) {
+      cropCanvas.addEventListener('mousemove', function (e) {
+        if (cropState.dragging) return;
+        var coords = getCropCoords(e);
+        var mode = getCropHitMode(coords.x, coords.y);
+        if (mode === 'nw' || mode === 'se') cropCanvas.style.cursor = 'nwse-resize';
+        else if (mode === 'ne' || mode === 'sw') cropCanvas.style.cursor = 'nesw-resize';
+        else if (mode === 'n' || mode === 's') cropCanvas.style.cursor = 'ns-resize';
+        else if (mode === 'e' || mode === 'w') cropCanvas.style.cursor = 'ew-resize';
+        else if (mode === 'move') cropCanvas.style.cursor = 'move';
+        else cropCanvas.style.cursor = 'crosshair';
+      });
+
+      cropCanvas.addEventListener('mousedown', function (e) {
+        var coords = getCropCoords(e);
+        var mode = getCropHitMode(coords.x, coords.y);
 
         cropState.dragging = true;
-        cropState.offsetX = mx - cropState.startX;
-        cropState.offsetY = my - cropState.startY;
+        cropState.dragMode = mode;
+        cropState.offsetX = coords.x - cropState.startX;
+        cropState.offsetY = coords.y - cropState.startY;
+        cropState.drawStartX = coords.x;
+        cropState.drawStartY = coords.y;
+
+        if (mode === 'draw') {
+          cropState.startX = coords.x;
+          cropState.startY = coords.y;
+          cropState.w = 1;
+          cropState.h = 1;
+          drawCropCanvas();
+        }
       });
 
       window.addEventListener('mousemove', function (e) {
         if (!cropState.dragging || !cropCanvas || cropModal.style.display === 'none') return;
-        var rect = cropCanvas.getBoundingClientRect();
-        var mx = e.clientX - rect.left;
-        var my = e.clientY - rect.top;
+        var coords = getCropCoords(e);
+        var mx = coords.x;
+        var my = coords.y;
+        var cw = cropCanvas.width;
+        var ch = cropCanvas.height;
+        var minSize = 25;
 
-        if (cropState.dragMode === 'move') {
-          cropState.startX = Math.max(0, Math.min(cropCanvas.width - cropState.w, mx - cropState.offsetX));
-          cropState.startY = Math.max(0, Math.min(cropCanvas.height - cropState.h, my - cropState.offsetY));
+        if (cropState.dragMode === 'draw') {
+          var x1 = Math.max(0, Math.min(cw, Math.min(cropState.drawStartX, mx)));
+          var y1 = Math.max(0, Math.min(ch, Math.min(cropState.drawStartY, my)));
+          var x2 = Math.max(0, Math.min(cw, Math.max(cropState.drawStartX, mx)));
+          var y2 = Math.max(0, Math.min(ch, Math.max(cropState.drawStartY, my)));
+          var newW = Math.max(minSize, x2 - x1);
+          var newH = Math.max(minSize, y2 - y1);
+
+          if (cropState.ratio === '1:1') {
+            var side = Math.min(newW, newH);
+            newW = side; newH = side;
+            if (mx < cropState.drawStartX) x1 = Math.max(0, cropState.drawStartX - side);
+            if (my < cropState.drawStartY) y1 = Math.max(0, cropState.drawStartY - side);
+          } else if (cropState.ratio === '4:3') {
+            newH = Math.round(newW * 0.75);
+          } else if (cropState.ratio === '16:9') {
+            newH = Math.round(newW * (9 / 16));
+          } else if (cropState.ratio === '3:4') {
+            newH = Math.round(newW * (4 / 3));
+          }
+
+          cropState.startX = Math.min(x1, cw - newW);
+          cropState.startY = Math.min(y1, ch - newH);
+          cropState.w = Math.min(cw - cropState.startX, newW);
+          cropState.h = Math.min(ch - cropState.startY, newH);
+        } else if (cropState.dragMode === 'move') {
+          cropState.startX = Math.max(0, Math.min(cw - cropState.w, mx - cropState.offsetX));
+          cropState.startY = Math.max(0, Math.min(ch - cropState.h, my - cropState.offsetY));
+        } else if (cropState.dragMode === 'e') {
+          var newW = Math.max(minSize, Math.min(cw - cropState.startX, mx - cropState.startX));
+          cropState.w = newW;
+          if (cropState.ratio === '1:1') cropState.h = Math.min(ch - cropState.startY, newW);
+          else if (cropState.ratio === '4:3') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * 0.75));
+          else if (cropState.ratio === '16:9') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (9 / 16)));
+          else if (cropState.ratio === '3:4') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (4 / 3)));
+        } else if (cropState.dragMode === 'w') {
+          var right = cropState.startX + cropState.w;
+          var newX = Math.max(0, Math.min(right - minSize, mx));
+          var newW = right - newX;
+          cropState.startX = newX;
+          cropState.w = newW;
+          if (cropState.ratio === '1:1') cropState.h = Math.min(ch - cropState.startY, newW);
+          else if (cropState.ratio === '4:3') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * 0.75));
+          else if (cropState.ratio === '16:9') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (9 / 16)));
+          else if (cropState.ratio === '3:4') cropState.h = Math.min(ch - cropState.startY, Math.round(newW * (4 / 3)));
+        } else if (cropState.dragMode === 's') {
+          var newH = Math.max(minSize, Math.min(ch - cropState.startY, my - cropState.startY));
+          cropState.h = newH;
+          if (cropState.ratio === '1:1') cropState.w = Math.min(cw - cropState.startX, newH);
+          else if (cropState.ratio === '4:3') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (4 / 3)));
+          else if (cropState.ratio === '16:9') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (16 / 9)));
+          else if (cropState.ratio === '3:4') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * 0.75));
+        } else if (cropState.dragMode === 'n') {
+          var bottom = cropState.startY + cropState.h;
+          var newY = Math.max(0, Math.min(bottom - minSize, my));
+          var newH = bottom - newY;
+          cropState.startY = newY;
+          cropState.h = newH;
+          if (cropState.ratio === '1:1') cropState.w = Math.min(cw - cropState.startX, newH);
+          else if (cropState.ratio === '4:3') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (4 / 3)));
+          else if (cropState.ratio === '16:9') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * (16 / 9)));
+          else if (cropState.ratio === '3:4') cropState.w = Math.min(cw - cropState.startX, Math.round(newH * 0.75));
         } else if (cropState.dragMode === 'se') {
-          cropState.w = Math.max(40, Math.min(cropCanvas.width - cropState.startX, mx - cropState.startX));
-          if (cropState.ratio === '1:1') cropState.h = cropState.w;
-          else if (cropState.ratio === '4:3') cropState.h = Math.round(cropState.w * (3 / 4));
-          else if (cropState.ratio === '16:9') cropState.h = Math.round(cropState.w * (9 / 16));
-          else if (cropState.ratio === '3:4') cropState.h = Math.round(cropState.w * (4 / 3));
-          else cropState.h = Math.max(40, Math.min(cropCanvas.height - cropState.startY, my - cropState.startY));
+          var newW = Math.max(minSize, Math.min(cw - cropState.startX, mx - cropState.startX));
+          var newH = Math.max(minSize, Math.min(ch - cropState.startY, my - cropState.startY));
+          if (cropState.ratio === '1:1') newH = newW;
+          else if (cropState.ratio === '4:3') newH = Math.round(newW * 0.75);
+          else if (cropState.ratio === '16:9') newH = Math.round(newW * (9 / 16));
+          else if (cropState.ratio === '3:4') newH = Math.round(newW * (4 / 3));
+          if (cropState.startY + newH <= ch) {
+            cropState.w = newW;
+            cropState.h = newH;
+          }
+        } else if (cropState.dragMode === 'nw') {
+          var right = cropState.startX + cropState.w;
+          var bottom = cropState.startY + cropState.h;
+          var newX = Math.max(0, Math.min(right - minSize, mx));
+          var newY = Math.max(0, Math.min(bottom - minSize, my));
+          var nwW = right - newX;
+          var nwH = bottom - newY;
+          if (cropState.ratio === '1:1') { nwH = nwW; newY = bottom - nwH; }
+          else if (cropState.ratio === '4:3') { nwH = Math.round(nwW * 0.75); newY = bottom - nwH; }
+          else if (cropState.ratio === '16:9') { nwH = Math.round(nwW * (9 / 16)); newY = bottom - nwH; }
+          else if (cropState.ratio === '3:4') { nwH = Math.round(nwW * (4 / 3)); newY = bottom - nwH; }
+          if (newY >= 0) {
+            cropState.startX = newX;
+            cropState.startY = newY;
+            cropState.w = nwW;
+            cropState.h = nwH;
+          }
+        } else if (cropState.dragMode === 'ne') {
+          var bottom = cropState.startY + cropState.h;
+          var newW = Math.max(minSize, Math.min(cw - cropState.startX, mx - cropState.startX));
+          var newY = Math.max(0, Math.min(bottom - minSize, my));
+          var neH = bottom - newY;
+          if (cropState.ratio === '1:1') { neH = newW; newY = bottom - neH; }
+          else if (cropState.ratio === '4:3') { neH = Math.round(newW * 0.75); newY = bottom - neH; }
+          else if (cropState.ratio === '16:9') { neH = Math.round(newW * (9 / 16)); newY = bottom - neH; }
+          else if (cropState.ratio === '3:4') { neH = Math.round(newW * (4 / 3)); newY = bottom - neH; }
+          if (newY >= 0) {
+            cropState.startY = newY;
+            cropState.w = newW;
+            cropState.h = neH;
+          }
+        } else if (cropState.dragMode === 'sw') {
+          var right = cropState.startX + cropState.w;
+          var newX = Math.max(0, Math.min(right - minSize, mx));
+          var swW = right - newX;
+          var newH = Math.max(minSize, Math.min(ch - cropState.startY, my - cropState.startY));
+          if (cropState.ratio === '1:1') newH = swW;
+          else if (cropState.ratio === '4:3') newH = Math.round(swW * 0.75);
+          else if (cropState.ratio === '16:9') newH = Math.round(swW * (9 / 16));
+          else if (cropState.ratio === '3:4') newH = Math.round(swW * (4 / 3));
+          if (cropState.startY + newH <= ch) {
+            cropState.startX = newX;
+            cropState.w = swW;
+            cropState.h = newH;
+          }
         }
         drawCropCanvas();
       });
@@ -1702,33 +1846,15 @@
       });
     }
 
-    // Sample File & Demo Picker
-    if (loadSampleBtn) {
-      loadSampleBtn.addEventListener('click', function () {
-        if (demoPickerPanel) {
-          demoPickerPanel.style.display = demoPickerPanel.style.display === 'none' ? 'block' : 'none';
-        }
-      });
-    }
-    if (emptyLoadSampleBtn) {
-      emptyLoadSampleBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        loadDemoAsset('street');
-      });
-    }
-    document.querySelectorAll('.btn-demo-item').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var demoKey = btn.dataset.demo;
-        loadDemoAsset(demoKey);
-        if (demoPickerPanel) demoPickerPanel.style.display = 'none';
-      });
-    });
-
     // Empty state & canvas click
-    emptyState.addEventListener('click', function () { fileInput.click(); });
-    canvas.addEventListener('click', function () {
-      if (!state.image) fileInput.click();
-    });
+    if (emptyState && fileInput) {
+      emptyState.addEventListener('click', function () { fileInput.click(); });
+    }
+    if (canvas && fileInput) {
+      canvas.addEventListener('click', function () {
+        if (!state.image) fileInput.click();
+      });
+    }
 
     // Drag and drop
     wrap.addEventListener('dragover', function (e) {
