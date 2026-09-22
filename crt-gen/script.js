@@ -40,7 +40,7 @@
     ghosting: 0,          // 0 - 60 %
 
     // Tone & Color
-    palette: 'rgb',       // 'rgb', 'green_p1', 'amber_p3', 'white_p4', 'cyan', 'plasma', 'blood'
+    palette: 'rgb',       // 'rgb', 'green_p1', 'amber_p3', 'white_p4', 'cyan', 'plasma', 'blood', 'nokia'
     brightness: 0,        // -50 - 50
     contrast: 10,         // -40 - 60
     saturation: 110,      // 0 - 250 %
@@ -261,6 +261,30 @@
       brightness: 0,
       contrast: 15,
       saturation: 90
+    },
+    nokia: {
+      name: 'Nokia 3310',
+      curvature: 4,
+      cornerRound: 6,
+      vignette: 25,
+      glassGlow: 15,
+      scanlineCount: 160,
+      scanlineOpacity: 65,
+      beamBloom: 18,
+      interlace: 'off',
+      maskType: 'mesh',
+      maskPitch: 3,
+      maskOpacity: 60,
+      rgbSplit: 0,
+      syncJitter: 0,
+      chromaBleed: 0,
+      vhsNoise: 0,
+      rfSnow: 0,
+      ghosting: 0,
+      palette: 'nokia',
+      brightness: 2,
+      contrast: 35,
+      saturation: 100
     }
   };
 
@@ -952,6 +976,10 @@
         r = luma * 1.25; g = luma * 0.45; b = luma * 0.05;
       } else if (pal === 'blood') {
         r = luma * 1.25; g = luma * 0.12; b = luma * 0.18;
+      } else if (pal === 'nokia') {
+        r = 28 + luma * 0.615;
+        g = 38 + luma * 0.694;
+        b = 26 + luma * 0.505;
       }
 
       data[i] = r < 0 ? 0 : r > 255 ? 255 : r;
@@ -1294,7 +1322,13 @@
     if (vhsNoiseEl) { vhsNoiseEl.value = state.vhsNoise; vhsNoiseVal.textContent = state.vhsNoise + '%'; }
     if (rfSnowEl) { rfSnowEl.value = state.rfSnow; rfSnowVal.textContent = state.rfSnow + '%'; }
     if (ghostingEl) { ghostingEl.value = state.ghosting; ghostingVal.textContent = state.ghosting + '%'; }
-    if (paletteSelect) { paletteSelect.value = state.palette; paletteNameVal.textContent = state.palette; }
+    if (paletteSelect) {
+      paletteSelect.value = state.palette;
+      if (paletteNameVal) {
+        paletteNameVal.textContent = paletteSelect.selectedIndex >= 0 && paletteSelect.options[paletteSelect.selectedIndex] ?
+          paletteSelect.options[paletteSelect.selectedIndex].text : state.palette;
+      }
+    }
     if (brightnessEl) { brightnessEl.value = state.brightness; brightnessVal.textContent = state.brightness; }
     if (contrastEl) { contrastEl.value = state.contrast; contrastVal.textContent = state.contrast; }
     if (saturationEl) { saturationEl.value = state.saturation; saturationVal.textContent = state.saturation + '%'; }
