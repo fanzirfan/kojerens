@@ -3,13 +3,20 @@
  * Author: Fanz Irfan | URL: manji.eu.org
  */
 
-var CACHE_NAME = 'kojerens-v1.2';
+var CACHE_NAME = 'kojerens-v1.3';
 var STATIC_ASSETS = [
   './',
   './index.html',
   './landing.css',
   './manifest.json',
-  './assets/kojerens-logo.svg',
+  './assets/brand/navbar.png',
+  './assets/brand/footer.png',
+  './assets/brand/logo.png',
+  './assets/brand/apple-icon.png',
+  './assets/brand/favicon-16x16.png',
+  './assets/brand/favicon-32x32.png',
+  './assets/brand/favicon-48x48.png',
+  './assets/brand/pwa-icon.png',
   './assets/pipeline.js',
   './blob-tracker/index.html',
   './blob-tracker/style.css',

@@ -113,6 +113,7 @@ body {
   width: 24px;
   height: 24px;
   display: block;
+  object-fit: contain;
 }
 
 .topbar-brand-title {

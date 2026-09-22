@@ -122,6 +122,7 @@ button {
   width: 28px;
   height: 28px;
   display: block;
+  object-fit: contain;
 }
 
 .nav-title {
@@ -633,6 +634,10 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.footer-brand img {
+  display: block;
+  object-fit: contain;
 }
 
 .footer-links {
