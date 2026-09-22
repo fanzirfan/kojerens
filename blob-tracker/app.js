@@ -3202,6 +3202,23 @@
     });
   }
 
+  var sendToCrtBtn = document.getElementById('sendToCrtBtn');
+  if (sendToCrtBtn) {
+    sendToCrtBtn.addEventListener('click', function () {
+      if (!state.image) {
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+        return;
+      }
+      var exportCv = renderToExportCanvas(false);
+      var dataUrl = exportCv.toDataURL('image/png');
+      if (window.StudioPipeline) {
+        StudioPipeline.sendImage(dataUrl, '../crt-gen/index.html', 'CRT Synthesizer');
+      } else {
+        window.location.href = '../crt-gen/index.html';
+      }
+    });
+  }
+
   var sharePresetBtn = document.getElementById('sharePresetBtn');
   if (sharePresetBtn) {
     sharePresetBtn.addEventListener('click', function () {

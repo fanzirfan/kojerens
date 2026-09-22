@@ -42,6 +42,10 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         <span>1-Bit Dither</span>
       </a>
+      <a href="../crt-gen/index.html" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>CRT Gen</span>
+      </a>
       <button class="topbar-btn" onclick="toggleFullscreen()" id="topbarFullscreenBtn" title="Toggle Fullscreen">
         <i class="ri-fullscreen-line"></i> Fullscreen
       </button>
@@ -473,12 +477,15 @@
           <!-- Inter-Tool Studio Pipeline -->
           <div class="pipeline-routing-box" style="margin: 14px 0 6px 0; border-top: 1px solid rgba(186,215,247,0.12); padding-top: 12px;">
             <span class="field-sublabel" style="display:block; margin-bottom: 8px; font-size: 10px; letter-spacing: 0.08em; color: #a1afc7;">STUDIO PIPELINE ROUTING</span>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-              <button class="btn-base btn-secondary" id="sendToDitherBtn" onclick="routeToDither()" style="font-size:11px;" title="Route ASCII render to 1-Bit Dither Matrix">
-                <i class="ri-grid-fill"></i> To 1-Bit Dither
-              </button>
-              <button class="btn-base btn-secondary" id="sendToTrackerBtn" onclick="routeToTracker()" style="font-size:11px;" title="Route ASCII render to Blob Tracker">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+              <button class="btn-base btn-secondary" id="sendToTrackerBtn" onclick="routeToTracker()" style="font-size:10.5px; padding:6px 4px;" title="Route ASCII render to Blob Tracker">
                 <i class="ri-radar-line"></i> To Tracker
+              </button>
+              <button class="btn-base btn-secondary" id="sendToDitherBtn" onclick="routeToDither()" style="font-size:10.5px; padding:6px 4px;" title="Route ASCII render to 1-Bit Dither Matrix">
+                <i class="ri-grid-fill"></i> To Dither
+              </button>
+              <button class="btn-base btn-secondary" id="sendToCrtBtn" onclick="routeToCrt()" style="font-size:10.5px; padding:6px 4px;" title="Route ASCII render to CRT Synthesizer">
+                <i class="ri-tv-line"></i> To CRT
               </button>
             </div>
             <button class="btn-base btn-secondary" onclick="copyPresetShareLink()" style="width: 100%;" title="Copy shareable preset URL for current configuration">

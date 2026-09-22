@@ -3,7 +3,7 @@
  * Author: Fanz Irfan | URL: manji.eu.org
  */
 
-var CACHE_NAME = 'kojerens-v1.1';
+var CACHE_NAME = 'kojerens-v1.2';
 var STATIC_ASSETS = [
   './',
   './index.html',
@@ -20,7 +20,10 @@ var STATIC_ASSETS = [
   './ascii-gen/script.js',
   './dither-gen/index.html',
   './dither-gen/styles.css',
-  './dither-gen/script.js'
+  './dither-gen/script.js',
+  './crt-gen/index.html',
+  './crt-gen/styles.css',
+  './crt-gen/script.js'
 ];
 
 self.addEventListener('install', function (event) {

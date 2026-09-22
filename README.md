@@ -71,6 +71,39 @@ Sintesis grafis bitmap 1-bit retro dan error-diffusion kuantisasi tingkat tinggi
 
 ---
 
+### 4. Analog CRT Beam & Glitch Synthesizer (`/crt-gen/`)
+Sintesis tabung sinar katoda (CRT) fisik dan prosesor analog video glitch langsung di peramban:
+
+- **Fisika Tabung & Geometri Layar**:
+  - *Barrel Curvature*: Distorsi cembung bola kaca tabung katoda realistis.
+  - *Chassis Corner Rounding & Vignette*: Masking sudut sasis monitor serta penggelapan tepi radiasi elektron.
+  - *Glass Specular Reflection*: Pendaran pantulan cahaya ambient pada permukaan luar tabung.
+- **Dinamika Berkas Elektron & Scanlines**:
+  - Pengaturan kerapatan scanline (120 hingga 640 baris raster) dan intensitas jurang raster.
+  - *Beam Bloom (Halation)*: Pendaran cahaya elektron menyebar pada piksel berintensitas tinggi.
+  - Simulasi *Interlacing*: Medan pemindaian genap/ganjil (*Even/Odd fields*) atau progresif.
+- **Matriks Masker Fosfor RGB**:
+  - *Aperture Grille*: Garis vertikal fosfor RGB (Sony Trinitron PVM).
+  - *Shadow Mask*: Matriks delta titik triad (TV konsumen era 90-an).
+  - *Slot Mask*: Susunan bata vertikal (Arcade Cromaclear).
+  - *Micro-Mesh*: Kisi-kisi mikro terminal halus.
+- **Glitch Analog & Degradasi Sinyal**:
+  - *Chromatic Aberration (RGB Split)*: Pemisahan berkas tembakan pistol elektron merah dan biru.
+  - *NTSC Chroma Bleed*: Pelebaran dan distorsi warna komposit horizontal.
+  - *Horizontal Sync Jitter*: Ketidakstabilan time-base dan robekan scanline acak.
+  - *VHS Tracking Noise Bar*: Garis noise statis putih khas pita magnetik VHS yang hilang tracking.
+  - *RF Snow & Multipath Ghosting*: Derau statis antena frekuensi tinggi dan bayangan sinyal pantul ganda.
+- **8 Preset Siap Pakai**:
+  - *Trinitron PVM*, *Consumer 90s*, *P1 Emerald Phosphor*, *P3 Amber Phosphor*, *VHS Tape Glitch*, *Cyber Fringes*, *Arcade 240p*, dan *Lo-Fi Broadcast*.
+- **OSD Telemetry & SMPTE Calibration**:
+  - Grafis On-Screen Display siaran hijau/putih dengan indikator REC dan timecode.
+  - Badge kalibrasi 8 bilah warna standar SMPTE.
+- **Format Ekspor Komprehensif**:
+  - Unduh citra penuh (`tracker-crt-...png`).
+  - Unduh *Transparent Scanline Overlay* (hanya garis scanline, masker, dan lengkungan tabung berlatar transparan untuk overlay video di software editing seperti Premiere Pro atau After Effects).
+
+---
+
 ## ⚡ Prinsip & Arsitektur
 
 1. **Privasi & Keamanan Penuh**: 100% berjalan *in-browser*. Tidak ada data citra, video, atau teks pengguna yang dikirim ke server.
@@ -79,7 +112,7 @@ Sintesis grafis bitmap 1-bit retro dan error-diffusion kuantisasi tingkat tinggi
    - Pipeline rendering dibatch secara halus menggunakan `requestAnimationFrame` untuk menjamin responsivitas 60fps/120fps.
 3. **Desain Terpadu**: Estetika *Cathedral Frosted Glass* bertema gelap (*midnight canvas*), aksen *Void Violet*, serta tipografi teknis dot-matrix yang presisi.
 4. **Studio Pipeline & Ekosistem Terpadu**:
-   - *Cross-Tool Interop*: Routing visual instan antar 3 mesin (Blob Tracker ↔ ASCII Matrix ↔ 1-Bit Dither) melalui IndexedDB tanpa perlu unduh/unggah manual.
+   - *Cross-Tool Interop*: Routing visual instan antar 4 mesin (Blob Tracker ↔ ASCII Matrix ↔ 1-Bit Dither ↔ CRT Synthesizer) melalui IndexedDB tanpa perlu unduh/unggah manual.
    - *Global Clipboard Paste*: Dukungan `Ctrl + V` langsung di seluruh canvas alat.
    - *Preset Share*: Berbagi resep parameter desain melalui URL hash.
    - *Progressive Web App (PWA)*: Caching *Service Worker* statis untuk akses 100% *offline* di desktop maupun perangkat seluler.
@@ -114,7 +147,6 @@ Berikut adalah daftar rencana fitur dan modul baru yang dijadwalkan untuk pengem
 ### 2. Rencana Modul Generatif Baru
 - **Voronoi & Weighted Stippling Matrix (`/stipple-gen/`)**: Konversi citra menjadi sebaran titik stippling berbobot kepadatan cahaya (*density-weighted stippling*), triangulasi Delaunay, dan *Travelling Salesperson (TSP)* single-line vector art.
 - **Slit-Scan & Time-Displacement Synthesizer (`/scan-gen/`)**: Efek distorsi *slit-scan* temporal dan displacement celah horizontal/vertikal untuk eksperimen foto dan video.
-- **Analog CRT Beam & Glitch Synthesizer (`/crt-gen/`)**: Simulasi tabung sinar katoda (CRT), shadow mask RGB phosphor, chromatic aberration, dan NTSC scanline bloom.
 - **Turing Reaction-Diffusion Laboratory (`/turing-gen/`)**: Model morfogenesis biologis Gray-Scott untuk menghasilkan pola labirin dan tekstur organik yang bereaksi terhadap kontras gambar.
 
 ---

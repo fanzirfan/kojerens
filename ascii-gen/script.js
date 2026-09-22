@@ -4558,6 +4558,19 @@ function routeToTracker() {
     }
 }
 
+function routeToCrt() {
+    if (!currentMediaElement) {
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image or video first');
+        return;
+    }
+    const dataUrl = outputCanvas.toDataURL('image/png');
+    if (window.StudioPipeline) {
+        StudioPipeline.sendImage(dataUrl, '../crt-gen/index.html', 'CRT Synthesizer');
+    } else {
+        window.location.href = '../crt-gen/index.html';
+    }
+}
+
 function copyPresetShareLink() {
     const params = new URLSearchParams();
     if (densityInput) params.set('density', densityInput.value);
