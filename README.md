@@ -102,6 +102,23 @@ Buka peramban di `http://localhost:3000`.
 
 ---
 
+## 🗺️ Roadmap Pengembangan Studio
+
+Berikut adalah daftar rencana fitur dan modul baru yang dijadwalkan untuk pengembangan selanjutnya:
+
+### 1. Peningkatan Modul yang Sudah Ada
+- **Export Vektor SVG untuk Blob Tracker**: Ekspor kurva kontur *Marching Squares* (Topography) dan garis *Sensor Constellation* ke berkas SVG murni untuk kebutuhan Figma, Adobe Illustrator, atau mesin *pen-plotter* (AxiDraw).
+- **Live Webcam & Perekaman Animasi di 1-Bit Dither**: Dukungan siaran kamera langsung secara *real-time* (estetika Game Boy Camera) serta perekaman klip looping 3-5 detik berformat GIF / WebP.
+- **Preset Standar Cetak (300 DPI)**: Template resolusi tinggi siap cetak untuk ukuran A4 (2480 x 3508 piksel), A3, dan format poster editorial.
+
+### 2. Rencana Modul Generatif Baru
+- **Voronoi & Weighted Stippling Matrix (`/stipple-gen/`)**: Konversi citra menjadi sebaran titik stippling berbobot kepadatan cahaya (*density-weighted stippling*), triangulasi Delaunay, dan *Travelling Salesperson (TSP)* single-line vector art.
+- **Slit-Scan & Time-Displacement Synthesizer (`/scan-gen/`)**: Efek distorsi *slit-scan* temporal dan displacement celah horizontal/vertikal untuk eksperimen foto dan video.
+- **Analog CRT Beam & Glitch Synthesizer (`/crt-gen/`)**: Simulasi tabung sinar katoda (CRT), shadow mask RGB phosphor, chromatic aberration, dan NTSC scanline bloom.
+- **Turing Reaction-Diffusion Laboratory (`/turing-gen/`)**: Model morfogenesis biologis Gray-Scott untuk menghasilkan pola labirin dan tekstur organik yang bereaksi terhadap kontras gambar.
+
+---
+
 ## 📜 Lisensi & Atribusi
 
 - **Konsep, Desain & Pengembangan**: **Fanz Irfan**
