@@ -147,13 +147,19 @@ body {
   color: var(--color-void-violet);
 }
 
+/* MODES IN TOPBAR (RIGHT-ALIGNED) */
 .topbar-modes {
-  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
+  justify-content: flex-end;
+  gap: 3px;
+  margin-left: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+  flex-shrink: 1;
 }
+.topbar-modes::-webkit-scrollbar { display: none; }
 
 .mode-tab {
   background: transparent;
@@ -162,9 +168,11 @@ body {
   font-family: var(--font-untitled-sans);
   font-size: 11.5px;
   font-weight: 500;
-  padding: 5px 16px;
+  padding: 4px 12px;
   border-radius: var(--radius-buttons);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 .mode-tab:hover {
@@ -188,6 +196,9 @@ body {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  margin-left: 8px;
+  border-left: 1px solid var(--color-glass-edge);
+  padding-left: 8px;
 }
 
 .topbar-tool-switch {
