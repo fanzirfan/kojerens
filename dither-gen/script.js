@@ -345,32 +345,34 @@
   }
 
   function loadDemoAsset(key) {
+    if (demoPickerPanel) {
+      demoPickerPanel.style.display = 'none';
+    }
     if (key === 'procedural') {
       createDemoImage();
       return;
     }
-    var path = DEMO_FILES[key];
-    if (!path) return;
+    var src = (typeof window !== 'undefined' && window.DEMO_ASSETS && window.DEMO_ASSETS[key]) || DEMO_FILES[key];
+    if (!src) return;
 
     var img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = function () {
       state.rawImage = img;
       applyLoadedFile(img);
       if (window.StudioPipeline) {
-        StudioPipeline.showToast('Loaded ' + key + ' demo graphic');
+        StudioPipeline.showToast('Loaded ' + key + ' demo asset');
       }
     };
     img.onerror = function () {
       createDemoImage();
     };
-    img.src = path;
+    img.src = src;
   }
 
   // Load Source File
   function applyLoadedFile(img) {
     state.image = img;
-    if (!state.rawImage) state.rawImage = img;
+    state.rawImage = img;
     emptyState.classList.add('hidden');
     resizeCanvasViewport();
     scheduleUpdate();

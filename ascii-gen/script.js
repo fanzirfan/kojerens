@@ -4624,16 +4624,30 @@ function toggleDemoPicker() {
 window.toggleDemoPicker = toggleDemoPicker;
 
 async function loadDemoPhoto(key) {
-    const path = DEMO_FILES[key];
-    if (!path) return;
     try {
         const p = document.getElementById('demoPickerPanel');
         if (p) p.style.display = 'none';
-        const res = await fetch(path);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const blob = await res.blob();
-        handleImageUpload(blob);
-        if (window.StudioPipeline) StudioPipeline.showToast('Loaded demo photograph');
+
+        let file = null;
+        if (typeof window !== 'undefined' && window.DEMO_ASSETS && window.DEMO_ASSETS[key]) {
+            file = dataURLtoFile(window.DEMO_ASSETS[key], key + '.jpg');
+        }
+
+        if (!file) {
+            const path = DEMO_FILES[key];
+            if (path) {
+                const res = await fetch(path);
+                if (res.ok) {
+                    const blob = await res.blob();
+                    file = new File([blob], key + '.jpg', { type: 'image/jpeg' });
+                }
+            }
+        }
+
+        if (!file) throw new Error('No asset available for ' + key);
+
+        handleImageUpload(file);
+        if (window.StudioPipeline) StudioPipeline.showToast('Loaded ' + key + ' demo asset');
     } catch (err) {
         console.warn('Could not load demo asset:', err);
         if (window.StudioPipeline) StudioPipeline.showToast('Could not load demo asset');

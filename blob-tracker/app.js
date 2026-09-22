@@ -2855,26 +2855,28 @@
   }
 
   function loadDemoAsset(key) {
+    if (demoPickerPanel) {
+      demoPickerPanel.style.display = 'none';
+    }
     if (key === 'procedural') {
       createDemoProceduralImage();
       return;
     }
-    var path = DEMO_FILES[key];
-    if (!path) return;
+    var src = (typeof window !== 'undefined' && window.DEMO_ASSETS && window.DEMO_ASSETS[key]) || DEMO_FILES[key];
+    if (!src) return;
 
     var img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = function () {
       state.rawImage = img;
       applyLoadedImage(img);
       if (window.StudioPipeline) {
-        StudioPipeline.showToast('Loaded ' + key + ' demo graphic');
+        StudioPipeline.showToast('Loaded ' + key + ' demo asset');
       }
     };
     img.onerror = function () {
       createDemoProceduralImage();
     };
-    img.src = path;
+    img.src = src;
   }
 
   function createDemoProceduralImage() {
