@@ -11,10 +11,21 @@
   "categories": ["design", "photo", "utilities"],
   "icons": [
     {
-      "src": "assets/kojerens-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/brand/pwa-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "assets/brand/logo.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/brand/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ]
 }
