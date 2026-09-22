@@ -1169,7 +1169,22 @@ input[type="range"]:focus-visible {
     flex-direction: column;
     min-height: 0;
   }
+  .stage {
+    order: 1;
+    width: 100%;
+    min-height: 280px;
+    height: 42vh;
+    max-height: 480px;
+    flex-shrink: 0;
+    position: relative;
+    background-color: var(--color-midnight-canvas);
+    border-bottom: 1px solid var(--color-glass-edge);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  }
+  .stage-attribution { display: none; }
+  .canvas-wrap { padding: 12px; }
   .rail {
+    order: 2;
     width: 100%;
     height: auto;
     flex-direction: row;
@@ -1177,7 +1192,14 @@ input[type="range"]:focus-visible {
     overflow-y: hidden;
     padding: 6px 8px;
     border-right: none;
+    border-top: 1px solid var(--color-glass-edge);
     border-bottom: 1px solid var(--color-glass-edge);
+    background: rgba(5, 6, 15, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 20;
   }
   .rail-btn {
     flex-shrink: 0;
@@ -1190,6 +1212,7 @@ input[type="range"]:focus-visible {
     margin: 0 4px;
   }
   .panel-drawer {
+    order: 3;
     width: 100% !important;
     height: auto;
     overflow: visible;
@@ -1203,16 +1226,13 @@ input[type="range"]:focus-visible {
   }
   .sidebar {
     height: auto;
-    max-height: 45vh;
-    overflow-y: auto;
+    max-height: none;
+    overflow-y: visible;
   }
-  .stage {
-    min-height: 380px;
-    height: 50vmax;
-    width: 100%;
+  .panel {
+    scroll-margin-top: 56px;
+    padding: 14px 16px 16px;
   }
-  .stage-attribution { display: none; }
-  .canvas-wrap { padding: 12px; }
   /* 44px tap targets (R-03) */
   .btn-block,
   .btn-toggle,
@@ -1241,7 +1261,19 @@ input[type="range"]:focus-visible {
 @media (max-width: 480px) {
   .topbar-wordmark { font-size: 12px; }
   .mode-tab { font-size: 10.5px; padding: 5px 10px; }
-  .stage { min-height: 320px; }
-  .empty-state { padding: 24px 28px; }
+  .stage {
+    min-height: 240px;
+    height: 38vh;
+    max-height: 360px;
+  }
+  .canvas-wrap { padding: 8px; }
+  .empty-state {
+    padding: 20px 24px;
+    width: calc(100% - 32px);
+    max-width: 300px;
+    box-sizing: border-box;
+  }
+  .empty-state h2 { font-size: 14px; }
+  .empty-state p { font-size: 11px; }
 }
 
