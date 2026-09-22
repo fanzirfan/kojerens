@@ -16,6 +16,8 @@
   <meta property="og:url" content="https://manji.eu.org" />
 
   <link rel="icon" type="image/svg+xml" href="assets/kojerens-logo.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#05060f" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
   <link rel="stylesheet" href="landing.css" />
 </head>
@@ -601,6 +603,15 @@
         renderDitherPreview();
       }
     })();
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function (err) {
+          console.log('SW registration skipped:', err);
+        });
+      });
+    }
   </script>
 </body>
 </html>

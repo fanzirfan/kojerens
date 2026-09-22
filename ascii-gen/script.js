@@ -4528,3 +4528,105 @@ document.addEventListener('DOMContentLoaded', function() {
     
 });
 
+// ============================================================================
+// KOJERENS STUDIO PIPELINE & INTER-TOOL ROUTING
+// ============================================================================
+
+function routeToDither() {
+    if (!currentMediaElement) {
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image or video first');
+        return;
+    }
+    const dataUrl = outputCanvas.toDataURL('image/png');
+    if (window.StudioPipeline) {
+        StudioPipeline.sendImage(dataUrl, '../dither-gen/index.html', '1-Bit Dither');
+    } else {
+        window.location.href = '../dither-gen/index.html';
+    }
+}
+
+function routeToTracker() {
+    if (!currentMediaElement) {
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image or video first');
+        return;
+    }
+    const dataUrl = outputCanvas.toDataURL('image/png');
+    if (window.StudioPipeline) {
+        StudioPipeline.sendImage(dataUrl, '../blob-tracker/index.html', 'Blob Tracker');
+    } else {
+        window.location.href = '../blob-tracker/index.html';
+    }
+}
+
+function copyPresetShareLink() {
+    const params = new URLSearchParams();
+    if (densityInput) params.set('density', densityInput.value);
+    if (contrastSlider) params.set('contrast', contrastSlider.value);
+    if (brightnessSlider) params.set('brightness', brightnessSlider.value);
+    if (bloomSlider) params.set('bloom', bloomSlider.value);
+    const url = window.location.origin + window.location.pathname + '#' + params.toString();
+    if (window.StudioPipeline) {
+        StudioPipeline.copyTextToClipboard(url, 'Preset share link copied to clipboard!');
+    }
+}
+
+function parseAsciiUrlHash() {
+    if (!window.location.hash || window.location.hash.length < 2) return;
+    try {
+        const hashStr = window.location.hash.substring(1);
+        const params = new URLSearchParams(hashStr);
+        if (params.has('density') && densityInput) {
+            densityInput.value = params.get('density');
+            currentDensity = parseInt(densityInput.value);
+        }
+        if (params.has('contrast') && contrastSlider) {
+            contrastSlider.value = params.get('contrast');
+        }
+        if (params.has('brightness') && brightnessSlider) {
+            brightnessSlider.value = params.get('brightness');
+        }
+        if (params.has('bloom') && bloomSlider) {
+            bloomSlider.value = params.get('bloom');
+        }
+    } catch (e) {
+        console.warn('Could not parse ASCII URL hash preset', e);
+    }
+}
+
+// Global Clipboard Paste Support
+window.addEventListener('paste', function(e) {
+    const target = e.target;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && target.type !== 'range') {
+        return;
+    }
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            if (blob) {
+                e.preventDefault();
+                if (window.StudioPipeline) StudioPipeline.showToast('Pasted image from clipboard');
+                handleImageUpload(blob);
+                break;
+            }
+        }
+    }
+});
+
+// Check incoming pipeline image on startup
+window.addEventListener('DOMContentLoaded', function() {
+    parseAsciiUrlHash();
+    if (window.StudioPipeline) {
+        StudioPipeline.receiveImage(function(dataUrl) {
+            fetch(dataUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    handleImageUpload(blob);
+                })
+                .catch(err => console.error('Pipeline blob conversion failed', err));
+        });
+    }
+});
+
+

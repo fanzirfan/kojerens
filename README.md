@@ -78,6 +78,11 @@ Sintesis grafis bitmap 1-bit retro dan error-diffusion kuantisasi tingkat tinggi
    - Memanfaatkan *offscreen canvas buffer* yang dapat digunakan kembali dengan flag `{ willReadFrequently: true }`.
    - Pipeline rendering dibatch secara halus menggunakan `requestAnimationFrame` untuk menjamin responsivitas 60fps/120fps.
 3. **Desain Terpadu**: Estetika *Cathedral Frosted Glass* bertema gelap (*midnight canvas*), aksen *Void Violet*, serta tipografi teknis dot-matrix yang presisi.
+4. **Studio Pipeline & Ekosistem Terpadu**:
+   - *Cross-Tool Interop*: Routing visual instan antar 3 mesin (Blob Tracker ↔ ASCII Matrix ↔ 1-Bit Dither) melalui IndexedDB tanpa perlu unduh/unggah manual.
+   - *Global Clipboard Paste*: Dukungan `Ctrl + V` langsung di seluruh canvas alat.
+   - *Preset Share*: Berbagi resep parameter desain melalui URL hash.
+   - *Progressive Web App (PWA)*: Caching *Service Worker* statis untuk akses 100% *offline* di desktop maupun perangkat seluler.
 
 ---
 

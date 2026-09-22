@@ -3167,6 +3167,101 @@
     });
   }
 
+  // Inter-Tool Pipeline Routing & Preset Share
+  var sendToDitherBtn = document.getElementById('sendToDitherBtn');
+  if (sendToDitherBtn) {
+    sendToDitherBtn.addEventListener('click', function () {
+      if (!state.image) {
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+        return;
+      }
+      var exportCv = renderToExportCanvas(false);
+      var dataUrl = exportCv.toDataURL('image/png');
+      if (window.StudioPipeline) {
+        StudioPipeline.sendImage(dataUrl, '../dither-gen/index.html', '1-Bit Dither');
+      } else {
+        window.location.href = '../dither-gen/index.html';
+      }
+    });
+  }
+
+  var sendToAsciiBtn = document.getElementById('sendToAsciiBtn');
+  if (sendToAsciiBtn) {
+    sendToAsciiBtn.addEventListener('click', function () {
+      if (!state.image) {
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+        return;
+      }
+      var exportCv = renderToExportCanvas(false);
+      var dataUrl = exportCv.toDataURL('image/png');
+      if (window.StudioPipeline) {
+        StudioPipeline.sendImage(dataUrl, '../ascii-gen/index.html', 'ASCII Matrix');
+      } else {
+        window.location.href = '../ascii-gen/index.html';
+      }
+    });
+  }
+
+  var sharePresetBtn = document.getElementById('sharePresetBtn');
+  if (sharePresetBtn) {
+    sharePresetBtn.addEventListener('click', function () {
+      var params = new URLSearchParams();
+      params.set('mode', state.mode);
+      params.set('format', state.format);
+      params.set('gradient', state.gradientMapIndex);
+      params.set('gradInvert', state.gradientMapInvert ? '1' : '0');
+      params.set('pixelSize', state.pixelSize);
+      params.set('threshold', state.threshold);
+      var url = window.location.origin + window.location.pathname + '#' + params.toString();
+      if (window.StudioPipeline) {
+        StudioPipeline.copyTextToClipboard(url, 'Preset share link copied to clipboard!');
+      }
+    });
+  }
+
+  function parseUrlHashPreset() {
+    if (!window.location.hash || window.location.hash.length < 2) return;
+    try {
+      var hashStr = window.location.hash.substring(1);
+      var params = new URLSearchParams(hashStr);
+      if (params.has('mode')) {
+        state.mode = params.get('mode');
+        var modeTabs = document.querySelectorAll('.mode-tab');
+        modeTabs.forEach(function (tab) {
+          tab.classList.toggle('active', tab.getAttribute('data-mode') === state.mode);
+        });
+        updateDynamicSidebarPanels(state.mode);
+      }
+      if (params.has('gradient')) {
+        state.gradientMapIndex = parseInt(params.get('gradient'), 10) || 0;
+        updateGradientMapPreview();
+      }
+      if (params.has('gradInvert')) {
+        state.gradientMapInvert = params.get('gradInvert') === '1';
+        updateGradientMapPreview();
+      }
+      if (params.has('pixelSize')) {
+        state.pixelSize = parseInt(params.get('pixelSize'), 10) || 8;
+        if (pixelSizeSlider) pixelSizeSlider.value = state.pixelSize;
+        if (pixelSizeVal) pixelSizeVal.textContent = state.pixelSize;
+      }
+      if (params.has('threshold')) {
+        state.threshold = parseInt(params.get('threshold'), 10) || 128;
+        if (thresholdSlider) thresholdSlider.value = state.threshold;
+        if (thresholdVal) thresholdVal.textContent = state.threshold;
+      }
+      if (params.has('format')) {
+        state.format = params.get('format');
+        var formatSelect = document.getElementById('canvasFormat');
+        if (formatSelect) formatSelect.value = state.format;
+        syncSizeInputsFromFormat();
+      }
+      updateStatusFooter();
+    } catch (e) {
+      console.warn('Could not parse URL hash preset', e);
+    }
+  }
+
   window.addEventListener('resize', function () {
     resizeAndRender();
   });
@@ -3176,6 +3271,19 @@
   syncSizeInputsFromFormat();
   updateStatusFooter();
   updateDynamicSidebarPanels(state.mode);
+  parseUrlHashPreset();
+
+  // Pipeline check for incoming shared image
+  if (window.StudioPipeline) {
+    StudioPipeline.receiveImage(function (dataUrl) {
+      var pipelineImg = new Image();
+      pipelineImg.onload = function () {
+        applyLoadedImage(pipelineImg);
+      };
+      pipelineImg.src = dataUrl;
+    });
+  }
+
   recalculate(true);
   resizeAndRender();
 })();

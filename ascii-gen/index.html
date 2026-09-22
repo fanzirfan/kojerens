@@ -14,6 +14,8 @@
   <meta property="og:description" content="Transform images and videos into ASCII glyph art locally in your browser.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="assets/kojerens-logo.svg">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#05060f">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <link rel="stylesheet" href="styles.css">
@@ -468,6 +470,22 @@
             </button>
           </div>
 
+          <!-- Inter-Tool Studio Pipeline -->
+          <div class="pipeline-routing-box" style="margin: 14px 0 6px 0; border-top: 1px solid rgba(186,215,247,0.12); padding-top: 12px;">
+            <span class="field-sublabel" style="display:block; margin-bottom: 8px; font-size: 10px; letter-spacing: 0.08em; color: #a1afc7;">STUDIO PIPELINE ROUTING</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <button class="btn-base btn-secondary" id="sendToDitherBtn" onclick="routeToDither()" style="font-size:11px;" title="Route ASCII render to 1-Bit Dither Matrix">
+                <i class="ri-grid-fill"></i> To 1-Bit Dither
+              </button>
+              <button class="btn-base btn-secondary" id="sendToTrackerBtn" onclick="routeToTracker()" style="font-size:11px;" title="Route ASCII render to Blob Tracker">
+                <i class="ri-radar-line"></i> To Tracker
+              </button>
+            </div>
+            <button class="btn-base btn-secondary" onclick="copyPresetShareLink()" style="width: 100%;" title="Copy shareable preset URL for current configuration">
+              <i class="ri-share-forward-line"></i> Copy Preset Link
+            </button>
+          </div>
+
           <input type="file" id="importSettingsInput" accept=".json,application/json" style="display: none;" onchange="handleImportSettings(event)">
 
           <button class="btn-base btn-ghost about-btn" onclick="openInfoModal()" id="openInfoButton">
@@ -568,7 +586,15 @@
     </div>
   </div>
 
+  <script src="../assets/pipeline.js"></script>
   <script src="assets/example-assets.js"></script>
   <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('../sw.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

@@ -1403,6 +1403,49 @@
     randomizeSettingsBtn.addEventListener('click', function () { randomizeAll(); });
     topbarRandomBtn.addEventListener('click', function () { randomizeAll(); });
 
+    // Inter-Tool Pipeline Routing & Preset Share
+    var sendToAsciiBtn = document.getElementById('sendToAsciiBtn');
+    if (sendToAsciiBtn) {
+      sendToAsciiBtn.addEventListener('click', function () {
+        if (!state.image) {
+          if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+          return;
+        }
+        var dataUrl = canvas.toDataURL('image/png');
+        if (window.StudioPipeline) {
+          StudioPipeline.sendImage(dataUrl, '../ascii-gen/index.html', 'ASCII Matrix');
+        } else {
+          window.location.href = '../ascii-gen/index.html';
+        }
+      });
+    }
+
+    var sendToTrackerBtn = document.getElementById('sendToTrackerBtn');
+    if (sendToTrackerBtn) {
+      sendToTrackerBtn.addEventListener('click', function () {
+        if (!state.image) {
+          if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
+          return;
+        }
+        var dataUrl = canvas.toDataURL('image/png');
+        if (window.StudioPipeline) {
+          StudioPipeline.sendImage(dataUrl, '../blob-tracker/index.html', 'Blob Tracker');
+        } else {
+          window.location.href = '../blob-tracker/index.html';
+        }
+      });
+    }
+
+    var sharePresetBtn = document.getElementById('sharePresetBtn');
+    if (sharePresetBtn) {
+      sharePresetBtn.addEventListener('click', function () {
+        var url = getShareablePresetUrl();
+        if (window.StudioPipeline) {
+          StudioPipeline.copyTextToClipboard(url, 'Preset share link copied to clipboard!');
+        }
+      });
+    }
+
     // Window Resize
     window.addEventListener('resize', function () {
       resizeCanvasViewport();
@@ -1410,19 +1453,117 @@
     });
   }
 
+  function parseUrlHashPreset() {
+    if (!window.location.hash || window.location.hash.length < 2) return;
+    try {
+      var hashStr = window.location.hash.substring(1);
+      var params = new URLSearchParams(hashStr);
+      if (params.has('engine')) {
+        state.engine = params.get('engine');
+        var modeTabs = document.querySelectorAll('.mode-tab');
+        modeTabs.forEach(function (tab) {
+          tab.classList.toggle('active', tab.getAttribute('data-engine') === state.engine);
+        });
+      }
+      if (params.has('palette')) {
+        state.palette = params.get('palette');
+        updatePaletteSelection(state.palette);
+      }
+      if (params.has('pixelScale')) {
+        state.pixelScale = parseInt(params.get('pixelScale'), 10) || 1;
+        var psEl = document.getElementById('pixelScale');
+        var psVal = document.getElementById('pixelScaleVal');
+        if (psEl) psEl.value = state.pixelScale;
+        if (psVal) psVal.textContent = state.pixelScale + 'x';
+      }
+      if (params.has('brightness')) {
+        state.brightness = parseInt(params.get('brightness'), 10) || 0;
+        var bEl = document.getElementById('brightness');
+        var bVal = document.getElementById('brightnessVal');
+        if (bEl) bEl.value = state.brightness;
+        if (bVal) bVal.textContent = state.brightness;
+      }
+      if (params.has('contrast')) {
+        state.contrast = parseInt(params.get('contrast'), 10) || 0;
+        var cEl = document.getElementById('contrast');
+        var cVal = document.getElementById('contrastVal');
+        if (cEl) cEl.value = state.contrast;
+        if (cVal) cVal.textContent = state.contrast;
+      }
+      if (params.has('gamma')) {
+        state.gamma = parseFloat(params.get('gamma')) || 1.0;
+        var gEl = document.getElementById('gamma');
+        var gVal = document.getElementById('gammaVal');
+        if (gEl) gEl.value = state.gamma;
+        if (gVal) gVal.textContent = state.gamma.toFixed(2);
+      }
+      if (params.has('thresholdBias')) {
+        state.thresholdBias = parseInt(params.get('thresholdBias'), 10) || 0;
+        var tbEl = document.getElementById('thresholdBias');
+        var tbVal = document.getElementById('thresholdBiasVal');
+        if (tbEl) tbEl.value = state.thresholdBias;
+        if (tbVal) tbVal.textContent = state.thresholdBias;
+      }
+      if (params.has('edgeSharpen')) {
+        state.edgeSharpen = parseInt(params.get('edgeSharpen'), 10) || 0;
+        var esEl = document.getElementById('edgeSharpen');
+        var esVal = document.getElementById('edgeSharpenVal');
+        if (esEl) esEl.value = state.edgeSharpen;
+        if (esVal) esVal.textContent = state.edgeSharpen;
+      }
+      if (params.has('format')) {
+        state.format = params.get('format');
+        var canvasFormatEl = document.getElementById('canvasFormat');
+        if (canvasFormatEl) canvasFormatEl.value = state.format;
+      }
+      updateStatusFooter();
+    } catch (e) {
+      console.warn('Could not parse URL hash preset', e);
+    }
+  }
+
+  function getShareablePresetUrl() {
+    var params = new URLSearchParams();
+    params.set('engine', state.engine);
+    params.set('palette', state.palette);
+    params.set('pixelScale', state.pixelScale);
+    params.set('brightness', state.brightness);
+    params.set('contrast', state.contrast);
+    params.set('gamma', state.gamma);
+    params.set('thresholdBias', state.thresholdBias);
+    params.set('edgeSharpen', state.edgeSharpen);
+    params.set('format', state.format);
+    return window.location.origin + window.location.pathname + '#' + params.toString();
+  }
+
   // Initialization
   initPaletteGrid();
   initEventListeners();
   resizeCanvasViewport();
+  parseUrlHashPreset();
 
-  // Try auto-loading preset-sample.png if available, else ready in clean state
-  var initialImg = new Image();
-  initialImg.onload = function () {
-    applyLoadedFile(initialImg);
-  };
-  initialImg.onerror = function () {
-    // Keep clean empty state if not available
-  };
-  initialImg.src = 'assets/preset-sample.png';
+  // Pipeline check for incoming shared image
+  var pipelineReceived = false;
+  if (window.StudioPipeline) {
+    StudioPipeline.receiveImage(function (dataUrl) {
+      pipelineReceived = true;
+      var pipelineImg = new Image();
+      pipelineImg.onload = function () {
+        applyLoadedFile(pipelineImg);
+      };
+      pipelineImg.src = dataUrl;
+    });
+  }
+
+  // If no pipeline image received, try auto-loading preset-sample.png
+  setTimeout(function () {
+    if (!pipelineReceived && !state.image) {
+      var initialImg = new Image();
+      initialImg.onload = function () {
+        if (!state.image) applyLoadedFile(initialImg);
+      };
+      initialImg.src = 'assets/preset-sample.png';
+    }
+  }, 100);
 
 })();
