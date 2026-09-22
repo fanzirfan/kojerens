@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=3.0" />
+  <link rel="stylesheet" href="style.css?v=3.1" />
 </head>
 <body>
 <div class="app">
@@ -44,9 +44,9 @@
   <div class="workspace">
 
     <nav class="rail" aria-label="Panel navigation">
-      <button class="rail-btn active" data-panel="image" data-modes="all" title="Image" aria-pressed="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <span class="rail-label">Image</span>
+      <button class="rail-btn active" data-panel="image" data-modes="all" title="Source File" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="rail-label">File</span>
       </button>
       <button class="rail-btn" data-panel="gradientmap" data-modes="all" title="Gradient Map" aria-pressed="false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2" stroke="currentColor"/><line x1="8" y1="7" x2="8" y2="17" stroke="currentColor" stroke-opacity=".4"/><line x1="13" y1="7" x2="13" y2="17" stroke="currentColor" stroke-opacity=".4"/></svg>
@@ -94,22 +94,22 @@
     <!-- PANEL DRAWER -->
     <aside class="panel-drawer open" id="panelDrawer">
       <div class="drawer-inner sidebar">
-    <!-- SECTION 1: IMAGE -->
+    <!-- SECTION 1: FILE -->
     <section class="panel" data-section="image" data-modes="all">
       <div class="panel-header">
-        <span class="panel-title">IMAGE</span>
+        <span class="panel-title">FILE</span>
         <button class="toggle-collapse" aria-label="Collapse section">−</button>
       </div>
       <div class="panel-body">
-        <button class="btn-block" id="replaceImageBtn">Replace Image</button>
-        <input type="file" id="imageInput" accept="image/*" style="display:none" />
+        <button class="btn-block" id="replaceImageBtn">Select / Replace File</button>
+        <input type="file" id="imageInput" style="display:none" />
 
         <div class="control-group">
           <div class="control-header">
-            <label>IMAGE OPACITY</label>
+            <label>FILE OPACITY</label>
             <span class="val" id="imageOpacityVal">0.75</span>
           </div>
-          <p class="hint">Fade the background image</p>
+          <p class="hint">Fade the background file</p>
           <input type="range" id="imageOpacity" min="0" max="1" step="0.01" value="0.75" />
         </div>
       </div>
@@ -796,7 +796,7 @@
         <canvas id="canvas"></canvas>
         <div class="empty-state" id="emptyState">
           <div class="empty-icon">◉</div>
-          <h2>Drop an image to start</h2>
+          <h2>Drop a file to start</h2>
           <p>Processed locally. Nothing leaves your browser.</p>
         </div>
       </div>
@@ -808,6 +808,6 @@
 </div><!-- /.app -->
 
 <script src="gradients.js"></script>
-<script src="app.js?v=3.0"></script>
+<script src="app.js?v=3.1"></script>
 </body>
 </html>

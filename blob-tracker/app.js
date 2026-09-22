@@ -2775,13 +2775,11 @@
 
   function isImageFile(file) {
     if (!file) return false;
-    if (file.type && file.type.startsWith('image/')) return true;
-    var name = file.name || '';
-    return /\.(png|jpe?g|webp|avif|bmp|gif|tiff|svg)$/i.test(name);
+    return true;
   }
 
   function loadFile(file) {
-    if (!isImageFile(file)) return;
+    if (!file) return;
     var reader = new FileReader();
     reader.onload = function (ev) {
       var img = new Image();
@@ -2790,6 +2788,7 @@
       };
       img.onerror = function (err) {
         console.error('Image load error:', err);
+        alert('Could not render this file as visual media. Please select an image or graphic file (PNG, JPG, WebP, SVG, GIF, AVIF, BMP).');
       };
       img.src = ev.target.result;
     };
