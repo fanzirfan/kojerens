@@ -45,3 +45,11 @@ body {
   font-family: var(--font-untitled-sans);
   overflow-x: hidden;
 }
+
+#cropCanvas,
+.crop-canvas {
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+

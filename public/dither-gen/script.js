@@ -1631,20 +1631,30 @@
     // Crop Canvas Dragging & Precision Interaction
     function getCropCoords(e) {
       var rect = cropCanvas.getBoundingClientRect();
+      var clientX = e.clientX;
+      var clientY = e.clientY;
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      }
       var scaleX = rect.width > 0 ? (cropCanvas.width / rect.width) : 1;
       var scaleY = rect.height > 0 ? (cropCanvas.height / rect.height) : 1;
       return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       };
     }
 
-    function getCropHitMode(mx, my) {
+    function getCropHitMode(mx, my, isTouch) {
       var x = cropState.startX;
       var y = cropState.startY;
       var w = cropState.w;
       var h = cropState.h;
-      var hs = 16;
+      var hs = isTouch ? 28 : 16;
+      var edgeHs = isTouch ? 20 : 12;
 
       // Corners
       var nearL = Math.abs(mx - x) <= hs;
@@ -1658,7 +1668,6 @@
       if (nearB && nearR) return 'se';
 
       // Edges
-      var edgeHs = 12;
       if (Math.abs(my - y) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 'n';
       if (Math.abs(my - (y + h)) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 's';
       if (Math.abs(mx - x) <= edgeHs && my >= y - hs && my <= y + h + hs) return 'w';
@@ -1680,7 +1689,7 @@
       cropCanvas.addEventListener('mousemove', function (e) {
         if (cropState.dragging) return;
         var coords = getCropCoords(e);
-        var mode = getCropHitMode(coords.x, coords.y);
+        var mode = getCropHitMode(coords.x, coords.y, false);
         if (mode === 'nw' || mode === 'se') cropCanvas.style.cursor = 'nwse-resize';
         else if (mode === 'ne' || mode === 'sw') cropCanvas.style.cursor = 'nesw-resize';
         else if (mode === 'n' || mode === 's') cropCanvas.style.cursor = 'ns-resize';
@@ -1689,9 +1698,10 @@
         else cropCanvas.style.cursor = 'crosshair';
       });
 
-      cropCanvas.addEventListener('mousedown', function (e) {
+      function handleCropStart(e) {
+        var isTouch = !!(e.touches && e.touches.length > 0);
         var coords = getCropCoords(e);
-        var mode = getCropHitMode(coords.x, coords.y);
+        var mode = getCropHitMode(coords.x, coords.y, isTouch);
 
         cropState.dragging = true;
         cropState.dragMode = mode;
@@ -1707,10 +1717,12 @@
           cropState.h = 1;
           drawCropCanvas();
         }
-      });
+        if (e.cancelable) e.preventDefault();
+      }
 
-      window.addEventListener('mousemove', function (e) {
+      function handleCropMove(e) {
         if (!cropState.dragging || !cropCanvas || cropModal.style.display === 'none') return;
+        if (e.cancelable) e.preventDefault();
         var coords = getCropCoords(e);
         var mx = coords.x;
         var my = coords.y;
@@ -1838,12 +1850,22 @@
           }
         }
         drawCropCanvas();
-      });
+      }
 
-      window.addEventListener('mouseup', function () {
+      function handleCropEnd() {
         cropState.dragging = false;
         cropState.dragMode = null;
-      });
+      }
+
+      cropCanvas.addEventListener('mousedown', handleCropStart);
+      cropCanvas.addEventListener('touchstart', handleCropStart, { passive: false });
+
+      window.addEventListener('mousemove', handleCropMove);
+      window.addEventListener('touchmove', handleCropMove, { passive: false });
+
+      window.addEventListener('mouseup', handleCropEnd);
+      window.addEventListener('touchend', handleCropEnd);
+      window.addEventListener('touchcancel', handleCropEnd);
     }
 
     // Empty state & canvas click

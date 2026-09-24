@@ -4911,21 +4911,31 @@ window.applyAsciiCrop = applyAsciiCrop;
 function getCropCoords(e) {
     const cropCanvas = document.getElementById('cropCanvas');
     const rect = cropCanvas.getBoundingClientRect();
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+    }
     const scaleX = rect.width > 0 ? (cropCanvas.width / rect.width) : 1;
     const scaleY = rect.height > 0 ? (cropCanvas.height / rect.height) : 1;
     return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
     };
 }
 
-function getCropHitMode(mx, my) {
+function getCropHitMode(mx, my, isTouch) {
     const cropCanvas = document.getElementById('cropCanvas');
     const x = cropState.startX;
     const y = cropState.startY;
     const w = cropState.w;
     const h = cropState.h;
-    const hs = 16;
+    const hs = isTouch ? 28 : 16;
+    const edgeHs = isTouch ? 20 : 12;
 
     // Corners
     const nearL = Math.abs(mx - x) <= hs;
@@ -4939,7 +4949,6 @@ function getCropHitMode(mx, my) {
     if (nearB && nearR) return 'se';
 
     // Edges
-    const edgeHs = 12;
     if (Math.abs(my - y) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 'n';
     if (Math.abs(my - (y + h)) <= edgeHs && mx >= x - hs && mx <= x + w + hs) return 's';
     if (Math.abs(mx - x) <= edgeHs && my >= y - hs && my <= y + h + hs) return 'w';
@@ -4965,7 +4974,7 @@ function setupCropCanvasEvents() {
     cropCanvas.addEventListener('mousemove', function(e) {
         if (cropState.dragging) return;
         const coords = getCropCoords(e);
-        const mode = getCropHitMode(coords.x, coords.y);
+        const mode = getCropHitMode(coords.x, coords.y, false);
         if (mode === 'nw' || mode === 'se') cropCanvas.style.cursor = 'nwse-resize';
         else if (mode === 'ne' || mode === 'sw') cropCanvas.style.cursor = 'nesw-resize';
         else if (mode === 'n' || mode === 's') cropCanvas.style.cursor = 'ns-resize';
@@ -4974,9 +4983,10 @@ function setupCropCanvasEvents() {
         else cropCanvas.style.cursor = 'crosshair';
     });
 
-    cropCanvas.addEventListener('mousedown', function(e) {
+    function handleCropStart(e) {
+        const isTouch = !!(e.touches && e.touches.length > 0);
         const coords = getCropCoords(e);
-        const mode = getCropHitMode(coords.x, coords.y);
+        const mode = getCropHitMode(coords.x, coords.y, isTouch);
 
         cropState.dragging = true;
         cropState.dragMode = mode;
@@ -4992,10 +5002,12 @@ function setupCropCanvasEvents() {
             cropState.h = 1;
             drawCropCanvas();
         }
-    });
+        if (e.cancelable) e.preventDefault();
+    }
 
-    window.addEventListener('mousemove', function(e) {
+    function handleCropMove(e) {
         if (!cropState.dragging || !cropCanvas || cropModal.style.display === 'none') return;
+        if (e.cancelable) e.preventDefault();
         const coords = getCropCoords(e);
         const mx = coords.x;
         const my = coords.y;
@@ -5123,12 +5135,22 @@ function setupCropCanvasEvents() {
             }
         }
         drawCropCanvas();
-    });
+    }
 
-    window.addEventListener('mouseup', function() {
+    function handleCropEnd() {
         cropState.dragging = false;
         cropState.dragMode = null;
-    });
+    }
+
+    cropCanvas.addEventListener('mousedown', handleCropStart);
+    cropCanvas.addEventListener('touchstart', handleCropStart, { passive: false });
+
+    window.addEventListener('mousemove', handleCropMove);
+    window.addEventListener('touchmove', handleCropMove, { passive: false });
+
+    window.addEventListener('mouseup', handleCropEnd);
+    window.addEventListener('touchend', handleCropEnd);
+    window.addEventListener('touchcancel', handleCropEnd);
 }
 
 /* ============================================================================
