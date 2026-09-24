@@ -425,10 +425,6 @@ body {
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
 }
 
-#inputVideo {
-  display: none;
-}
-
 /* Output Viewport */
 .output-viewport {
   width: 100%;
@@ -585,52 +581,6 @@ body {
   background: rgba(255, 60, 60, 0.15);
   border-color: rgba(255, 60, 60, 0.35);
   color: #ff6b6b;
-}
-
-/* Recording Overlay */
-#recordingOverlay {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(5, 6, 15, 0.9);
-  border: 1px solid rgba(255, 60, 60, 0.35);
-  padding: 10px 16px;
-  border-radius: var(--radius-inputs);
-  z-index: 15;
-  pointer-events: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-}
-
-.recording-content {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-.recording-icon {
-  color: #ff4757;
-  font-size: 1.2em;
-  animation: recording-pulse 1.4s ease-in-out infinite;
-}
-
-#recordingText {
-  color: var(--color-frost-glow);
-  font-family: var(--font-untitled-sans);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-#recordingTimer {
-  color: #ff4757;
-  font-family: var(--font-dotdigital);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-@keyframes recording-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.15); }
 }
 
 /* ============================================================================
@@ -1506,44 +1456,6 @@ input[type="range"]::-moz-range-thumb {
   justify-content: flex-end;
 }
 
-/* FPS Options Grid */
-.fps-options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin: 16px 0;
-}
-
-.fps-option-button {
-  background: var(--color-glass-fill);
-  border: 1px solid var(--color-glass-edge);
-  border-radius: var(--radius-inputs);
-  color: var(--color-frost-glow);
-  padding: 12px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.15s ease;
-}
-.fps-option-button:hover {
-  background: var(--color-glass-fill-hover);
-  border-color: var(--color-glass-edge-active);
-  transform: translateY(-2px);
-}
-.fps-number {
-  font-family: var(--font-aeonikpro);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-pure-white);
-}
-.fps-description {
-  font-family: var(--font-dotdigital);
-  font-size: 10px;
-  color: var(--color-fog-veil);
-}
-
 /* ============================================================================
    12. MOBILE COMPONENTS & RESPONSIVE DESIGN (R-03)
    ============================================================================ */
@@ -1625,11 +1537,11 @@ input[type="range"]::-moz-range-thumb {
     top: 48px;
     z-index: 25;
     width: 100%;
-    background: rgba(5, 6, 15, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #05060f;
     border-bottom: 1px solid var(--color-glass-edge);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+    contain: paint;
+    transform: translateZ(0);
   }
 
   .mobile-preview-header {
@@ -1692,8 +1604,7 @@ input[type="range"]::-moz-range-thumb {
     background: rgba(3, 4, 10, 0.9);
   }
 
-  .mobile-preview-content canvas,
-  .mobile-preview-content video {
+  .mobile-preview-content canvas {
     max-width: 100%;
     max-height: calc(38vh - 24px);
     object-fit: contain;

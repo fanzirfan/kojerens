@@ -18,11 +18,10 @@
    7. FILE UPLOAD & LOADING
    8. IMAGE PROCESSING FUNCTIONS
    9. ASCII RENDERING ENGINE
-   10. VIDEO PROCESSING
-   11. EXPORT FUNCTIONS
-   12. UI EVENT HANDLERS
-   13. MOBILE SUPPORT
-   14. INITIALIZATION & EVENT LISTENERS
+   10. EXPORT FUNCTIONS
+   11. UI EVENT HANDLERS
+   12. MOBILE SUPPORT
+   13. INITIALIZATION & EVENT LISTENERS
    
    ============================================================================ */
 
@@ -35,6 +34,10 @@
 function getSpinner(size = 24) {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"><g><rect width="2" height="5" x="11" y="1" fill="currentColor" opacity=".14"/><rect width="2" height="5" x="11" y="1" fill="currentColor" opacity=".29" transform="rotate(30 12 12)"/><rect width="2" height="5" x="11" y="1" fill="currentColor" opacity=".43" transform="rotate(60 12 12)"/><rect width="2" height="5" x="11" y="1" fill="currentColor" opacity=".57" transform="rotate(90 12 12)"/><rect width="2" height="5" x="11" y="1" fill="currentColor" opacity=".71" transform="rotate(120 12 12)"/><rect width="2" height="5" x="11" y="1" fill="currentColor" opacity=".86" transform="rotate(150 12 12)"/><rect width="2" height="5" x="11" y="1" fill="currentColor" transform="rotate(180 12 12)"/><animateTransform attributeName="transform" calcMode="discrete" dur="0.75s" repeatCount="indefinite" type="rotate" values="0 12 12;30 12 12;60 12 12;90 12 12;120 12 12;150 12 12;180 12 12;210 12 12;240 12 12;270 12 12;300 12 12;330 12 12;360 12 12"/></g></svg>`;
 }
+
+// Deprecated sequence no-op stubs
+function clearCachedSequence() {}
+function updatePngSequenceButtonState() {}
 
 
 /* ============================================================================
@@ -63,15 +66,11 @@ let customCharSeqIndex = 0;
 const imageUpload = document.getElementById('imageUpload');
 const condensedImageUpload = document.getElementById('condensedImageUpload');
 const inputCanvas = document.getElementById('inputCanvas');
-const inputVideo = document.getElementById('inputVideo');
 const outputCanvas = document.getElementById('outputCanvas');
 const inputCtx = inputCanvas.getContext('2d');
 const outputCtx = outputCanvas.getContext('2d');
 const loadingSpinner = document.getElementById('loadingSpinner');
 const mobileLoadingSpinner = document.getElementById('mobileLoadingSpinner');
-const sequenceLoadingOverlay = document.getElementById('sequenceLoadingOverlay');
-const sequenceLoadingOverlayText = document.getElementById('sequenceLoadingOverlayText');
-const cancelSequenceButton = document.getElementById('cancelSequenceButton');
 
 
 const condensedUploadZone = document.getElementById('condensedUploadZone');
@@ -156,15 +155,10 @@ const exportTransparentToggle = document.getElementById('exportTransparentToggle
 const openNewTabButton = document.getElementById('openNewTabButton');
 const downloadPngButton = document.getElementById('downloadPngButton');
 const downloadTextButton = document.getElementById('downloadTextButton');
-const downloadPngSequenceButton = document.getElementById('downloadPngSequenceButton');
-const recordWebcamButton = document.getElementById('recordWebcamButton');
 const exportSettingsButton = document.getElementById('exportSettingsButton');
 const importSettingsButton = document.getElementById('importSettingsButton');
 const importSettingsInput = document.getElementById('importSettingsInput');
 const fullscreenButton = document.getElementById('fullscreenButton');
-const recordingOverlay = document.getElementById('recordingOverlay');
-const recordingTimer = document.getElementById('recordingTimer');
-const recordingText = document.getElementById('recordingText');
 
 /* 3.6 Layout & Panel Elements */
 const mainContainer = document.getElementById('mainContainer');
@@ -199,19 +193,6 @@ let isInvertColorsActive = false;
 let isChromaRemovalActive = false;
 let currentBackgroundTolerance = 10;
 let currentOutputBloom = 0;
-let isVideoInput = false;
-let videoProcessLoopId = null;
-
-let isWebcamActive = false;
-let webcamStream = null;
-let isRecordingWebcam = false;
-let mediaRecorder = null;
-let recordedChunks = [];
-
-let isSequenceRendering = false;
-let cancelSequenceRenderFlag = false;
-let cachedZipBlob = null;
-let sequenceSettingsSnapshot = null;
 
 let actionHistory = [];
 let currentHistoryIndex = -1;
@@ -593,322 +574,12 @@ function restoreSettingsFromSnapshot(snapshot) {
             syncAllNumberInputsFromSliders();
         }
 
-        clearCachedSequence();
         processImageWithCurrentSettings();
-        if (!isVideoInput) updateInputCanvasPreview();
+        updateInputCanvasPreview();
         
     } catch (error) {
         console.error('Error restoring settings:', error);
     }
-}
-
-function clearCachedSequence() {
-    cachedZipBlob = null;
-    sequenceSettingsSnapshot = null;
-    customCharSeqIndex = 0;
-    updatePngSequenceButtonState();
-}
-
-function updatePngSequenceButtonState() {
-    if (!isVideoInput || isWebcamActive) {
-        downloadPngSequenceButton.style.display = 'none';
-        return;
-    }
-    downloadPngSequenceButton.style.display = 'inline-flex';
-    downloadPngSequenceButton.innerHTML = '<i class="ri-download-2-line"></i> Download Sequence';
-    downloadPngSequenceButton.disabled = isSequenceRendering;
-}
-
-function toggleSequenceRenderingUI(isRendering, message = "") {
-    isSequenceRendering = isRendering;
-    cancelSequenceRenderFlag = false;
-
-    if (isRendering) {
-        outputCanvas.style.display = 'none';
-        sequenceLoadingOverlay.style.display = 'flex';
-        sequenceLoadingOverlayText.textContent = message || "Rendering Sequence...";
-        cancelSequenceButton.style.display = 'block';
-    } else {
-        outputCanvas.style.display = 'block';
-        sequenceLoadingOverlay.style.display = 'none';
-        cancelSequenceButton.style.display = 'none';
-    }
-
-    const controlsToDisable = [
-        imageUpload, condensedImageUpload,
-        levelsSlider, brightnessSlider,
-        shadowInputSlider, midtoneGammaSlider, highlightInputSlider,
-        invertColorsToggle, previewChangesToggle,
-        outputBloomSlider,
-        outputExposureSlider,
-        densityInput, densityDecrement, densityIncrement, fontSelect, prevFontButton, nextFontButton,
-        characterSetSelect, prevCharSetButton, nextCharSetButton, customCharsInput,
-        scaleFactorInput, scaleFactorDecrement, scaleFactorIncrement, colorSchemeSelect, prevColorSchemeButton, nextColorSchemeButton,
-        gradientMapSelect, prevGradientMapButton, nextGradientMapButton, gradientMapInvertToggle,
-        openNewTabButton, downloadPngButton, downloadTextButton,
-        exportSettingsButton, importSettingsButton,
-        document.getElementById('levelsNumberInput'),
-        document.getElementById('brightnessNumberInput'),
-        document.getElementById('contrastNumberInput'),
-        document.getElementById('shadowNumberInput'),
-        document.getElementById('midtoneNumberInput'),
-        document.getElementById('highlightNumberInput'),
-        document.getElementById('charSpacingNumberInput'),
-        document.getElementById('outputBloomNumberInput'),
-        document.getElementById('outputExposureNumberInput')
-    ];
-
-    controlsToDisable.forEach(control => {
-        if (control) control.disabled = isRendering;
-    });
-
-
-    updatePngSequenceButtonState();
-}
-
-cancelSequenceButton.addEventListener('click', () => {
-    cancelSequenceRenderFlag = true;
-    sequenceLoadingOverlayText.textContent = "Cancelling rendering...";
-});
-
-
-async function generateGlyphtrixFrameBlob(videoTime, tempCanvas, tempCtx, offscreenRenderCanvas, offscreenRenderCtx) {
-    return new Promise(async (resolve, reject) => {
-        if (cancelSequenceRenderFlag) {
-            return reject(new Error("Sequence rendering cancelled by user."));
-        }
-        inputVideo.currentTime = videoTime;
-
-        const onSeeked = async () => {
-            inputVideo.removeEventListener('seeked', onSeeked);
-            inputVideo.removeEventListener('error', onError);
-            if (cancelSequenceRenderFlag) {
-                return reject(new Error("Sequence rendering cancelled during seek."));
-            }
-            try {
-                tempCtx.drawImage(inputVideo, 0, 0, currentImageOriginalWidth, currentImageOriginalHeight);
-                let framePixelData = tempCtx.getImageData(0, 0, currentImageOriginalWidth, currentImageOriginalHeight).data;
-
-                if (chromaRemovalToggle.checked) {
-                    framePixelData = removeChroma(framePixelData, currentImageOriginalWidth, currentImageOriginalHeight, 10);
-                }
-
-                if (invertColorsToggle.checked) {
-                    framePixelData = invertPixelData(framePixelData);
-                }
-
-                let processedData = applyContrast(new Uint8ClampedArray(framePixelData), currentImageOriginalWidth, currentImageOriginalHeight, parseInt(contrastSlider.value));
-                processedData = applyLevelsAndBrightness(processedData, currentImageOriginalWidth, currentImageOriginalHeight, parseInt(brightnessSlider.value), parseInt(shadowInputSlider.value), parseFloat(midtoneGammaSlider.value), parseInt(highlightInputSlider.value));
-
-                const frameGrayscaleLevels = generateGrayscaleLevels(parseInt(levelsSlider.value));
-                const frameBlobMatrix = generateBlobMatrix(processedData, currentImageOriginalWidth, currentImageOriginalHeight, frameGrayscaleLevels, parseInt(densityInput.value), colorSchemeSelect.value, characterSetSelect.value);
-
-                const baseCharSize = currentDensity || DEFAULT_BASE_FONT_SIZE;
-                const effectiveCharSize = baseCharSize * parseFloat(scaleFactorInput.value);
-                const charWidth = effectiveCharSize;
-                const charHeight = effectiveCharSize;
-
-                if (frameBlobMatrix.length === 0 || frameBlobMatrix[0].length === 0) {
-                   return reject(new Error("Empty frame matrix generated"));
-                }
-                const numOutputRows = frameBlobMatrix.length;
-                const numOutputCols = frameBlobMatrix[0].length;
-                
-                const charSpacing = currentCharSpacing || 0;
-                const colsToAdjust = Math.floor(charSpacing);
-                const originalCols = numOutputCols + colsToAdjust;
-                
-                offscreenRenderCanvas.width = Math.max(1, originalCols * charWidth);
-                offscreenRenderCanvas.height = Math.max(1, numOutputRows * charHeight);
-                const seqBgColor = getCanvasBackgroundColor(colorSchemeSelect.value);
-                if (isBgColorTransparent || seqBgColor === 'transparent') {
-                    offscreenRenderCtx.clearRect(0, 0, offscreenRenderCanvas.width, offscreenRenderCanvas.height);
-                } else {
-                    offscreenRenderCtx.fillStyle = seqBgColor;
-                    offscreenRenderCtx.fillRect(0, 0, offscreenRenderCanvas.width, offscreenRenderCanvas.height);
-                }
-                offscreenRenderCtx.font = `${effectiveCharSize}px ${availableFonts[fontSelect.selectedIndex].cssName}`;
-                offscreenRenderCtx.textAlign = 'left';
-                offscreenRenderCtx.textBaseline = 'top';
-
-                const cellWidth = numOutputCols > 1 ? offscreenRenderCanvas.width / numOutputCols : charWidth;
-
-                let currentY = 0;
-                for (let y = 0; y < numOutputRows; y++) {
-                    let currentX = 0;
-                    for (let x = 0; x < numOutputCols; x++) {
-                        if (frameBlobMatrix[y] && frameBlobMatrix[y][x]) {
-                            const cellColor = frameBlobMatrix[y][x].color;
-                            if (cellColor !== 'rgba(0, 0, 0, 0)') {
-                                offscreenRenderCtx.fillStyle = cellColor;
-                                offscreenRenderCtx.fillText(frameBlobMatrix[y][x].char, currentX, currentY);
-                            }
-                        }
-                        currentX += cellWidth;
-                    }
-                    currentY += charHeight;
-                }
-
-                if (currentOutputExposure !== 0) {
-                    const exposureFactor = Math.pow(2, currentOutputExposure / 50);
-                    const imgData = offscreenRenderCtx.getImageData(0, 0, offscreenRenderCanvas.width, offscreenRenderCanvas.height);
-                    const d = imgData.data;
-                    if (isBgColorTransparent || seqBgColor === 'transparent') {
-                        for (let i = 0; i < d.length; i += 4) {
-                            if (d[i + 3] > 0) {
-                                d[i] = Math.min(255, Math.max(0, d[i] * exposureFactor));
-                                d[i + 1] = Math.min(255, Math.max(0, d[i + 1] * exposureFactor));
-                                d[i + 2] = Math.min(255, Math.max(0, d[i + 2] * exposureFactor));
-                            }
-                        }
-                    } else {
-                        for (let i = 0; i < d.length; i += 4) {
-                            d[i] = Math.min(255, Math.max(0, d[i] * exposureFactor));
-                            d[i + 1] = Math.min(255, Math.max(0, d[i + 1] * exposureFactor));
-                            d[i + 2] = Math.min(255, Math.max(0, d[i + 2] * exposureFactor));
-                        }
-                    }
-                    offscreenRenderCtx.putImageData(imgData, 0, 0);
-                }
-
-                offscreenRenderCanvas.toBlob(blob => {
-                    if (blob) resolve(blob);
-                    else reject(new Error("Failed to create blob from offscreen canvas"));
-                }, 'image/png');
-
-            } catch (error) {
-                reject(error);
-            }
-        };
-
-        const onError = (e) => {
-            inputVideo.removeEventListener('seeked', onSeeked);
-            inputVideo.removeEventListener('error', onError);
-            reject(new Error("Video seeking error during sequence rendering."));
-        };
-
-        inputVideo.addEventListener('seeked', onSeeked, { once: true });
-        inputVideo.addEventListener('error', onError, { once: true });
-    });
-}
-
-
-async function downloadPngSequenceWithFps(fps) {
-    if (!isVideoInput || inputVideo.readyState < inputVideo.HAVE_METADATA || isSequenceRendering) return;
-
-    closeFpsModal();
-
-    const currentSettings = getCurrentSettingsSnapshot(fps);
-    if (cachedZipBlob && sequenceSettingsSnapshot === currentSettings) {
-        const randomHash = generateRandomHash(8);
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(cachedZipBlob);
-        link.download = `kojerens_sequence_${randomHash}.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-        return;
-    }
-    clearCachedSequence();
-
-    const wasPaused = inputVideo.paused;
-    if (!wasPaused) inputVideo.pause();
-
-    toggleSequenceRenderingUI(true, "Initializing sequence rendering...");
-
-    const pngBlobs = [];
-    const videoDuration = inputVideo.duration;
-    const selectedFps = fps;
-    const frameInterval = 1 / selectedFps;
-    const numFrames = Math.floor(videoDuration / frameInterval);
-
-    const tempCaptureCanvas = document.createElement('canvas');
-    tempCaptureCanvas.width = currentImageOriginalWidth;
-    tempCaptureCanvas.height = currentImageOriginalHeight;
-    const tempCaptureCtx = tempCaptureCanvas.getContext('2d');
-
-    const offscreenRenderCanvas = document.createElement('canvas');
-    const offscreenRenderCtx = offscreenRenderCanvas.getContext('2d');
-
-    let renderingCancelled = false;
-    try {
-        for (let i = 0; i < numFrames; i++) {
-            if (cancelSequenceRenderFlag) {
-                renderingCancelled = true;
-                sequenceLoadingOverlayText.textContent = "Rendering cancelled.";
-                await new Promise(r => setTimeout(r, 1500));
-                break;
-            }
-            const currentTime = i * frameInterval;
-            const progressMessage = `Rendering frame ${i + 1} of ${numFrames} and creating a .zip archive...`;
-            sequenceLoadingOverlayText.textContent = progressMessage;
-
-            const blob = await generateGlyphtrixFrameBlob(currentTime, tempCaptureCanvas, tempCaptureCtx, offscreenRenderCanvas, offscreenRenderCtx);
-            pngBlobs.push(blob);
-        }
-
-        if (!renderingCancelled && pngBlobs.length > 0) {
-            sequenceLoadingOverlayText.textContent = "Zipping frames and creating .zip archive...";
-            const zip = new JSZip();
-            pngBlobs.forEach((blob, index) => {
-                const frameNumber = (index + 1).toString().padStart(4, '0');
-                zip.file(`frame_${frameNumber}.png`, blob);
-            });
-
-            cachedZipBlob = await zip.generateAsync({ type: "blob" });
-            sequenceSettingsSnapshot = currentSettings;
-
-            const randomHash = generateRandomHash(8);
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(cachedZipBlob);
-            link.download = `kojerens_sequence_${randomHash}.zip`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-        } else if (!renderingCancelled && numFrames > 0) {
-            alert("No frames were rendered for the sequence. This might be due to a very short video or an issue.");
-        }
-
-    } catch (error) {
-        if (!error.message.toLowerCase().includes("cancel")) {
-            console.error("Error during PNG sequence rendering: ", error);
-            alert(`Error during PNG sequence rendering: ${error.message}`);
-        }
-    } finally {
-        toggleSequenceRenderingUI(false);
-        if (!wasPaused && inputVideo.readyState >= inputVideo.HAVE_ENOUGH_DATA && !renderingCancelled) {
- 
-        }
-        updatePngSequenceButtonState();
-    }
-}
-
-
-function processCurrentFrame() {
-    if (!inputVideo || inputVideo.paused || inputVideo.ended || inputVideo.readyState < inputVideo.HAVE_CURRENT_DATA) {
-        stopVideoProcessingLoop();
-        return;
-    }
-    processImageWithCurrentSettings().then(() => {
-                if (isPreviewChangesActive) {
-        updateInputCanvasPreview();
-    }
-
-    if (window.innerWidth <= 768 && mobilePreviewActive) {
-        debouncedUpdateMobilePreview();
-    }
-        
-        if (!inputVideo.paused && !inputVideo.ended) {
-            videoProcessLoopId = requestAnimationFrame(processCurrentFrame);
-        } else {
-            stopVideoProcessingLoop();
-        }
-    }).catch(error => {
-        console.error("Error processing video frame:", error);
-        stopVideoProcessingLoop();
-    });
 }
 
 function setDownloadButtonsState(disabled) {
@@ -1073,7 +744,7 @@ function resetGlyphSettingsToDefault() {
     }
     
     processImageWithCurrentSettings();
-    if (!isVideoInput) updateInputCanvasPreview();
+    updateInputCanvasPreview();
     
     enableHistoryAfterUserChange();
     saveActionToHistory();
@@ -1392,56 +1063,12 @@ function drawPosterizedPreview(pixelDataToProcess, width, height, levelsArray) {
 }
 
 async function updateInputCanvasPreview() {
-    if (!currentMediaElement || (isVideoInput && !currentMediaElement.videoWidth) || (!isVideoInput && !originalPixelData)) {
-         inputCtx.clearRect(0, 0, inputCanvas.width, inputCanvas.height);
+    if (!currentMediaElement || !originalPixelData) {
+        inputCtx.clearRect(0, 0, inputCanvas.width, inputCanvas.height);
         return;
     }
 
     const isMobile = window.innerWidth <= 768;
-    if (isMobile && isVideoInput) {
-        inputVideo.style.display = 'block';
-        inputCanvas.style.display = 'none';
-        return;
-    }
-
-    if (isVideoInput) {
-        if (isPreviewChangesActive && !isMobile) {
-            inputVideo.style.display = 'none';
-            inputCanvas.style.display = 'block';
-            
-            // Capture current video frame
-            inputCanvas.width = currentImageOriginalWidth;
-            inputCanvas.height = currentImageOriginalHeight;
-            inputCtx.drawImage(inputVideo, 0, 0, currentImageOriginalWidth, currentImageOriginalHeight);
-            
-            let framePixelData = inputCtx.getImageData(0, 0, currentImageOriginalWidth, currentImageOriginalHeight).data;
-            
-            if (isChromaRemovalActive) {
-                framePixelData = removeChroma(framePixelData, currentImageOriginalWidth, currentImageOriginalHeight, currentBackgroundTolerance);
-            }
-            
-            if (isInvertColorsActive) {
-                framePixelData = invertPixelData(framePixelData);
-            }
-            
-            const tempContrast = parseInt(contrastSlider.value);
-            const tempBrightness = parseInt(brightnessSlider.value);
-            const tempShadow = parseInt(shadowInputSlider.value);
-            const tempGamma = parseFloat(midtoneGammaSlider.value);
-            const tempHighlight = parseInt(highlightInputSlider.value);
-            const tempNumLevels = parseInt(levelsSlider.value);
-            
-            let processedForPreview = applyContrast(new Uint8ClampedArray(framePixelData), currentImageOriginalWidth, currentImageOriginalHeight, tempContrast);
-            processedForPreview = applyLevelsAndBrightness(processedForPreview, currentImageOriginalWidth, currentImageOriginalHeight, tempBrightness, tempShadow, tempGamma, tempHighlight);
-            
-            const previewLevels = generateGrayscaleLevels(tempNumLevels);
-            drawPosterizedPreview(processedForPreview, currentImageOriginalWidth, currentImageOriginalHeight, previewLevels);
-        } else {
-        inputVideo.style.display = 'block';
-        inputCanvas.style.display = 'none';
-        }
-        return;
-    }
 
     if(invertColorsContainer) invertColorsContainer.style.display = 'flex';
     if(previewChangesContainer) previewChangesContainer.style.display = 'flex';
@@ -1886,17 +1513,8 @@ function drawTextOnCanvas(matrixToDraw, scaleFactor, colorScheme, fontFamily) {
         });
     });
 }
-function stopVideoProcessingLoop() {
-    if (videoProcessLoopId !== null) {
-        cancelAnimationFrame(videoProcessLoopId);
-        videoProcessLoopId = null;
-    }
-}
-
 
 async function processImageWithCurrentSettings() {
-    if (isSequenceRendering) return;
-
     // Only hide example buttons if there's a file loaded
     if (currentMediaElement || originalPixelData) {
         hideExampleButtons();
@@ -1904,9 +1522,7 @@ async function processImageWithCurrentSettings() {
 
     loadingSpinner.style.display = 'inline';
     if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'inline';
-    if (!isVideoInput || inputVideo.paused) {
-         setDownloadButtonsState(true);
-    }
+    setDownloadButtonsState(true);
 
     isChromaRemovalActive = chromaRemovalToggle.checked;
     currentBackgroundTolerance = 10;
@@ -1928,48 +1544,25 @@ async function processImageWithCurrentSettings() {
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    let sourcePixelData;
-    if (isVideoInput) {
-        if (!currentMediaElement || currentMediaElement.readyState < inputVideo.HAVE_CURRENT_DATA ) {
-            loadingSpinner.style.display = 'none';
+    if (!originalPixelData) {
+        loadingSpinner.style.display = 'none';
         if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-            setDownloadButtonsState(true);
-            return;
-        }
-        const tempVidCanvas = document.createElement('canvas');
-        tempVidCanvas.width = currentImageOriginalWidth;
-        tempVidCanvas.height = currentImageOriginalHeight;
-        const tempVidCtx = tempVidCanvas.getContext('2d');
-        tempVidCtx.drawImage(currentMediaElement, 0, 0, currentImageOriginalWidth, currentImageOriginalHeight);
-        sourcePixelData = tempVidCtx.getImageData(0, 0, currentImageOriginalWidth, currentImageOriginalHeight).data;
+        setDownloadButtonsState(true);
+        return;
+    }
 
-        if (isChromaRemovalActive) {
-            sourcePixelData = removeChroma(sourcePixelData, currentImageOriginalWidth, currentImageOriginalHeight, currentBackgroundTolerance);
-        }
-        if (isInvertColorsActive) {
-            sourcePixelData = invertPixelData(sourcePixelData);
-        }
-
-    } else {
-        if (!originalPixelData) {
-            loadingSpinner.style.display = 'none';
-        if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-            setDownloadButtonsState(true);
-            return;
-        }
-        sourcePixelData = new Uint8ClampedArray(originalPixelData);
-        if (isChromaRemovalActive) {
-            sourcePixelData = removeChroma(sourcePixelData, currentImageOriginalWidth, currentImageOriginalHeight, currentBackgroundTolerance);
-        }
-        if (isInvertColorsActive) {
-            sourcePixelData = invertPixelData(sourcePixelData);
-        }
+    let sourcePixelData = new Uint8ClampedArray(originalPixelData);
+    if (isChromaRemovalActive) {
+        sourcePixelData = removeChroma(sourcePixelData, currentImageOriginalWidth, currentImageOriginalHeight, currentBackgroundTolerance);
+    }
+    if (isInvertColorsActive) {
+        sourcePixelData = invertPixelData(sourcePixelData);
     }
 
     let processedData = applyContrast(new Uint8ClampedArray(sourcePixelData), currentImageOriginalWidth, currentImageOriginalHeight, currentContrast);
     processedData = applyLevelsAndBrightness(processedData, currentImageOriginalWidth, currentImageOriginalHeight, currentBrightness, currentShadowInput, currentMidtoneGamma, currentHighlightInput);
 
-    if (!isVideoInput && isPreviewChangesActive) {
+    if (isPreviewChangesActive) {
         const previewLevels = generateGrayscaleLevels(currentNumLevels);
         let previewBaseData = new Uint8ClampedArray(originalPixelData);
         if (chromaRemovalToggle.checked) {
@@ -1978,15 +1571,9 @@ async function processImageWithCurrentSettings() {
         if (invertColorsToggle.checked) {
             previewBaseData = invertPixelData(previewBaseData);
         }
-                        let previewProcessed = applyContrast(previewBaseData, currentImageOriginalWidth, currentImageOriginalHeight, parseInt(contrastSlider.value));
+        let previewProcessed = applyContrast(previewBaseData, currentImageOriginalWidth, currentImageOriginalHeight, parseInt(contrastSlider.value));
         previewProcessed = applyLevelsAndBrightness(previewProcessed, currentImageOriginalWidth, currentImageOriginalHeight, parseInt(brightnessSlider.value), parseInt(shadowInputSlider.value), parseFloat(midtoneGammaSlider.value), parseInt(highlightInputSlider.value));
         drawPosterizedPreview(previewProcessed, currentImageOriginalWidth, currentImageOriginalHeight, previewLevels);
-
-    } else if (isVideoInput && isPreviewChangesActive) {
-        updateInputCanvasPreview();
-    } else if (isVideoInput) {
-         inputVideo.style.display = 'block';
-         inputCanvas.style.display = 'none';
     }
 
     const localGrayscaleLevels = generateGrayscaleLevels(currentNumLevels);
@@ -2014,15 +1601,15 @@ async function processImageWithCurrentSettings() {
 }
 
 function handleImageUpload(file, isCropped = false) {
-    stopVideoProcessingLoop();
-    stopWebcam();
-    clearCachedSequence();
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        alert("Please select an image file (PNG, JPG, WebP, SVG, GIF, AVIF).");
+        return;
+    }
     resetCanvasZoom(false);
-    isVideoInput = false;
     loadingSpinner.style.display = 'inline';
     if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'inline';
     setDownloadButtonsState(true);
-    downloadPngSequenceButton.style.display = 'none';
     showUploadSpinner();
     hideExampleButtons();
 
@@ -2036,171 +1623,80 @@ function handleImageUpload(file, isCropped = false) {
         outputViewport.classList.add('has-media');
     }
 
-    inputVideo.style.display = 'none';
-    inputVideo.pause();
-    inputVideo.onloadedmetadata = null;
-    inputVideo.onerror = null;
-    inputVideo.onplay = null;
-    inputVideo.onpause = null;
-    inputVideo.onended = null;
-    inputVideo.onseeked = null;
-    inputVideo.src = "";
     inputCanvas.style.display = 'none';
 
     const reader = new FileReader();
     reader.onload = function(event) {
-        if (file.type.startsWith('video/')) {
-            isVideoInput = true;
-            currentMediaElement = inputVideo;
-            if (!isCropped) rawMediaElement = inputVideo;
-            inputVideo.src = event.target.result;
-            inputVideo.onloadedmetadata = async () => {
-                currentImageOriginalWidth = inputVideo.videoWidth;
-                currentImageOriginalHeight = inputVideo.videoHeight;
-                customCharSeqIndex = 0;
+        const img = new Image();
+        currentMediaElement = img;
+        if (!isCropped) rawMediaElement = img;
+        img.onload = async function() {
+            currentImageOriginalWidth = img.width;
+            currentImageOriginalHeight = img.height;
+            randomNumberMap = {};
+            customCharSeqIndex = 0;
 
-                inputVideo.style.display = 'block';
-                inputCanvas.style.display = 'none';
+            inputCanvas.width = currentImageOriginalWidth;
+            inputCanvas.height = currentImageOriginalHeight;
 
-                uploadZone.style.display = 'none';
-                if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-                if(condensedUploadZone) condensedUploadZone.style.display = 'inline-block';
-                if(condensedFilename) condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name} `;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = currentImageOriginalWidth;
+            tempCanvas.height = currentImageOriginalHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(img, 0, 0, currentImageOriginalWidth, currentImageOriginalHeight);
+            originalPixelData = tempCtx.getImageData(0, 0, currentImageOriginalWidth, currentImageOriginalHeight).data;
+            if (!isCropped) rawOriginalPixelData = originalPixelData;
 
-                hideExampleButtons();
+            if(chromaRemovalContainer) chromaRemovalContainer.style.display = 'flex';
+            if(invertColorsContainer) invertColorsContainer.style.display = 'flex';
+            if(previewChangesContainer) previewChangesContainer.style.display = 'flex';
 
-                if(previewChangesContainer) previewChangesContainer.style.display = 'flex';
+            previewChangesToggle.disabled = false;
 
-                setDefaultValues(inputVideo.videoWidth);
-                
-                previewChangesToggle.checked = false;
-                isPreviewChangesActive = false;
-                previewChangesToggle.disabled = false;
-                currentDensity = parseInt(densityInput.value);
+            setDefaultValues(img.width);
+            currentDensity = parseInt(densityInput.value);
 
-                if(chromaRemovalContainer) chromaRemovalContainer.style.display = 'flex';
-                if(invertColorsContainer) invertColorsContainer.style.display = 'flex';
-
-                await processImageWithCurrentSettings();
-                loadingSpinner.style.display = 'none';
-                if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-                hideUploadSpinner();
-                updatePngSequenceButtonState();
-                
-                initializeHistoryForNewFile();
-                
-                if (inputVideo.duration > 1) {
-                    inputVideo.currentTime = 1;
-                }
-                
-                if (window.innerWidth <= 768 && mobilePreviewActive) {
-                    switchMobileView('output');
-                } else {
-                    debouncedUpdateMobilePreview();
-                }
-
-                inputVideo.onplay = () => {
-                    clearCachedSequence();
-                    stopVideoProcessingLoop();
-                    videoProcessLoopId = requestAnimationFrame(processCurrentFrame);
-                };
-                inputVideo.onpause = () => {
-                    processImageWithCurrentSettings();
-                };
-                inputVideo.onended = () => stopVideoProcessingLoop();
-                
-                let seekDebounceTimeout;
-                inputVideo.onseeked = () => {
-                    clearTimeout(seekDebounceTimeout);
-                    seekDebounceTimeout = setTimeout(() => {
-                        if (inputVideo.paused && inputVideo.readyState >= inputVideo.HAVE_CURRENT_DATA) {
-                            syncMobileVideoTime();
-                            
-                            processImageWithCurrentSettings().then(() => {
-                                if (window.innerWidth <= 768 && currentMobileView === 'output') {
-                                    debouncedUpdateMobilePreview();
-                                }
-                            });
-                        }
-                    }, 100);
-                };
-            };
-             inputVideo.onerror = () => {
-                alert("Error loading video.");
-                loadingSpinner.style.display = 'none';
-                if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-                hideUploadSpinner();
-                setDownloadButtonsState(true);
-                updatePngSequenceButtonState();
-            };
-        } else if (file.type.startsWith('image/')) {
-            isVideoInput = false;
-            const img = new Image();
-            currentMediaElement = img;
-            if (!isCropped) rawMediaElement = img;
-            img.onload = async function() {
-                currentImageOriginalWidth = img.width;
-                currentImageOriginalHeight = img.height;
-                randomNumberMap = {};
-                customCharSeqIndex = 0;
-
-                inputCanvas.width = currentImageOriginalWidth;
-                inputCanvas.height = currentImageOriginalHeight;
-
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = currentImageOriginalWidth;
-                tempCanvas.height = currentImageOriginalHeight;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.drawImage(img, 0, 0, currentImageOriginalWidth, currentImageOriginalHeight);
-                originalPixelData = tempCtx.getImageData(0, 0, currentImageOriginalWidth, currentImageOriginalHeight).data;
-                if (!isCropped) rawOriginalPixelData = originalPixelData;
-
-                if(chromaRemovalContainer) chromaRemovalContainer.style.display = 'flex';
-                if(invertColorsContainer) invertColorsContainer.style.display = 'flex';
-                if(previewChangesContainer) previewChangesContainer.style.display = 'flex';
-
-                previewChangesToggle.disabled = false;
-
-                setDefaultValues(img.width);
-                currentDensity = parseInt(densityInput.value);
-
-                await processImageWithCurrentSettings();
-                await updateInputCanvasPreview();
-                inputCanvas.style.display = 'block';
-                uploadZone.style.display = 'none';
-                if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-                
-                hideExampleButtons();
-                
-                hideUploadSpinner();
-                updatePngSequenceButtonState();
-                
-                initializeHistoryForNewFile();
-                
-                if (window.innerWidth <= 768 && mobilePreviewActive) {
-                    switchMobileView('output');
-                } else {
-                    debouncedUpdateMobilePreview();
-                }
+            await processImageWithCurrentSettings();
+            await updateInputCanvasPreview();
+            inputCanvas.style.display = 'block';
+            uploadZone.style.display = 'none';
+            if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
+            
+            hideExampleButtons();
+            hideUploadSpinner();
+            
+            initializeHistoryForNewFile();
+            
+            if (window.innerWidth <= 768 && mobilePreviewActive) {
+                switchMobileView('output');
+            } else {
+                debouncedUpdateMobilePreview();
             }
-            img.src = event.target.result;
-             img.onerror = () => {
-                alert("Error loading image.");
-                loadingSpinner.style.display = 'none';
-                if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-                hideUploadSpinner();
-                setDownloadButtonsState(true);
-                updatePngSequenceButtonState();
-            };
-        } else {
-            alert('Unsupported file type.');
+
+            loadingSpinner.style.display = 'none';
+            if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
+            setDownloadButtonsState(false);
+            updateFullscreenButton();
+
+            condensedUploadZone.style.display = 'inline-block';
+            condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name}`;
+        };
+        img.onerror = function() {
+            alert("Error loading image. Please try another file.");
             loadingSpinner.style.display = 'none';
             if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
             hideUploadSpinner();
             setDownloadButtonsState(true);
-            updatePngSequenceButtonState();
-        }
-    }
+        };
+        img.src = event.target.result;
+    };
+    reader.onerror = function() {
+        alert("Error reading file.");
+        loadingSpinner.style.display = 'none';
+        if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
+        hideUploadSpinner();
+        setDownloadButtonsState(true);
+    };
     reader.readAsDataURL(file);
 }
 
@@ -2727,19 +2223,6 @@ nextColorSchemeButton.addEventListener('click', function() {
     setTimeout(() => saveActionToHistory(), 100);
 });
 
-inputCanvas.addEventListener('click', () => {
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile && isVideoInput && isPreviewChangesActive && inputCanvas.style.display !== 'none') {
-        previewChangesToggle.checked = false;
-        isPreviewChangesActive = false;
-        updateInputCanvasPreview();
-        
-        if (inputVideo.paused) {
-            inputVideo.play();
-        }
-    }
-});
-
 uploadZone.addEventListener('dragover', (e) => { 
     e.preventDefault(); 
     uploadZone.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--hover-grey'); 
@@ -2751,12 +2234,12 @@ uploadZone.addEventListener('drop', (e) => {
     e.preventDefault(); 
     uploadZone.style.backgroundColor = 'transparent';
     const file = e.dataTransfer.files[0];
-    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+    if (file && file.type.startsWith('image/')) {
       handleImageUpload(file);
       condensedUploadZone.style.display = 'inline-block';
       condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name} `;
        if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-    } else { alert('Please drop an image or video file.'); }
+    } else { alert('Please drop an image file.'); }
 });
 
 condensedUploadZone.addEventListener('dragover', (e) => { e.preventDefault(); condensedUploadZone.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--hover-grey'); });
@@ -2764,11 +2247,11 @@ condensedUploadZone.addEventListener('dragleave', () => { condensedUploadZone.st
 condensedUploadZone.addEventListener('drop', (e) => {
     e.preventDefault(); condensedUploadZone.style.backgroundColor = 'transparent';
     const file = e.dataTransfer.files[0];
-    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+    if (file && file.type.startsWith('image/')) {
       handleImageUpload(file);
       condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name} `;
       if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-    } else { alert('Please drop an image or video file.'); }
+    } else { alert('Please drop an image file.'); }
 });
 
 
@@ -3090,430 +2573,12 @@ async function loadExampleImage() {
     }
 }
 
-async function loadExampleVideo() {
-    try {
-        loadingSpinner.style.display = 'inline';
-        if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'inline';
-        showUploadSpinner();
-        
-        let file = null;
-        
-        // 1. Try local fetch first (works on http://, https://, localhost)
-        try {
-            const response = await fetch('assets/example-video.mp4');
-            if (response.ok) {
-                const blob = await response.blob();
-                file = new File([blob], 'example-video.mp4', { type: 'video/mp4' });
-            }
-        } catch (fetchErr) {
-            console.log('Local fetch failed, falling back to embedded asset...');
-        }
-        
-        // 2. Fallback to embedded local asset (100% offline / file:/// compatible)
-        if (!file && typeof window !== 'undefined' && window.EXAMPLE_VIDEO_BASE64) {
-            file = dataURLtoFile(window.EXAMPLE_VIDEO_BASE64, 'example-video.mp4');
-        }
-        
-        if (!file) {
-            throw new Error('Failed to load example-video.mp4 from local assets');
-        }
-        
-        handleImageUpload(file);
-        condensedUploadZone.style.display = 'inline-block';
-        condensedFilename.innerHTML = `<i class="ri-check-line"></i> example-video.mp4`;
-        if (uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-    } catch (error) {
-        console.error('Error loading example video:', error);
-        alert('Failed to load example-video.mp4. Please try uploading a video manually.');
-    } finally {
-        loadingSpinner.style.display = 'none';
-        if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-        hideUploadSpinner();
-    }
-}
-
-async function startWebcam() {
-    try {
-        stopVideoProcessingLoop();
-        clearCachedSequence();
-        
-        loadingSpinner.style.display = 'inline';
-        if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'inline';
-        setDownloadButtonsState(true);
-        downloadPngSequenceButton.style.display = 'none';
-        showUploadSpinner();
-        hideExampleButtons();
-        
-        // Request webcam access
-        webcamStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            },
-            audio: false 
-        });
-        
-        isVideoInput = true;
-        isWebcamActive = true;
-        currentMediaElement = inputVideo;
-        
-        // Set the stream to the video element
-        inputVideo.srcObject = webcamStream;
-        inputVideo.src = "";
-        inputVideo.controls = false; // Remove controls for webcam
-        inputVideo.muted = true; // Keep muted
-        
-        inputVideo.onloadedmetadata = async () => {
-            currentImageOriginalWidth = inputVideo.videoWidth;
-            currentImageOriginalHeight = inputVideo.videoHeight;
-            customCharSeqIndex = 0;
-            
-            inputVideo.style.display = 'block';
-            inputCanvas.style.display = 'none';
-            
-            uploadZone.style.display = 'none';
-            if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-            if(condensedUploadZone) condensedUploadZone.style.display = 'inline-block';
-            if(condensedFilename) condensedFilename.innerHTML = `<i class="ri-webcam-line"></i> Webcam Active`;
-            
-            hideExampleButtons();
-            
-            if(previewChangesContainer) previewChangesContainer.style.display = 'flex';
-            
-            setDefaultValues(inputVideo.videoWidth);
-            
-            previewChangesToggle.checked = false;
-            isPreviewChangesActive = false;
-            previewChangesToggle.disabled = true;
-            currentDensity = parseInt(densityInput.value);
-            
-            if(chromaRemovalContainer) chromaRemovalContainer.style.display = 'flex';
-            if(invertColorsContainer) invertColorsContainer.style.display = 'flex';
-            
-            await processImageWithCurrentSettings();
-            loadingSpinner.style.display = 'none';
-            if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-            hideUploadSpinner();
-            updatePngSequenceButtonState();
-            
-            initializeHistoryForNewFile();
-            
-            previewChangesToggle.disabled = true;
-            
-            // Update button text
-            const webcamBtn = document.getElementById('webcamButton');
-            if (webcamBtn) {
-                webcamBtn.innerHTML = '<i class="ri-webcam-line"></i>Stop Webcam';
-            }
-            
-            // Show record webcam button, hide download sequence button
-            if (recordWebcamButton) recordWebcamButton.style.display = '';
-            if (downloadPngSequenceButton) downloadPngSequenceButton.style.display = 'none';
-            
-            if (window.innerWidth <= 768 && mobilePreviewActive) {
-                switchMobileView('output');
-            } else {
-                debouncedUpdateMobilePreview();
-            }
-            
-            // Set up event handlers BEFORE playing
-            inputVideo.onplay = () => {
-                clearCachedSequence();
-                stopVideoProcessingLoop();
-                if (previewChangesToggle.checked) {
-                    previewChangesToggle.checked = false;
-                    isPreviewChangesActive = false;
-                    updateInputCanvasPreview();
-                }
-                previewChangesToggle.disabled = true;
-                videoProcessLoopId = requestAnimationFrame(processCurrentFrame);
-            };
-            
-            inputVideo.onpause = () => {
-                previewChangesToggle.disabled = false;
-                processImageWithCurrentSettings();
-            };
-            
-            // Start the video and processing loop
-            await inputVideo.play();
-            
-            // Manually start the processing loop if play didn't trigger onplay
-            if (!videoProcessLoopId) {
-                videoProcessLoopId = requestAnimationFrame(processCurrentFrame);
-            }
-        };
-        
-    } catch (error) {
-        console.error('Error accessing webcam:', error);
-        let errorMessage = 'Unable to access webcam. ';
-        if (error.name === 'NotAllowedError') {
-            errorMessage += 'Permission denied.';
-        } else if (error.name === 'NotFoundError') {
-            errorMessage += 'No webcam found on your device.';
-        } else {
-            errorMessage += error.message;
-        }
-        alert(errorMessage);
-        
-        isWebcamActive = false;
-        loadingSpinner.style.display = 'none';
-        if (mobileLoadingSpinner) mobileLoadingSpinner.style.display = 'none';
-        hideUploadSpinner();
-        showExampleButtons();
-    }
-}
-
-function stopWebcam() {
-    if (webcamStream) {
-        // Stop all tracks in the stream
-        webcamStream.getTracks().forEach(track => track.stop());
-        webcamStream = null;
-    }
-    
-    if (inputVideo.srcObject) {
-        inputVideo.srcObject = null;
-    }
-    
-    isWebcamActive = false;
-    isVideoInput = false;
-    
-    stopVideoProcessingLoop();
-    
-    // Reset video element
-    inputVideo.style.display = 'none';
-    inputVideo.pause();
-    inputVideo.onloadedmetadata = null;
-    inputVideo.onerror = null;
-    inputVideo.onplay = null;
-    inputVideo.onpause = null;
-    inputVideo.src = "";
-    inputVideo.controls = true; // Restore controls for video files
-    
-    // Reset UI
-    uploadZone.style.display = 'flex';
-    inputCanvas.style.display = 'none';
-    if(uploadPanelTitle) uploadPanelTitle.style.display = 'none';
-    if(condensedUploadZone) condensedUploadZone.style.display = 'none';
-    
-    showExampleButtons();
-    
-    // Clear output
-    outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
-    const outputPlaceholder = document.getElementById('outputPlaceholder');
-    if (outputPlaceholder && !currentMediaElement) {
-        outputPlaceholder.classList.remove('hidden');
-        outputPlaceholder.style.display = '';
-    }
-    const outputViewport = document.getElementById('outputViewport');
-    if (outputViewport && !currentMediaElement) {
-        outputViewport.classList.remove('has-media');
-    }
-    
-    // Update button text
-    const webcamBtn = document.getElementById('webcamButton');
-    if (webcamBtn) {
-        webcamBtn.innerHTML = '<i class="ri-webcam-line"></i>Use Webcam';
-    }
-    
-    // Hide record webcam button
-    if (recordWebcamButton) recordWebcamButton.style.display = 'none';
-    
-    downloadPngSequenceButton.style.display = 'none';
-    setDownloadButtonsState(true);
-}
-
-function toggleWebcam() {
-    if (isWebcamActive) {
-        stopWebcam();
-    } else {
-        startWebcam();
-    }
-}
-
-function recordWebcam() {
-    if (!isWebcamActive || !webcamStream) {
-        alert('Please start the webcam first before recording.');
-        return;
-    }
-    
-    if (isRecordingWebcam) {
-        return; // Already recording
-    }
-    
-    // Open the recording duration modal
-    openRecordingDurationModal();
-}
-
-async function startRecordingWithDuration(duration) {
-    // Close the modal
-    closeRecordingDurationModal();
-    
-    if (!isWebcamActive || !webcamStream) {
-        alert('Please start the webcam first before recording.');
-        return;
-    }
-    
-    if (isRecordingWebcam) {
-        return; // Already recording
-    }
-    
-    try {
-        isRecordingWebcam = true;
-        recordedChunks = [];
-        
-        // Reset timer display
-        if (recordingTimer) recordingTimer.textContent = `${duration}s`;
-        if (recordingText) recordingText.textContent = 'Recording...';
-        
-        // Show recording overlay
-        if (recordingOverlay) {
-            recordingOverlay.style.display = 'flex';
-        }
-        
-        // Disable record button during recording
-        if (recordWebcamButton) recordWebcamButton.disabled = true;
-        
-        // Create MediaRecorder
-        const options = { mimeType: 'video/webm;codecs=vp9' };
-        
-        // Fallback to vp8 if vp9 is not supported
-        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-            options.mimeType = 'video/webm;codecs=vp8';
-            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options.mimeType = 'video/webm';
-            }
-        }
-        
-        mediaRecorder = new MediaRecorder(webcamStream, options);
-        
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-        
-        mediaRecorder.onstop = async () => {
-            // Create blob from recorded chunks
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const file = new File([blob], 'glyphtrix-webcam-recording.webm', { type: 'video/webm' });
-            
-            // Show processing message
-            if (recordingText) recordingText.textContent = 'Processing...';
-            
-            // Stop the webcam
-            stopWebcam();
-            
-            // Small delay to show processing message
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Hide recording overlay
-            if (recordingOverlay) {
-                recordingOverlay.style.display = 'none';
-            }
-            
-            // Load the recorded video as a file
-            handleImageUpload(file);
-            
-            // Update filename display
-            setTimeout(() => {
-                if (condensedFilename) {
-                    condensedFilename.innerHTML = `<i class="ri-check-line"></i> glyphtrix-webcam-recording.webm`;
-                }
-            }, 100);
-            
-            // Reset recording state
-            isRecordingWebcam = false;
-            recordedChunks = [];
-            mediaRecorder = null;
-            
-            // Re-enable record button
-            if (recordWebcamButton) recordWebcamButton.disabled = false;
-        };
-        
-        // Start recording
-        mediaRecorder.start();
-        
-        // Countdown timer
-        let timeLeft = duration;
-        
-        const countdownInterval = setInterval(() => {
-            timeLeft--;
-            if (recordingTimer) {
-                recordingTimer.textContent = `${timeLeft}s`;
-            }
-            
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-                
-                // Stop recording
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                }
-            }
-        }, 1000);
-        
-    } catch (error) {
-        console.error('Error recording webcam:', error);
-        alert('Failed to record webcam: ' + error.message);
-        
-        isRecordingWebcam = false;
-        if (recordingOverlay) recordingOverlay.style.display = 'none';
-        if (recordWebcamButton) recordWebcamButton.disabled = false;
-        if (recordingText) recordingText.textContent = 'Recording...';
-        if (recordingTimer) recordingTimer.textContent = '10s';
-    }
-}
-
-function hideExampleButtons() {
-    const exampleButtonsContainer = document.getElementById('exampleButtonsContainer');
-    if (exampleButtonsContainer) {
-        exampleButtonsContainer.style.display = 'none';
-    }
-    
-    const mobilePreviewContent = document.getElementById('mobilePreviewContent');
-    if (mobilePreviewContent) {
-        const mobileExampleButtons = mobilePreviewContent.querySelector('.example-buttons-container');
-        if (mobileExampleButtons) {
-            mobileExampleButtons.style.display = 'none';
-        }
-    }
-}
-
-function showExampleButtons() {
-    const exampleButtonsContainer = document.getElementById('exampleButtonsContainer');
-    if (exampleButtonsContainer) {
-        exampleButtonsContainer.style.display = 'flex';
-    }
-}
-
-function showUploadSpinner() {
-    const uploadZone = document.getElementById('uploadZone');
-    const uploadSpinner = document.getElementById('uploadSpinner');
-    if (uploadZone && uploadSpinner) {
-        uploadSpinner.innerHTML = getSpinner(48);
-        uploadZone.classList.add('loading');
-    }
-}
-
-function hideUploadSpinner() {
-    const uploadZone = document.getElementById('uploadZone');
-    if (uploadZone) {
-        uploadZone.classList.remove('loading');
-    }
-}
-
 function resetUploadState() {
-    stopVideoProcessingLoop();
-    clearCachedSequence();
-    isVideoInput = false;
     currentMediaElement = null;
     originalPixelData = null;
     currentBlobMatrix = null;
     updateFullscreenButton();
 
-    inputVideo.style.display = 'none';
-    inputVideo.pause();
-    inputVideo.src = "";
     inputCanvas.style.display = 'none';
     uploadZone.style.display = 'flex';
     
@@ -3541,7 +2606,6 @@ function resetUploadState() {
     if(outputResolutionDisplay) outputResolutionDisplay.textContent = '-';
     
     setDownloadButtonsState(true);
-    updatePngSequenceButtonState();
     
     if(chromaRemovalContainer) chromaRemovalContainer.style.display = 'none';
     if(invertColorsContainer) invertColorsContainer.style.display = 'none';
@@ -3579,153 +2643,17 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function formatDuration(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-
-
-function getVideoMetadata() {
-    if (!inputVideo) return {};
-
-    // Calculate optimized output based on current density and scale settings
-    const density = parseInt(densityInput.value) || 7;
-    const outputCols = Math.ceil(inputVideo.videoWidth / density);
-    const outputRows = Math.ceil(inputVideo.videoHeight / density);
-    const scaleFactor = parseFloat(scaleFactorInput.value) || 1;
-    const charSize = 8 * scaleFactor;
-    const outputWidth = outputCols * charSize;
-    const outputHeight = outputRows * charSize;
-
-    return {
-        duration: inputVideo.duration ? formatDuration(inputVideo.duration) : 'Unknown',
-        outputResolution: `${Math.round(outputWidth)} x ${Math.round(outputHeight)}`
-    };
-}
-
-function calculateEstimatedFrames(fps) {
-    if (!inputVideo || !inputVideo.duration) return 0;
-    return Math.floor(inputVideo.duration * fps);
-}
-
-function populateVideoMetadata() {
-    const metadataContainer = document.getElementById('videoMetadata');
-    if (!metadataContainer) return;
-
-    const metadata = getVideoMetadata();
-    
-    metadataContainer.innerHTML = `
-        <div class="metadata-grid">
-            <div class="metadata-item">
-                <span class="metadata-label">Duration</span>
-                <span class="metadata-value">${metadata.duration}</span>
-            </div>
-            <div class="metadata-item">
-                <span class="metadata-label">Resolution
-                    <span style="display: inline-flex; gap: 6px; margin-left: 8px;">
-                        <button class="btn-base" id="modalScaleDecrement" style="padding: 2px 6px;">-</button>
-                        <button class="btn-base" id="modalScaleIncrement" style="padding: 2px 6px;">+</button>
-                    </span>
-                </span>
-                <span class="metadata-value"><span id="modalResolutionValue">${metadata.outputResolution}</span></span>
-            </div>
-        </div>
-    `;
-
-    const modalScaleDecrement = document.getElementById('modalScaleDecrement');
-    const modalScaleIncrement = document.getElementById('modalScaleIncrement');
-    if (modalScaleDecrement) {
-        modalScaleDecrement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            updateScaleFactor(parseFloat(scaleFactorInput.value) - 0.5);
-            populateVideoMetadata();
-        });
-    }
-    if (modalScaleIncrement) {
-        modalScaleIncrement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            updateScaleFactor(parseFloat(scaleFactorInput.value) + 0.5);
-            populateVideoMetadata();
-        });
-    }
-}
-
-function populateFpsOptions() {
-    const fpsOptionsGrid = document.getElementById('fpsOptionsGrid');
-    if (!fpsOptionsGrid) return;
-
-    const fpsOptions = [
-        { fps: 1, label: '1 FPS' },
-        { fps: 2, label: '2 FPS' },
-        { fps: 5, label: '5 FPS' },
-        { fps: 24, label: '24 FPS' },
-        { fps: 25, label: '25 FPS' },
-        { fps: 30, label: '30 FPS' },
-        { fps: 60, label: '60 FPS' },
-        { fps: 120, label: '120 FPS' }
-    ];
-
-    fpsOptionsGrid.innerHTML = '';
-
-    fpsOptions.forEach(option => {
-        const estimatedFrames = calculateEstimatedFrames(option.fps);
-        
-        const button = document.createElement('button');
-        button.className = 'fps-option-button';
-        button.onclick = () => downloadPngSequenceWithFps(option.fps);
-
-        button.innerHTML = `
-            <div class="fps-number"><i class="ri-download-2-line"></i> ${option.label}</div>
-            <div class="fps-description">${estimatedFrames.toLocaleString()} frames</div>
-        `;
-
-        fpsOptionsGrid.appendChild(button);
-    });
-    
-    populateVideoMetadata();
-}
-
-function openFpsModal() {
-    if (!isVideoInput || inputVideo.readyState < inputVideo.HAVE_METADATA || isSequenceRendering) return;
-    populateFpsOptions();
-    document.getElementById('fpsModal').style.display = 'flex';
-}
-
-function closeFpsModal() {
-    document.getElementById('fpsModal').style.display = 'none';
-}
-
-function openRecordingDurationModal() {
-    document.getElementById('recordingDurationModal').style.display = 'flex';
-}
-
-function closeRecordingDurationModal() {
-    document.getElementById('recordingDurationModal').style.display = 'none';
-}
-
 // Close modal
 document.addEventListener('click', function(event) {
     const infoModal = document.getElementById('infoModal');
-    const fpsModal = document.getElementById('fpsModal');
-    const recordingDurationModal = document.getElementById('recordingDurationModal');
     if (event.target === infoModal) {
         closeInfoModal();
-    }
-    if (event.target === fpsModal) {
-        closeFpsModal();
-    }
-    if (event.target === recordingDurationModal) {
-        closeRecordingDurationModal();
     }
 });
 
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeInfoModal();
-        closeFpsModal();
-        closeRecordingDurationModal();
 
         // Exit fullscreen if active
         if (document.fullscreenElement) {
@@ -3944,7 +2872,7 @@ window.addEventListener('resize', () => {
         if (currentMediaElement || originalPixelData) {
             setTimeout(() => {
                 processImageWithCurrentSettings();
-                if (!isVideoInput) updateInputCanvasPreview();
+                updateInputCanvasPreview();
             }, 100);
         }
     }, 300);
@@ -4090,26 +3018,6 @@ function forceUpdateMobileOutputCanvas() {
     }
 }
 
-function syncMobileVideoTime() {
-    if (!mobilePreviewActive || window.innerWidth > 768 || currentMobileView !== 'input' || !isVideoInput) return;
-    
-    const mobilePreviewContent = document.getElementById('mobilePreviewContent');
-    if (!mobilePreviewContent) return;
-    
-    const existingContent = mobilePreviewContent.firstElementChild;
-    if (existingContent && existingContent.tagName === 'VIDEO') {
-        const inputVideo = document.getElementById('inputVideo');
-        if (inputVideo && Math.abs(existingContent.currentTime - inputVideo.currentTime) > 0.1) {
-            existingContent.currentTime = inputVideo.currentTime;
-        }
-    }
-}
-
-// Track the current mobile video clone globally
-window.currentMobileVideoClone = null;
-window.currentMobileVideoCloneSeekedHandler = null;
-window.inputVideoSeekedHandler = null;
-
 function updateMobilePreviewContent() {
     if (!mobilePreviewActive || window.innerWidth > 768) return;
     
@@ -4119,13 +3027,11 @@ function updateMobilePreviewContent() {
     // Check if content already exists and is the correct type
     const existingContent = mobilePreviewContent.firstElementChild;
     const shouldUpdate = !existingContent || 
-        (currentMobileView === 'input' && existingContent.tagName !== 'VIDEO' && existingContent.tagName !== 'CANVAS' && existingContent.id !== 'mobileUploadZone') ||
+        (currentMobileView === 'input' && existingContent.tagName !== 'CANVAS' && existingContent.id !== 'mobileUploadZone') ||
         (currentMobileView === 'output' && existingContent.tagName !== 'CANVAS' && !existingContent.style.cssText.includes('placeholder'));
     
     if (!shouldUpdate) {
-        if (currentMobileView === 'input' && isVideoInput && existingContent.tagName === 'VIDEO') {
-            syncMobileVideoTime();
-        } else if (currentMobileView === 'output' && existingContent.tagName === 'CANVAS') {
+        if (currentMobileView === 'output' && existingContent.tagName === 'CANVAS') {
             const outputCanvas = document.getElementById('outputCanvas');
             if (outputCanvas && currentBlobMatrix && currentBlobMatrix.length > 0) {
                 if (existingContent.width !== outputCanvas.width || existingContent.height !== outputCanvas.height) {
@@ -4142,48 +3048,12 @@ function updateMobilePreviewContent() {
     }
     
     mobilePreviewContent.innerHTML = '';
-    
-    if (window.currentMobileVideoClone && window.currentMobileVideoCloneSeekedHandler) {
-        window.currentMobileVideoClone.removeEventListener('seeked', window.currentMobileVideoCloneSeekedHandler);
-        window.currentMobileVideoClone = null;
-        window.currentMobileVideoCloneSeekedHandler = null;
-    }
-    if (window.inputVideoSeekedHandler && document.getElementById('inputVideo')) {
-        document.getElementById('inputVideo').removeEventListener('seeked', window.inputVideoSeekedHandler);
-        window.inputVideoSeekedHandler = null;
-    }
 
     if (currentMobileView === 'input') {
         const inputCanvas = document.getElementById('inputCanvas');
-        const inputVideo = document.getElementById('inputVideo');
         const uploadZone = document.getElementById('uploadZone');
         
-        if (isVideoInput && inputVideo && inputVideo.style.display !== 'none') {
-            const videoClone = inputVideo.cloneNode(true);
-            videoClone.id = 'mobilePreviewVideo';
-            videoClone.currentTime = inputVideo.currentTime;
-            
-            const videoCloneSeekedHandler = () => {
-                if (Math.abs(inputVideo.currentTime - videoClone.currentTime) > 0.1) {
-                    inputVideo.currentTime = videoClone.currentTime;
-                    const seekedEvent = new Event('seeked');
-                    inputVideo.dispatchEvent(seekedEvent);
-                }
-            };
-            videoClone.addEventListener('seeked', videoCloneSeekedHandler);
-            window.currentMobileVideoClone = videoClone;
-            window.currentMobileVideoCloneSeekedHandler = videoCloneSeekedHandler;
-
-            const inputVideoSeekedHandler = () => {
-                if (Math.abs(videoClone.currentTime - inputVideo.currentTime) > 0.1) {
-                    videoClone.currentTime = inputVideo.currentTime;
-                }
-            };
-            inputVideo.addEventListener('seeked', inputVideoSeekedHandler);
-            window.inputVideoSeekedHandler = inputVideoSeekedHandler;
-
-            mobilePreviewContent.appendChild(videoClone);
-        } else if (inputCanvas && inputCanvas.style.display !== 'none' && currentMediaElement) {
+        if (inputCanvas && inputCanvas.style.display !== 'none' && currentMediaElement) {
             const canvasClone = document.createElement('canvas');
             canvasClone.width = inputCanvas.width;
             canvasClone.height = inputCanvas.height;
@@ -4200,7 +3070,6 @@ function updateMobilePreviewContent() {
                 document.getElementById('imageUpload').click();
             });
             mobilePreviewContent.appendChild(uploadClone);
-
         }
     } else {
         const outputCanvas = document.getElementById('outputCanvas');
@@ -4219,8 +3088,8 @@ function updateMobilePreviewContent() {
                 <div class="placeholder-icon-wrap" style="width: 40px; height: 40px; font-size: 18px; margin-bottom: 4px;">
                     <i class="ri-terminal-box-line"></i>
                 </div>
-                <span class="placeholder-title" style="font-size: 10px;">NO STREAM ACTIVE</span>
-                <span class="placeholder-desc" style="font-size: 10px; max-width: 220px;">Switch to "Input" to upload media or connect webcam</span>
+                <span class="placeholder-title" style="font-size: 10px;">AWAITING INPUT IMAGE</span>
+                <span class="placeholder-desc" style="font-size: 10px; max-width: 220px;">Switch to "Input" to upload an image</span>
             `;
             mobilePreviewContent.appendChild(placeholder);
         }
@@ -4287,7 +3156,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setDefaultValues();
     if(uploadPanelTitle) uploadPanelTitle.style.display = 'none';
     layoutPanels();
-    updatePngSequenceButtonState();
     setupCanvasZoom();
     
     const undoButton = document.getElementById('undoButton');
@@ -4302,7 +3170,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setDefaultValues();
             
             processImageWithCurrentSettings();
-            if (!isVideoInput) updateInputCanvasPreview();
+            updateInputCanvasPreview();
             
             saveActionToHistory();
         });
@@ -4391,7 +3259,7 @@ function randomizeCustomColors() {
     }
 
     processImageWithCurrentSettings();
-    if (!isVideoInput) updateInputCanvasPreview();
+    updateInputCanvasPreview();
 
     setTimeout(() => {
         isFileJustLoaded = wasFileJustLoaded;
@@ -4466,7 +3334,7 @@ function randomizeGlyphSettings() {
     }
     
     processImageWithCurrentSettings();
-    if (!isVideoInput) updateInputCanvasPreview();
+    updateInputCanvasPreview();
     
     // Re-enable history and save the complete randomized state
     setTimeout(() => {
@@ -4519,9 +3387,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 textDirectionToggle.title = 'Toggle text direction (horizontal)';
             }
             
-            // Clear cached sequence when direction changes
-            clearCachedSequence();
-            
             // Reprocess the image with new direction
             processImageWithCurrentSettings();
             
@@ -4539,7 +3404,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function routeToDither() {
     if (!currentMediaElement) {
-        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image or video first');
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
         return;
     }
     const dataUrl = outputCanvas.toDataURL('image/png');
@@ -4552,7 +3417,7 @@ function routeToDither() {
 
 function routeToTracker() {
     if (!currentMediaElement) {
-        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image or video first');
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
         return;
     }
     const dataUrl = outputCanvas.toDataURL('image/png');
@@ -4565,7 +3430,7 @@ function routeToTracker() {
 
 function routeToCrt() {
     if (!currentMediaElement) {
-        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image or video first');
+        if (window.StudioPipeline) StudioPipeline.showToast('Please load an image first');
         return;
     }
     const dataUrl = outputCanvas.toDataURL('image/png');
@@ -4707,8 +3572,8 @@ function openCropModal() {
     const maxW = Math.min(800, Math.max(300, wrapRect.width - 32));
     const maxH = Math.min(500, Math.max(250, wrapRect.height - 32));
 
-    const sourceW = source.videoWidth || source.naturalWidth || source.width || inputCanvas.width;
-    const sourceH = source.videoHeight || source.naturalHeight || source.height || inputCanvas.height;
+    const sourceW = source.naturalWidth || source.width || inputCanvas.width;
+    const sourceH = source.naturalHeight || source.height || inputCanvas.height;
 
     cropState.imgW = sourceW;
     cropState.imgH = sourceH;
@@ -4867,8 +3732,8 @@ function applyAsciiCrop() {
     const source = rawMediaElement || currentMediaElement;
     if (!source) return;
 
-    const fullW = source.videoWidth || source.naturalWidth || source.width || inputCanvas.width;
-    const fullH = source.videoHeight || source.naturalHeight || source.height || inputCanvas.height;
+    const fullW = source.naturalWidth || source.width || inputCanvas.width;
+    const fullH = source.naturalHeight || source.height || inputCanvas.height;
 
     let origX = Math.round(cropState.startX / cropState.scale);
     let origY = Math.round(cropState.startY / cropState.scale);

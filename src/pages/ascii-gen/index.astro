@@ -8,15 +8,15 @@ import '../../styles/ascii-gen.css';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KOJERENS | ASCII Matrix Generator (Image & Video to ASCII Art)</title>
-  <meta name="description" content="KOJERENS ASCII Matrix: Generative client-side tool to convert images and videos into ASCII and Unicode glyph art directly in your browser.">
-  <meta name="keywords" content="kojerens, ascii art, text art, image to ascii, video to ascii, character art, terminal art, glyph, in-browser, generative art">
+  <title>KOJERENS | ASCII Matrix Generator (Image to ASCII Art)</title>
+  <meta name="description" content="KOJERENS ASCII Matrix: Generative client-side tool to convert images into ASCII and Unicode glyph art directly in your browser.">
+  <meta name="keywords" content="kojerens, ascii art, text art, image to ascii, character art, terminal art, glyph, in-browser, generative art">
   <meta name="robots" content="index,follow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <meta property="og:title" content="KOJERENS | ASCII Matrix Generator">
-  <meta property="og:description" content="Transform images and videos into ASCII glyph art locally in your browser.">
+  <meta property="og:description" content="Transform images into ASCII glyph art locally in your browser.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/png" sizes="32x32" href="/ascii-gen/assets/brand/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/ascii-gen/assets/brand/favicon-16x16.png">
@@ -24,7 +24,6 @@ import '../../styles/ascii-gen.css';
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#05060f">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
-  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
   <!-- TOPBAR (KOJERENS Studio Header) -->
@@ -83,22 +82,19 @@ import '../../styles/ascii-gen.css';
           <h2><i class="ri-image-line"></i> Input Source</h2>
         </div>
         <div class="input-area">
-          <input type="file" id="imageUpload" accept="image/* video/*">
+          <input type="file" id="imageUpload" accept="image/*">
           <div class="upload-zone" id="uploadZone">
             <div class="upload-icon-ring">
               <i class="ri-upload-cloud-2-line" id="uploadIcon"></i>
             </div>
             <div class="upload-spinner" id="uploadSpinner"></div>
             <div class="upload-heading-group" id="uploadText">
-              <h3 class="upload-primary-text">Drop Media or Choose Source</h3>
-              <p class="upload-secondary-text">Client-side synthesis · Supports JPG, PNG, WEBP, MP4, MOV</p>
+              <h3 class="upload-primary-text">Drop Image or Choose Source</h3>
+              <p class="upload-secondary-text">Client-side synthesis · Supports JPG, PNG, WEBP, SVG, GIF, AVIF</p>
             </div>
             <div class="example-buttons-container" id="exampleButtonsContainer">
               <button class="btn-base btn-action upload-main-button upload-btn-primary" onclick="document.getElementById('imageUpload').click()">
-                <i class="ri-folder-open-line"></i> Select Media File
-              </button>
-              <button class="btn-base btn-action upload-main-button upload-btn-secondary" id="webcamButton" onclick="toggleWebcam()">
-                <i class="ri-webcam-line"></i> Connect Live Webcam
+                <i class="ri-folder-open-line"></i> Select Image File
               </button>
               <div class="preset-buttons-row">
                 <button class="btn-base btn-preset" id="cropInputBtn" onclick="openCropModal()">
@@ -119,14 +115,6 @@ import '../../styles/ascii-gen.css';
             </div>
           </div>
           <canvas id="inputCanvas" class="imageCanvas"></canvas>
-          <video id="inputVideo" class="imageCanvas" playsinline loop muted controls></video>
-          <div id="recordingOverlay" style="display: none;">
-            <div class="recording-content">
-              <div class="recording-icon">●</div>
-              <p id="recordingText">Recording...</p>
-              <p id="recordingTimer">10s</p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -147,14 +135,9 @@ import '../../styles/ascii-gen.css';
             <div class="placeholder-icon-wrap">
               <i class="ri-terminal-box-line"></i>
             </div>
-            <div class="placeholder-title">AWAITING INPUT STREAM</div>
-            <div class="placeholder-desc">Load an image, video, or webcam feed on the left to synthesize live ASCII glyphs</div>
+            <div class="placeholder-title">AWAITING INPUT IMAGE</div>
+            <div class="placeholder-desc">Load an image on the left to synthesize live ASCII glyphs</div>
           </div>
-        </div>
-        <div id="sequenceLoadingOverlay" style="display: none;">
-          <div id="sequenceLoadingSpinner"></div>
-          <p id="sequenceLoadingOverlayText">Rendering PNG Sequence...</p>
-          <button id="cancelSequenceButton">Cancel Rendering</button>
         </div>
         <a id="downloadLink" style="display: none;" download="kojerens_ascii_image.png">Download Image</a>
       </div>
@@ -173,7 +156,7 @@ import '../../styles/ascii-gen.css';
               <button class="btn-base btn-action change-image-button" type="button" onclick="document.getElementById('imageUpload').click()"><i class="ri-upload-2-fill"></i> New Upload</button>
             </div>
           </div>
-          <input type="file" id="condensedImageUpload" accept="image/* video/*" style="display: none;">
+          <input type="file" id="condensedImageUpload" accept="image/*" style="display: none;">
         </div>
       </div>
 
@@ -482,12 +465,6 @@ import '../../styles/ascii-gen.css';
             <button class="btn-base btn-secondary" onclick="downloadText()" id="downloadTextButton">
               <i class="ri-file-text-line"></i> Text (.txt)
             </button>
-            <button class="btn-base btn-secondary" onclick="openFpsModal()" id="downloadPngSequenceButton" style="display: none;">
-              <i class="ri-folder-zip-line"></i> Sequence (.zip)
-            </button>
-            <button class="btn-base btn-secondary" onclick="recordWebcam()" id="recordWebcamButton" style="display: none;">
-              <i class="ri-record-circle-line"></i> Record Webcam
-            </button>
             <button class="btn-base btn-secondary" onclick="openNewTab()" id="openNewTabButton">
               <i class="ri-external-link-line"></i> Open Tab
             </button>
@@ -543,14 +520,14 @@ import '../../styles/ascii-gen.css';
         <button class="info-modal-close" onclick="closeInfoModal()">&times;</button>
       </div>
       <div class="info-modal-body">
-        <p><strong>KOJERENS ASCII Matrix</strong> is a high-performance generative canvas laboratory tool that converts images and video media into vector ASCII and Unicode glyph matrices directly in your browser.</p>
+        <p><strong>KOJERENS ASCII Matrix</strong> is a high-performance generative canvas laboratory tool that converts images into vector ASCII and Unicode glyph matrices directly in your browser.</p>
         <p style="font-size: 0.85em; opacity: 0.85; margin-bottom: 15px;">Designed & Developed by <strong>Fanz Irfan</strong> | <a href="https://manji.eu.org" target="_blank" style="color: inherit; text-decoration: underline;">manji.eu.org</a></p>
         
         <h3>How to Use</h3>
         <ol>
-          <li>Upload an image, video, or connect your webcam</li>
+          <li>Upload or drop an image file</li>
           <li>Tune image levels, glyphs, color maps, and density in the controls panel</li>
-          <li>Preview in real-time and export as high-res PNG, pure text, or video sequence ZIP</li>
+          <li>Preview in real-time and export as high-res PNG or pure text</li>
         </ol>
 
         <h3>Core Highlights</h3>
@@ -558,7 +535,7 @@ import '../../styles/ascii-gen.css';
           <li>100% Client-Side In-Browser Processing (Zero Server Dependencies)</li>
           <li>Multi-language Unicode character sets (Latin, Cyrillic, Devanagari, Japanese, Korean, Arabic, etc.)</li>
           <li>Hardware-accelerated Bloom, Photographic Exposure, and Gradient Mapping</li>
-          <li>Animated sequence rendering and webcam recording</li>
+          <li>Pure text (.txt) and high-resolution raster (.png) export</li>
         </ul>
         
         <div class="info-modal-footer">
@@ -569,56 +546,6 @@ import '../../styles/ascii-gen.css';
       </div>
     </div>
   </div>
-
-  <!-- FPS Selection Modal -->
-  <div id="fpsModal" class="info-modal" style="display: none;">
-    <div class="info-modal-content">
-      <div class="info-modal-header">
-        <h2>Choose Sequence FPS</h2>
-        <button class="info-modal-close" onclick="closeFpsModal()">&times;</button>
-      </div>
-      <div class="info-modal-body">
-        <div class="fps-options-grid" id="fpsOptionsGrid">
-        </div>
-        <div class="video-metadata" id="videoMetadata"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Recording Duration Modal -->
-  <div id="recordingDurationModal" class="info-modal" style="display: none;">
-    <div class="info-modal-content">
-      <div class="info-modal-header">
-        <h2>Record Webcam</h2>
-        <button class="info-modal-close" onclick="closeRecordingDurationModal()">&times;</button>
-      </div>
-      <div class="info-modal-body">
-        <p style="margin-bottom: 15px; font-weight: bold;">
-          Select recording duration below
-        </p>
-        <div class="fps-options-grid" id="recordingDurationGrid">
-          <button class="fps-option-button" onclick="startRecordingWithDuration(5)">
-            <span class="fps-number">5s</span>
-            <span class="fps-description">.mov</span>
-          </button>
-          <button class="fps-option-button" onclick="startRecordingWithDuration(10)">
-            <span class="fps-number">10s</span>
-            <span class="fps-description">.mov</span>
-          </button>
-          <button class="fps-option-button" onclick="startRecordingWithDuration(30)">
-            <span class="fps-number">30s</span>
-            <span class="fps-description">.mov</span>
-          </button>
-          <button class="fps-option-button" onclick="startRecordingWithDuration(60)">
-            <span class="fps-number">60s</span>
-            <span class="fps-description">.mov</span>
-          </button>
-        </div>
-        <p style="margin-top: 20px; line-height: 1.6; font-size: 0.9em;">
-          The recording will capture your <strong>webcam input</strong> (not the ASCII output) and save it temporarily in your browser's memory for privacy. After recording, you can fine-tune all settings on the captured video.
-        </p>
-      </div>
-    </div>
   <!-- INTERACTIVE CROP MODAL -->
   <div class="crop-modal-backdrop" id="cropModal" style="display:none;">
     <div class="crop-modal-content">

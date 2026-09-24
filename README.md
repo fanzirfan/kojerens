@@ -3,7 +3,7 @@
 > Generative Visual & Computational Design Studio  
 > **Author**: Fanz Irfan | **URL**: [manji.eu.org](https://manji.eu.org)
 
-KOJERENS adalah laboratorium visual generatif dan komputasi grafis berbasis browser (*client-side*) dengan teknologi web murni (HTML5 Canvas, CSS3, ES6 JavaScript). Seluruh kalkulasi gambar, pemrosesan video, dan visualisasi berjalan langsung di perangkat pengguna secara lokal tanpa ketergantungan server luar.
+KOJERENS adalah laboratorium visual generatif dan komputasi grafis berbasis browser (*client-side*) dengan teknologi web murni (HTML5 Canvas, CSS3, ES6 JavaScript). Seluruh kalkulasi citra dan visualisasi berjalan langsung di perangkat pengguna secara lokal tanpa ketergantungan server luar.
 
 ---
 
@@ -33,7 +33,7 @@ Alat analisis kontras dan detektor fitur citra dengan 4 mesin generatif visual:
 ### 2. ASCII Matrix Generator (`/ascii-gen/`)
 Sintesis karakter Unicode dan seni ASCII interaktif secara *real-time*:
 
-- **Multi-Media Input**: Mendukung berkas gambar (*PNG/JPG/WebP*), berkas video (*MP4/WebM*), serta siaran kamera langsung (*live webcam*).
+- **Image Input**: Mendukung berbagai format citra raster maupun vektor (*PNG, JPG, WebP, SVG, GIF, AVIF*).
 - **Rangkaian Efek Visual**:
   - *Optical Bloom*: Efek pendaran cahaya lensa pada karakter terang.
   - *Exposure & Contrast Tuning*: Penyesuaian kompensasi eksposur dan kontras secara presisi.
@@ -42,7 +42,7 @@ Sintesis karakter Unicode dan seni ASCII interaktif secara *real-time*:
 - **Format Ekspor Komprehensif**:
   - Berkas gambar beresolusi tinggi (PNG).
   - Teks mentah (.txt) untuk salin ke terminal atau dokumen.
-  - Urutan frame gambar (.zip) untuk rekaman video/animasi ASCII.
+  - Salin teks ASCII langsung ke clipboard (*One-click copy*).
 
 ---
 
@@ -106,7 +106,7 @@ Sintesis tabung sinar katoda (CRT) fisik dan prosesor analog video glitch langsu
 
 ## Prinsip & Arsitektur
 
-1. **Privasi & Keamanan Penuh**: 100% berjalan *in-browser*. Tidak ada data citra, video, atau teks pengguna yang dikirim ke server.
+1. **Privasi & Keamanan Penuh**: 100% berjalan *in-browser*. Tidak ada data citra atau teks pengguna yang dikirim ke server.
 2. **Kinerja Tinggi**:
    - Memanfaatkan *offscreen canvas buffer* yang dapat digunakan kembali dengan flag `{ willReadFrequently: true }`.
    - Pipeline rendering dibatch secara halus menggunakan `requestAnimationFrame` untuk menjamin responsivitas 60fps/120fps.

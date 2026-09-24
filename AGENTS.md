@@ -7,7 +7,7 @@ KOJERENS is a high-performance generative visual and design laboratory built wit
    - **Telemetry** (`hero`): High-impact sci-fi HUD display with radial dial ticks, technical perspective grid, corner brackets, and crosshairs.
    - **Topography** (`geo`): Precision geodetic contour mapping with Marching Squares elevation levels and radial bearing spokes.
    - **Viewfinder** (`studio`): Minimalist editorial framing with rule-of-thirds compositional guides and studio telemetry typography.
-2. **ASCII Matrix / Generator** (`/ascii-gen/`): Browser-native glyph and ASCII art synthesizer with extensive Unicode character sets, real-time image and video processing, bloom, exposure, color quantization, and sequence export.
+2. **ASCII Matrix / Generator** (`/ascii-gen/`): Browser-native glyph and ASCII art synthesizer with extensive Unicode character sets, real-time image processing, bloom, exposure, color quantization, and text/image export.
 3. **1-Bit Dither Matrix** (`/dither-gen/`): Browser-native 1-bit bitmap and error-diffusion synthesizer featuring 15 dithering engines (Atkinson, Floyd-Steinberg, Bayer 8x8/4x4/2x2, Halftone Dot/Line, Sierra-3, Stucki, Burkes, JJN, Blue Noise), 12 retro palettes, integer pixel crunching, and scalable vector SVG export.
 4. **Analog CRT Beam & Glitch Synthesizer** (`/crt-gen/`): Browser-native cathode ray tube and glitch processor featuring Trinitron aperture grilles, triad shadow masks, electron beam bloom, chromatic aberration, NTSC composite chroma bleed, and VHS tracking jitter.
 
