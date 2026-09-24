@@ -14,3 +14,4 @@ node_modules/
 # Astro & Build Outputs
 .astro/
 dist/
+worker-configuration.d.ts
