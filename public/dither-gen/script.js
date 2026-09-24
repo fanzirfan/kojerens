@@ -1171,7 +1171,7 @@
         document.querySelectorAll('.palette-swatch').forEach(function (s) { s.classList.remove('active'); });
         swatch.classList.add('active');
         state.palette = key;
-        palettePresetVal.textContent = item.name;
+        if (paletteNameVal) paletteNameVal.textContent = item.name;
         scheduleUpdate();
       });
 
