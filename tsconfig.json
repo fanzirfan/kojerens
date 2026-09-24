@@ -9,10 +9,6 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@core/*": ["src/core/*"],
-      "@components/*": ["src/components/*"],
-      "@stores/*": ["src/stores/*"],
-      "@layouts/*": ["src/layouts/*"],
       "@styles/*": ["src/styles/*"]
     }
   },

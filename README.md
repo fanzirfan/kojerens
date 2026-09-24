@@ -119,6 +119,29 @@ Sintesis tabung sinar katoda (CRT) fisik dan prosesor analog video glitch langsu
 
 ---
 
+## Teknologi & Arsitektur
+
+- **Framework**: [Astro v5](https://astro.build/) (Static Site Generation / `output: 'static'`)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) via `@tailwindcss/vite` dengan CSS-first `@theme` tokens
+- **Package Manager & Runtime**: [Bun](https://bun.sh/)
+- **Hosting & Edge**: Cloudflare Pages / Workers Static Assets via [`wrangler.jsonc`](wrangler.jsonc)
+- **Komputasi Grafis**: HTML5 Canvas2D dengan *offscreen buffer pools* dan akselerasi hardware
+
+### Struktur Proyek
+
+```
+blob-tracker/
+├── src/
+│   ├── pages/           # Route Astro (/, /blob-tracker, /ascii-gen, /dither-gen, /crt-gen)
+│   └── styles/          # Tailwind CSS v4 global.css & tool-specific stylesheets
+├── public/              # Skrip visual engine, web worker, icon, dan aset statis
+├── wrangler.jsonc       # Konfigurasi Cloudflare Pages (serving ./dist)
+├── astro.config.mjs     # Konfigurasi Astro SSG & Vite Tailwind plugin
+└── package.json
+```
+
+---
+
 ## Menjalankan Secara Lokal & Build
 
 Workspace ini ditenagai oleh **Astro** dan **Bun**:
@@ -132,9 +155,12 @@ bun run dev
 
 # Membangun output statis untuk Cloudflare Pages
 bun run build
-# Direktori deploy Cloudflare Pages: dist/
+
+# Menjalankan preview lokal hasil build
+bun run preview
 ```
 
+Output build akan tersimpan di direktori `./dist` dan siap dideploy langsung ke Cloudflare Pages.
 Buka peramban di `http://localhost:4321`.
 
 ---

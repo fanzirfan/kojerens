@@ -1,7 +1,7 @@
 # KOJERENS : Developer & Agent Guidelines
 
 ## Overview
-KOJERENS is a high-performance generative visual and design laboratory built with vanilla web technologies (HTML5 Canvas, CSS3, ES5/ES6 JavaScript). It hosts four client-side generative tools:
+KOJERENS is a high-performance generative visual and design laboratory built with Astro v5 SSG, Tailwind CSS v4, Bun, and client-side HTML5 Canvas2D. It is configured for zero-server static hosting on Cloudflare Pages (`wrangler.jsonc`, outputting to `dist/`). It hosts four client-side generative tools:
 1. **Blob Tracker** (`/blob-tracker/`): Analyzes images for luminance contrast and feature centroids across 4 distinct generative visual engines:
    - **Sensor** (`circles`): Responsive blob and feature tracker with dynamic radius weighting, constellation connections, and coordinate readouts.
    - **Telemetry** (`hero`): High-impact sci-fi HUD display with radial dial ticks, technical perspective grid, corner brackets, and crosshairs.
@@ -10,6 +10,16 @@ KOJERENS is a high-performance generative visual and design laboratory built wit
 2. **ASCII Matrix / Generator** (`/ascii-gen/`): Browser-native glyph and ASCII art synthesizer with extensive Unicode character sets, real-time image and video processing, bloom, exposure, color quantization, and sequence export.
 3. **1-Bit Dither Matrix** (`/dither-gen/`): Browser-native 1-bit bitmap and error-diffusion synthesizer featuring 15 dithering engines (Atkinson, Floyd-Steinberg, Bayer 8x8/4x4/2x2, Halftone Dot/Line, Sierra-3, Stucki, Burkes, JJN, Blue Noise), 12 retro palettes, integer pixel crunching, and scalable vector SVG export.
 4. **Analog CRT Beam & Glitch Synthesizer** (`/crt-gen/`): Browser-native cathode ray tube and glitch processor featuring Trinitron aperture grilles, triad shadow masks, electron beam bloom, chromatic aberration, NTSC composite chroma bleed, and VHS tracking jitter.
+
+---
+
+## Architecture & Project Structure
+
+- `src/pages/`: Astro static routes (`/`, `/blob-tracker`, `/ascii-gen`, `/dither-gen`, `/crt-gen`).
+- `src/styles/`: Tailwind CSS v4 `global.css` with `@theme` HUD tokens and tool-specific stylesheets.
+- `public/`: Client-side visual scripts, web workers, demo assets, and static media (served directly to `dist/`).
+- `wrangler.jsonc`: Cloudflare Pages configuration serving static assets from `./dist`.
+- Runtime & Package Manager: **Bun**.
 
 ---
 
