@@ -73,6 +73,7 @@ const loadingSpinner = document.getElementById('loadingSpinner');
 const mobileLoadingSpinner = document.getElementById('mobileLoadingSpinner');
 
 
+const uploadZone = document.getElementById('uploadZone');
 const condensedUploadZone = document.getElementById('condensedUploadZone');
 const condensedFilename = document.getElementById('condensedFilename');
 const uploadPanelTitle = document.getElementById('uploadPanelTitle');
@@ -1600,9 +1601,60 @@ async function processImageWithCurrentSettings() {
     }
 }
 
+function hideExampleButtons() {
+    const exampleButtonsContainer = document.getElementById('exampleButtonsContainer');
+    if (exampleButtonsContainer) {
+        exampleButtonsContainer.style.display = 'none';
+    }
+    const mobilePreviewContent = document.getElementById('mobilePreviewContent');
+    if (mobilePreviewContent) {
+        const mobileExampleButtons = mobilePreviewContent.querySelector('.example-buttons-container');
+        if (mobileExampleButtons) {
+            mobileExampleButtons.style.display = 'none';
+        }
+    }
+}
+
+function showExampleButtons() {
+    const exampleButtonsContainer = document.getElementById('exampleButtonsContainer');
+    if (exampleButtonsContainer) {
+        exampleButtonsContainer.style.display = 'flex';
+    }
+    const mobilePreviewContent = document.getElementById('mobilePreviewContent');
+    if (mobilePreviewContent) {
+        const mobileExampleButtons = mobilePreviewContent.querySelector('.example-buttons-container');
+        if (mobileExampleButtons) {
+            mobileExampleButtons.style.display = 'flex';
+        }
+    }
+}
+
+function showUploadSpinner() {
+    const uploadZoneEl = document.getElementById('uploadZone');
+    const uploadSpinnerEl = document.getElementById('uploadSpinner');
+    if (uploadSpinnerEl) {
+        uploadSpinnerEl.innerHTML = getSpinner(48);
+    }
+    if (uploadZoneEl) {
+        uploadZoneEl.classList.add('loading');
+    }
+}
+
+function hideUploadSpinner() {
+    const uploadZoneEl = document.getElementById('uploadZone');
+    const uploadSpinnerEl = document.getElementById('uploadSpinner');
+    if (uploadZoneEl) {
+        uploadZoneEl.classList.remove('loading');
+    }
+    if (uploadSpinnerEl) {
+        uploadSpinnerEl.innerHTML = '';
+    }
+}
+
 function handleImageUpload(file, isCropped = false) {
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
+    const isImage = file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|svg|gif|avif|bmp|ico)$/i.test(file.name || '');
+    if (!isImage) {
         alert("Please select an image file (PNG, JPG, WebP, SVG, GIF, AVIF).");
         return;
     }
@@ -1659,7 +1711,7 @@ function handleImageUpload(file, isCropped = false) {
             await processImageWithCurrentSettings();
             await updateInputCanvasPreview();
             inputCanvas.style.display = 'block';
-            uploadZone.style.display = 'none';
+            if (uploadZone) uploadZone.style.display = 'none';
             if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
             
             hideExampleButtons();
@@ -1702,18 +1754,21 @@ function handleImageUpload(file, isCropped = false) {
 
 imageUpload.addEventListener('change', function(e) {
    if (e.target.files && e.target.files[0]) {
-       handleImageUpload(e.target.files[0]);
+       const file = e.target.files[0];
+       handleImageUpload(file);
        condensedUploadZone.style.display = 'inline-block';
-       condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${e.target.files[0].name} `;
+       condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name} `;
        if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
+       this.value = '';
    }
 });
-condensedImageUpload.addEventListener('change', (e) => {
+condensedImageUpload.addEventListener('change', function(e) {
     if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
         handleImageUpload(file);
         condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name} `;
         if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
+        this.value = '';
     }
 });
 
@@ -2223,6 +2278,13 @@ nextColorSchemeButton.addEventListener('click', function() {
     setTimeout(() => saveActionToHistory(), 100);
 });
 
+uploadZone.addEventListener('click', (e) => {
+    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('#demoPickerPanel')) {
+        return;
+    }
+    imageUpload.click();
+});
+
 uploadZone.addEventListener('dragover', (e) => { 
     e.preventDefault(); 
     uploadZone.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--hover-grey'); 
@@ -2234,12 +2296,13 @@ uploadZone.addEventListener('drop', (e) => {
     e.preventDefault(); 
     uploadZone.style.backgroundColor = 'transparent';
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
+    const isImage = file && (file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|svg|gif|avif|bmp|ico)$/i.test(file.name || ''));
+    if (isImage) {
       handleImageUpload(file);
       condensedUploadZone.style.display = 'inline-block';
       condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name} `;
        if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-    } else { alert('Please drop an image file.'); }
+    } else if (file) { alert('Please drop an image file.'); }
 });
 
 condensedUploadZone.addEventListener('dragover', (e) => { e.preventDefault(); condensedUploadZone.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--hover-grey'); });
@@ -2247,11 +2310,12 @@ condensedUploadZone.addEventListener('dragleave', () => { condensedUploadZone.st
 condensedUploadZone.addEventListener('drop', (e) => {
     e.preventDefault(); condensedUploadZone.style.backgroundColor = 'transparent';
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
+    const isImage = file && (file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|svg|gif|avif|bmp|ico)$/i.test(file.name || ''));
+    if (isImage) {
       handleImageUpload(file);
       condensedFilename.innerHTML = `<i class="ri-check-line"></i> ${file.name} `;
       if(uploadPanelTitle) uploadPanelTitle.style.display = 'block';
-    } else { alert('Please drop an image file.'); }
+    } else if (file) { alert('Please drop an image file.'); }
 });
 
 
