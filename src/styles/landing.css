@@ -70,15 +70,27 @@ body {
   font-family: var(--font-untitled-sans);
   background-color: var(--color-midnight-canvas);
   color: var(--color-moon-mist);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--color-midnight-canvas);
   background-image:
     radial-gradient(ellipse 90% 60% at 50% -10%, rgba(102, 58, 243, 0.22) 0%, transparent 65%),
     radial-gradient(ellipse 70% 40% at 85% 60%, rgba(186, 215, 247, 0.05) 0%, transparent 70%),
     linear-gradient(rgba(186, 215, 247, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(186, 215, 247, 0.035) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
-  line-height: 1.6;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 a {
@@ -775,6 +787,20 @@ button {
   }
   .features-grid {
     grid-template-columns: 1fr;
+  }
+  .tool-card,
+  .feature-card,
+  .manifesto-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(14, 18, 36, 0.96) !important;
+    contain: content;
+    transform: translateZ(0);
+  }
+  .navbar {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    background: rgba(5, 6, 15, 0.94) !important;
   }
   .manifesto-card {
     grid-template-columns: 1fr;
