@@ -1,0 +1,31 @@
+{
+  "name": "KOJERENS Generative Visual Studio",
+  "short_name": "KOJERENS",
+  "description": "High-performance browser-native generative visual and computational design studio.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#05060f",
+  "theme_color": "#05060f",
+  "orientation": "any",
+  "categories": ["design", "photo", "utilities"],
+  "icons": [
+    {
+      "src": "assets/brand/pwa-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/brand/logo.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/brand/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

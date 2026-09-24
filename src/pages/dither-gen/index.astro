@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1-Bit Dither Matrix : KOJERENS</title>
+  <meta name="description" content="KOJERENS 1-Bit Dither Matrix: High-performance browser-native dithering synthesizer featuring Atkinson, Floyd-Steinberg, Bayer ordered, and Halftone raster engines." />
+  <meta name="author" content="Fanz Irfan" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/dither-gen/assets/brand/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/dither-gen/assets/brand/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/dither-gen/assets/brand/apple-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#05060f" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/dither-gen/styles.css" />
+</head>
+<body class="theme-midnight">
+<div class="app">
+
+  <!-- TOPBAR (Clean Header: Brand on left, Navigation & Actions on right) -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a href="/" class="topbar-brand-link" title="Back to KOJERENS Studio">
+        <img src="/dither-gen/assets/brand/navbar.png" alt="KOJERENS" class="topbar-logo" width="26" height="26" />
+        <span class="topbar-brand-title">KOJERENS</span>
+      </a>
+      <span class="topbar-subtool-badge">1-BIT DITHER</span>
+    </div>
+
+    <!-- ACTIONS ON RIGHT -->
+    <div class="topbar-actions">
+      <a href="/blob-tracker/" class="topbar-tool-switch" title="Switch to Blob Tracker">
+        <i class="ri-radar-line"></i>
+        <span>Blob Tracker</span>
+      </a>
+      <a href="/ascii-gen/" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">
+        <i class="ri-terminal-line"></i>
+        <span>ASCII Gen</span>
+      </a>
+      <a href="/crt-gen/" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">
+        <i class="ri-tv-line"></i>
+        <span>CRT Gen</span>
+      </a>
+      <button class="topbar-btn" id="topbarRandomBtn" title="Randomize style and settings">
+        <i class="ri-dice-line"></i>
+        <span class="btn-text">Random</span>
+      </button>
+      <button class="topbar-cta" id="topbarDownloadBtn">Export PNG</button>
+    </div>
+  </header>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+
+    <!-- ICON RAIL (FAR LEFT) -->
+    <nav class="rail" aria-label="Panel navigation">
+      <button class="rail-btn active" data-panel="presets" title="Dither Presets" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        <span class="rail-label">Style</span>
+      </button>
+      <button class="rail-btn" data-panel="file" title="Source File &amp; Crop" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="rail-label">File</span>
+      </button>
+      <button class="rail-btn" data-panel="engine" title="Dither Algorithm" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="rail-label">Engine</span>
+      </button>
+      <button class="rail-btn" data-panel="palette" title="Color Palette" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
+        <span class="rail-label">Palette</span>
+      </button>
+      <button class="rail-btn" data-panel="scale" title="Pixel Scale &amp; Crunch" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="rail-label">Scale</span>
+      </button>
+      <button class="rail-btn" data-panel="levels" title="Image Levels &amp; Tone" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        <span class="rail-label">Levels</span>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="rail-btn" data-panel="size" title="Canvas Format" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        <span class="rail-label">Size</span>
+      </button>
+      <button class="rail-btn" data-panel="frame" title="Telemetry Typography" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="rail-label">Text</span>
+      </button>
+      <button class="rail-btn" data-panel="export" title="Production Export" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="rail-label">Export</span>
+      </button>
+    </nav>
+
+    <!-- PANEL DRAWER (MIDDLE LEFT) -->
+    <aside class="panel-drawer open" id="panelDrawer">
+      <div class="drawer-inner sidebar">
+
+        <!-- SECTION 0: DITHER ENGINE PRESETS (MOVED TO RIGHT PANEL) -->
+        <section class="panel" data-section="presets">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> DITHER ALGORITHM PRESETS</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <p class="hint">Instant 1-bit quantization engines</p>
+            <div class="preset-pill-grid">
+              <button class="preset-pill-btn active" data-engine="atkinson">Atkinson</button>
+              <button class="preset-pill-btn" data-engine="floyd">Floyd-Steinberg</button>
+              <button class="preset-pill-btn" data-engine="bayer8">Bayer 8x8</button>
+              <button class="preset-pill-btn" data-engine="bayer4">Bayer 4x4</button>
+              <button class="preset-pill-btn" data-engine="halftone">Halftone Dot</button>
+              <button class="preset-pill-btn" data-engine="line">Halftone Line</button>
+              <button class="preset-pill-btn" data-engine="sierra">Sierra-3</button>
+              <button class="preset-pill-btn" data-engine="bluenoise">Blue Noise</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 1: FILE SOURCE & CROP -->
+        <section class="panel" data-section="file">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> FILE SOURCE &amp; CROP</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <button class="btn-block" id="replaceFileBtn">Select / Replace File</button>
+            <input type="file" id="fileInput" style="display:none" />
+            
+            <div style="margin-bottom: 8px;">
+              <button class="btn-block-outline" id="cropBtn" title="Crop or frame the source image">
+                <i class="ri-crop-line"></i> Crop Image
+              </button>
+            </div>
+
+            <div class="control-group" style="margin-top:10px">
+              <div class="control-header">
+                <label>INPUT OPACITY</label>
+                <span class="val" id="fileOpacityVal">1.00</span>
+              </div>
+              <p class="hint">Blend level of dither matrix against canvas</p>
+              <input type="range" id="fileOpacity" min="0.1" max="1" step="0.01" value="1.00" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: DITHER ENGINE SELECTOR (DETAILED 15 ENGINES) -->
+        <section class="panel" data-section="engine">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> ADVANCED ALGORITHM</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>ALGORITHM PRESET (15 ENGINES)</label>
+                <span class="val" id="engineNameVal">Atkinson</span>
+              </div>
+              <div class="select-wrap">
+                <select id="engineSelect" aria-label="Select Dither Engine">
+                  <optgroup label="Error Diffusion">
+                    <option value="atkinson" selected>Atkinson (Apple Macintosh 1984)</option>
+                    <option value="floyd">Floyd-Steinberg (Classic Diffusion)</option>
+                    <option value="sierra">Sierra-3 (High-Fidelity 3-Row)</option>
+                    <option value="sierra_lite">Sierra Lite (Fast 2-Row)</option>
+                    <option value="stucki">Stucki (Sharp Contour Preserving)</option>
+                    <option value="burkes">Burkes (Smooth Diffusion)</option>
+                    <option value="jardin">Jarvis-Judice-Ninke (12-Weight)</option>
+                  </optgroup>
+                  <optgroup label="Ordered &amp; Matrix">
+                    <option value="bayer8">Bayer 8x8 (Cross-Hatch Matrix)</option>
+                    <option value="bayer4">Bayer 4x4 (Chunky Retro Matrix)</option>
+                    <option value="bayer2">Bayer 2x2 (Coarse 4-Shade Checker)</option>
+                  </optgroup>
+                  <optgroup label="Halftone Raster Screens">
+                    <option value="halftone">Halftone Dot Screen (Rotated Raster)</option>
+                    <option value="line">Halftone Line Screen (Engraving Lines)</option>
+                  </optgroup>
+                  <optgroup label="Noise &amp; Threshold">
+                    <option value="bluenoise">Blue Noise (Stochastic Dispersal)</option>
+                    <option value="random">Random Noise (TV Static Grain)</option>
+                    <option value="threshold">Pure High-Contrast Threshold</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+
+            <div class="control-group" id="halftoneControls" style="display:none">
+              <div class="control-header">
+                <label>HALFTONE ANGLE</label>
+                <span class="val" id="halftoneAngleVal">45°</span>
+              </div>
+              <input type="range" id="halftoneAngle" min="0" max="90" step="5" value="45" />
+
+              <div class="control-header" style="margin-top:10px">
+                <label>SCREEN FREQUENCY</label>
+                <span class="val" id="halftoneFreqVal">24</span>
+              </div>
+              <input type="range" id="halftoneFreq" min="6" max="64" step="2" value="24" />
+            </div>
+
+            <div class="control-group">
+              <div class="toggle-row">
+                <label for="serpentineToggle">SERPENTINE SCANNING</label>
+                <input type="checkbox" id="serpentineToggle" checked />
+              </div>
+              <p class="hint">Alternates row scan direction to eliminate directional banding</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: PALETTE -->
+        <section class="panel" data-section="palette">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> COLOR PALETTE</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>RETRO HARDWARE PRESETS (12 PALETTES)</label>
+                <span class="val" id="paletteNameVal">Mac 1984</span>
+              </div>
+              <div class="palette-swatch-grid" id="paletteGrid">
+                <!-- Injected by script.js -->
+              </div>
+            </div>
+
+            <div class="control-group" style="margin-top:14px">
+              <div class="toggle-row">
+                <label for="invertPaletteToggle">INVERT PALETTE</label>
+                <input type="checkbox" id="invertPaletteToggle" />
+              </div>
+              <p class="hint">Flip background and foreground ink colors</p>
+            </div>
+
+            <!-- Custom 2-Color Picker -->
+            <div class="custom-palette-row" id="customPaletteWrap">
+              <div class="color-picker-item">
+                <label>BACKGROUND INK</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="customBgColor" value="#05060f" />
+                  <span class="color-hex-val" id="customBgVal">#05060f</span>
+                </div>
+              </div>
+              <div class="color-picker-item">
+                <label>FOREGROUND INK</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="customFgColor" value="#ffffff" />
+                  <span class="color-hex-val" id="customFgVal">#ffffff</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: PIXEL SCALE -->
+        <section class="panel" data-section="scale">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> PIXEL SCALE &amp; CRUNCH</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>INTEGER PIXEL SCALE</label>
+                <span class="val" id="pixelScaleVal">1x</span>
+              </div>
+              <p class="hint">Downsamples processing grid before synthesis for authentic chunky bitmap resolution</p>
+              <div class="seg-row">
+                <button class="seg-btn active" data-scale="1">1x</button>
+                <button class="seg-btn" data-scale="2">2x</button>
+                <button class="seg-btn" data-scale="3">3x</button>
+                <button class="seg-btn" data-scale="4">4x</button>
+                <button class="seg-btn" data-scale="6">6x</button>
+                <button class="seg-btn" data-scale="8">8x</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: IMAGE LEVELS -->
+        <section class="panel" data-section="levels">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> IMAGE LEVELS &amp; TONE</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>BRIGHTNESS</label>
+                <span class="val" id="brightnessVal">0</span>
+              </div>
+              <input type="range" id="brightness" min="-100" max="100" step="1" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>CONTRAST</label>
+                <span class="val" id="contrastVal">0</span>
+              </div>
+              <input type="range" id="contrast" min="-100" max="100" step="1" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>GAMMA CORRECTION</label>
+                <span class="val" id="gammaVal">1.00</span>
+              </div>
+              <input type="range" id="gamma" min="0.2" max="3.0" step="0.05" value="1.00" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>THRESHOLD BIAS</label>
+                <span class="val" id="thresholdBiasVal">0</span>
+              </div>
+              <p class="hint">Shifts the 50% midpoint threshold higher or lower</p>
+              <input type="range" id="thresholdBias" min="-80" max="80" step="1" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <label>SOBEL EDGE SHARPEN</label>
+                <span class="val" id="edgeSharpenVal">0</span>
+              </div>
+              <p class="hint">Pre-emphasizes high-frequency contour edges before error diffusion</p>
+              <input type="range" id="edgeSharpen" min="0" max="100" step="1" value="0" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 6: CANVAS FORMAT -->
+        <section class="panel" data-section="size">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> CANVAS FORMAT</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-header">
+                <label>DIMENSIONS &amp; ASPECT RATIO</label>
+                <span class="val" id="formatVal">Portrait 3:4</span>
+              </div>
+              <div class="select-wrap">
+                <select id="canvasFormat" aria-label="Canvas Format">
+                  <option value="portrait_3_4" selected>Portrait 3:4 (1200 x 1600)</option>
+                  <option value="portrait_9_16">Portrait 9:16 (1080 x 1920)</option>
+                  <option value="portrait_2_3">Portrait 2:3 (1200 x 1800)</option>
+                  <option value="landscape_4_3">Landscape 4:3 (1600 x 1200)</option>
+                  <option value="landscape_16_9">Landscape 16:9 (1920 x 1080)</option>
+                  <option value="landscape_3_2">Landscape 3:2 (1800 x 1200)</option>
+                  <option value="square_1_1">Square 1:1 (1200 x 1200)</option>
+                  <option value="original">Original Image Aspect Ratio</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 7: TELEMETRY TYPOGRAPHY -->
+        <section class="panel" data-section="frame">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> TELEMETRY TYPOGRAPHY</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="toggle-row">
+                <label for="toggleFrameText">STUDIO 4-CORNER LABELS</label>
+                <input type="checkbox" id="toggleFrameText" />
+              </div>
+            </div>
+
+            <div id="frameTextControls" style="display:none;">
+              <div class="control-group">
+                <div class="control-header"><label>TOP LEFT</label></div>
+                <input type="text" id="frameTL" value="Design &amp; Strategy" class="text-input" />
+              </div>
+              <div class="control-group">
+                <div class="control-header"><label>TOP RIGHT</label></div>
+                <input type="text" id="frameTR" value="Fanz Irfan" class="text-input" />
+              </div>
+              <div class="control-group">
+                <div class="control-header"><label>BOTTOM LEFT</label></div>
+                <input type="text" id="frameBL" value="manji.eu.org" class="text-input" />
+              </div>
+              <div class="control-group">
+                <div class="control-header"><label>BOTTOM RIGHT</label></div>
+                <input type="text" id="frameBR" value="Indonesia" class="text-input" />
+              </div>
+              <div class="control-group">
+                <div class="control-header">
+                  <label>FONT SIZE</label>
+                  <span class="val" id="frameTextSizeVal">12</span>
+                </div>
+                <input type="range" id="frameTextSize" min="8" max="24" step="1" value="12" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 8: EXPORT & ACTIONS -->
+        <section class="panel" data-section="export" style="border-bottom:none">
+          <div class="panel-header">
+            <span class="panel-title"><i class="panel-dot"></i> PRODUCTION EXPORT</span>
+            <button class="toggle-collapse" aria-label="Collapse section">−</button>
+          </div>
+          <div class="panel-body">
+            <button class="btn-download" id="downloadBtn">Download Full PNG</button>
+            <button class="btn-download-secondary" id="downloadOverlayBtn">Download Transparent PNG (Dots Only)</button>
+            <button class="btn-download-secondary" id="downloadSvgBtn">Export Scalable Vector (SVG)</button>
+            <button class="btn-action-random" id="randomizeSettingsBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
+              Randomize Style &amp; Settings
+            </button>
+
+            <!-- Inter-Tool Studio Pipeline -->
+            <div style="margin: 14px 0 6px 0; border-top: 1px solid var(--color-glass-edge); padding-top: 12px;">
+              <span class="field-sublabel" style="display:block; margin-bottom: 8px; color: var(--color-moon-mist);">STUDIO PIPELINE ROUTING</span>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                <button class="btn-download-secondary" id="sendToTrackerBtn" style="margin-bottom:0; font-size:10.5px; padding: 6px 4px;" title="Route current 1-bit render to Blob Tracker">
+                  <i class="ri-radar-line"></i> To Tracker
+                </button>
+                <button class="btn-download-secondary" id="sendToAsciiBtn" style="margin-bottom:0; font-size:10.5px; padding: 6px 4px;" title="Route current 1-bit render to ASCII Matrix Generator">
+                  <i class="ri-terminal-box-line"></i> To ASCII
+                </button>
+                <button class="btn-download-secondary" id="sendToCrtBtn" style="margin-bottom:0; font-size:10.5px; padding: 6px 4px;" title="Route current 1-bit render to CRT Synthesizer">
+                  <i class="ri-tv-line"></i> To CRT
+                </button>
+              </div>
+              <button class="btn-download-secondary" id="sharePresetBtn" style="margin-bottom:0;" title="Copy shareable preset URL for current dither configuration">
+                <i class="ri-share-forward-line"></i> Copy Preset Link
+              </button>
+            </div>
+
+            <p class="status-footer" id="exportStatusText">1200 x 1600 · Atkinson · Mac 1984</p>
+          </div>
+        </section>
+
+      </div><!-- /.drawer-inner.sidebar -->
+    </aside><!-- /.panel-drawer -->
+
+    <!-- MAIN STAGE (RIGHT) -->
+    <main class="stage" id="stageMain">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="canvas"></canvas>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon"><i class="ri-grid-line"></i></div>
+          <h2>Drop a file to synthesize</h2>
+          <p>Local in-browser computing. Zero server dependency.</p>
+        </div>
+      </div>
+
+      <!-- Stage Floating Zoom Controls -->
+      <div class="stage-zoom-bar" id="stageZoomBar">
+        <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out" aria-label="Zoom Out">
+          <i class="ri-subtract-line"></i>
+        </button>
+        <span class="zoom-val" id="zoomVal">100%</span>
+        <button class="zoom-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In">
+          <i class="ri-add-line"></i>
+        </button>
+        <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
+      </div>
+
+      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
+    </main>
+
+    <!-- PRESETS SIDEBAR (RIGHT) -->
+    <aside class="presets-sidebar" id="presetsSidebar" aria-label="Dither Engines">
+      <div class="presets-sidebar-header">
+        <span class="presets-sidebar-title"><i class="ri-grid-fill"></i> DITHER ENGINES</span>
+      </div>
+      <div class="presets-sidebar-list">
+        <button class="preset-card-btn active" data-engine="atkinson">
+          <span class="preset-name">Atkinson</span>
+          <span class="preset-desc">Apple Mac 1984 clean crisp contrast</span>
+        </button>
+        <button class="preset-card-btn" data-engine="floyd">
+          <span class="preset-name">Floyd-Steinberg</span>
+          <span class="preset-desc">Classic error diffusion balance</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bayer8">
+          <span class="preset-name">Bayer 8x8</span>
+          <span class="preset-desc">Ordered matrix halftone dithering</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bayer4">
+          <span class="preset-name">Bayer 4x4</span>
+          <span class="preset-desc">Medium geometric pattern grid</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bayer2">
+          <span class="preset-name">Bayer 2x2</span>
+          <span class="preset-desc">Coarse 2x2 micro cross-hatch</span>
+        </button>
+        <button class="preset-card-btn" data-engine="halftone">
+          <span class="preset-name">Halftone Dot</span>
+          <span class="preset-desc">Analog newsprint radial screen</span>
+        </button>
+        <button class="preset-card-btn" data-engine="line">
+          <span class="preset-name">Halftone Line</span>
+          <span class="preset-desc">Industrial linear scan screentone</span>
+        </button>
+        <button class="preset-card-btn" data-engine="sierra">
+          <span class="preset-name">Sierra-3</span>
+          <span class="preset-desc">High precision 3-row error diffusion</span>
+        </button>
+        <button class="preset-card-btn" data-engine="bluenoise">
+          <span class="preset-name">Blue Noise</span>
+          <span class="preset-desc">High-frequency organic stipple</span>
+        </button>
+        <button class="preset-card-btn" data-engine="jjn">
+          <span class="preset-name">JJN</span>
+          <span class="preset-desc">Jarvis-Judice-Ninke wide dispersion</span>
+        </button>
+        <button class="preset-card-btn" data-engine="stucki">
+          <span class="preset-name">Stucki</span>
+          <span class="preset-desc">Crisp edge-preserving diffusion</span>
+        </button>
+        <button class="preset-card-btn" data-engine="burkes">
+          <span class="preset-name">Burkes</span>
+          <span class="preset-desc">Fast 7-pixel error distribution</span>
+        </button>
+        <button class="preset-card-btn" data-engine="random">
+          <span class="preset-name">White Noise</span>
+          <span class="preset-desc">Random stochastic grain distribution</span>
+        </button>
+        <button class="preset-card-btn" data-engine="threshold">
+          <span class="preset-name">Direct 1-Bit</span>
+          <span class="preset-desc">Pure high-contrast luminance cutoff</span>
+        </button>
+        <button class="preset-card-btn" data-engine="posterize">
+          <span class="preset-name">2-Bit Quantize</span>
+          <span class="preset-desc">Stepped tonal quantization bands</span>
+        </button>
+      </div>
+    </aside>
+
+  </div><!-- /.workspace -->
+
+  <!-- INTERACTIVE CROP MODAL -->
+  <div class="crop-modal-backdrop" id="cropModal" style="display:none;">
+    <div class="crop-modal-content">
+      <div class="crop-modal-header">
+        <div class="crop-modal-title">
+          <i class="ri-crop-line"></i>
+          <span>Interactive Image Cropper</span>
+        </div>
+        <div class="crop-ratio-group">
+          <button class="crop-ratio-btn active" data-ratio="free">Free</button>
+          <button class="crop-ratio-btn" data-ratio="1:1">1:1</button>
+          <button class="crop-ratio-btn" data-ratio="4:3">4:3</button>
+          <button class="crop-ratio-btn" data-ratio="16:9">16:9</button>
+          <button class="crop-ratio-btn" data-ratio="3:4">3:4</button>
+        </div>
+        <button class="crop-close-btn" id="cropCancelBtn" aria-label="Cancel Crop"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div class="crop-stage-wrap" id="cropStageWrap">
+        <canvas id="cropCanvas"></canvas>
+      </div>
+
+      <div class="crop-modal-footer">
+        <span class="crop-info-text" id="cropInfoText">Drag to adjust crop boundary</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-block-outline" id="cropResetBtn" style="width:auto; padding: 6px 14px; margin:0;">Reset</button>
+          <button class="btn-download" id="cropApplyBtn" style="width:auto; padding: 6px 20px; margin:0;">Apply Crop</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.app -->
+
+<script is:inline src="/assets/pipeline.js"></script>
+<script is:inline src="/assets/demo/demo-assets.js"></script>
+<script is:inline src="/dither-gen/script.js"></script>
+<script is:inline>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('../sw.js').catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>

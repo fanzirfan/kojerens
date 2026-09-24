@@ -10,3 +10,7 @@ anti-slop/
 node_modules/
 .vscode/
 .idea/
+
+# Astro & Build Outputs
+.astro/
+dist/
