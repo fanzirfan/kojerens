@@ -1,0 +1,75 @@
+---
+interface Props {
+  toolName: string;
+  badgeText: string;
+  currentPath: string;
+}
+
+const { toolName, badgeText, currentPath } = Astro.props;
+---
+
+<header class="h-14 bg-[#080b19]/90 backdrop-blur-md border-b border-[#bad6f7]/10 px-4 md:px-6 flex items-center justify-between text-xs font-mono text-[#9da7ba] select-none z-40">
+  <!-- Brand & Tool Badge -->
+  <div class="flex items-center gap-3">
+    <a href="/" class="flex items-center gap-2 text-white hover:text-[#b6d9fc] transition" title="Back to KOJERENS Studio">
+      <img src="/assets/brand/navbar.png" alt="KOJERENS" class="w-6 h-6 object-contain" />
+      <span class="font-display font-semibold tracking-wider text-sm hidden sm:inline">KOJERENS</span>
+    </a>
+    <span class="text-[#bad6f7]/20">/</span>
+    <span class="px-2 py-0.5 rounded border border-[#663af3]/50 bg-[#663af3]/15 text-[#b6d9fc] font-bold tracking-wide">
+      {badgeText}
+    </span>
+  </div>
+
+  <!-- Tool Quick Switcher -->
+  <div class="hidden lg:flex items-center gap-2 bg-[#05060f]/60 p-1 rounded-lg border border-[#bad6f7]/10">
+    <a
+      href="/blob-tracker"
+      class={`px-2.5 py-1 rounded transition flex items-center gap-1.5 ${currentPath === 'blob-tracker' ? 'bg-[#663af3]/20 text-[#b6d9fc] border border-[#663af3]/30' : 'hover:text-white'}`}
+    >
+      <i class="ri-radar-line"></i>
+      <span>Blob Tracker</span>
+    </a>
+    <a
+      href="/ascii-gen"
+      class={`px-2.5 py-1 rounded transition flex items-center gap-1.5 ${currentPath === 'ascii-gen' ? 'bg-[#663af3]/20 text-[#b6d9fc] border border-[#663af3]/30' : 'hover:text-white'}`}
+    >
+      <i class="ri-terminal-line"></i>
+      <span>ASCII Matrix</span>
+    </a>
+    <a
+      href="/dither-gen"
+      class={`px-2.5 py-1 rounded transition flex items-center gap-1.5 ${currentPath === 'dither-gen' ? 'bg-[#663af3]/20 text-[#b6d9fc] border border-[#663af3]/30' : 'hover:text-white'}`}
+    >
+      <i class="ri-contrast-drop-line"></i>
+      <span>1-Bit Dither</span>
+    </a>
+    <a
+      href="/crt-gen"
+      class={`px-2.5 py-1 rounded transition flex items-center gap-1.5 ${currentPath === 'crt-gen' ? 'bg-[#663af3]/20 text-[#b6d9fc] border border-[#663af3]/30' : 'hover:text-white'}`}
+    >
+      <i class="ri-tv-line"></i>
+      <span>CRT Glitch</span>
+    </a>
+  </div>
+
+  <!-- Studio Actions -->
+  <div class="flex items-center gap-2 sm:gap-3">
+    <button
+      id="pipelineRouteBtn"
+      class="px-2.5 py-1.5 rounded border border-[#bad6f7]/15 hover:border-[#bad6f7]/30 text-[#c7d3ea] hover:text-white flex items-center gap-1.5 transition text-[11px]"
+      title="Route canvas visual across studio tools"
+    >
+      <i class="ri-route-line text-[#885dfc]"></i>
+      <span class="hidden sm:inline">Pipeline Route</span>
+    </button>
+
+    <button
+      id="topbarDownloadBtn"
+      class="px-3.5 py-1.5 rounded bg-[#663af3] hover:bg-[#784dfc] text-white font-medium flex items-center gap-1.5 shadow-[0_0_15px_rgba(102,58,243,0.35)] transition text-[11px]"
+    >
+      <i class="ri-download-2-line"></i>
+      <span>Export PNG</span>
+    </button>
+  </div>
+</header>

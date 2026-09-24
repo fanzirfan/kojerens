@@ -1,0 +1,41 @@
+import { map } from 'nanostores';
+import { DEFAULT_FRAME_TEXTS } from '../core/shared/watermark';
+import type { BlobEngineConfig } from '../core/engines/blob-tracker/types';
+
+export const $blobState = map<BlobEngineConfig>({
+  mode: 'circles',
+  detectionMode: 'contrast',
+  format: 'portrait_3_4',
+  palette: {
+    bg: '#0a0a0a',
+    stroke: '#ffffff',
+    name: 'White / Dark',
+  },
+  imageOpacity: 0.9,
+  overlayOpacity: 0.95,
+  shapeStroke: 1.5,
+  blockSize: 16,
+  threshold: 30,
+  maxCircles: 80,
+  minDistance: 40,
+  minRadius: 4,
+  maxRadius: 24,
+  sizeSeed: 42,
+  maxDistance: 150,
+  chainOn: true,
+  chainCount: 11,
+  chainAngle: 45,
+  chainBaseRadius: 300,
+  chainSizeRatio: 0.5,
+  chainIntersections: true,
+  frameTextOn: false,
+  frameTextTL: DEFAULT_FRAME_TEXTS.topLeft,
+  frameTextTR: DEFAULT_FRAME_TEXTS.topRight,
+  frameTextBL: DEFAULT_FRAME_TEXTS.bottomLeft,
+  frameTextBR: DEFAULT_FRAME_TEXTS.bottomRight,
+  frameTextSize: 12,
+  telemetryRadar: true,
+  telemetryBrackets: true,
+  telemetryData: true,
+  topoLabels: true,
+});

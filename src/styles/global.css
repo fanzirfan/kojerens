@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-midnight: #05060f;
+  --color-steel: #111422;
+  --color-fog: #9da7ba;
+  --color-moon: #c7d3ea;
+  --color-frost: #d1e4fa;
+  --color-void: #663af3;
+  --color-void-hover: #784dfc;
+  --color-blueprint: #b6d9fc;
+  --color-gridline: #1c2333;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+:root {
+  --color-midnight-canvas: #05060f;
+  --color-steel-plate: #111422;
+  --color-fog-veil: #9da7ba;
+  --color-moon-mist: #c7d3ea;
+  --color-frost-glow: #d1e4fa;
+  --color-pure-white: #ffffff;
+  --color-void-violet: #663af3;
+  --color-void-violet-hover: #784dfc;
+  --color-blueprint-blue: #b6d9fc;
+  --color-gridline-blue: #1c2333;
+
+  --color-glass-fill: rgba(186, 214, 247, 0.04);
+  --color-glass-fill-hover: rgba(186, 214, 247, 0.08);
+  --color-glass-edge: rgba(186, 215, 247, 0.12);
+  --color-glass-edge-active: rgba(186, 215, 247, 0.28);
+  --color-luminous-fill: rgba(199, 211, 234, 0.08);
+
+  --font-untitled-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-aeonikpro: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-dotdigital: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+body {
+  background-color: var(--color-midnight-canvas);
+  color: var(--color-moon-mist);
+  font-family: var(--font-untitled-sans);
+  overflow-x: hidden;
+}

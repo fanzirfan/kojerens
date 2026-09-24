@@ -1,0 +1,57 @@
+---
+interface Props {
+  currentTool?: string;
+}
+
+const { currentTool } = Astro.props;
+---
+
+<nav class="fixed top-0 left-0 right-0 z-50 h-14 bg-[#05060f]/80 backdrop-blur-md border-b border-[#bad6f7]/10 px-4 md:px-8 flex items-center justify-between">
+  <!-- Brand -->
+  <div class="flex items-center gap-3">
+    <a href="/" class="flex items-center gap-2.5 text-white font-semibold tracking-wide hover:opacity-85 transition">
+      <img src="/assets/brand/navbar.png" alt="KOJERENS" class="w-6 h-6 object-contain" />
+      <span class="font-display tracking-widest text-sm">KOJERENS</span>
+    </a>
+    <span class="hidden sm:inline-block text-[10px] font-mono tracking-wider px-2 py-0.5 rounded border border-[#663af3]/40 bg-[#663af3]/10 text-[#b6d9fc]">
+      STUDIO LAB
+    </span>
+  </div>
+
+  <!-- Navigation Links -->
+  <div class="hidden md:flex items-center gap-6 text-xs font-mono text-[#9da7ba]">
+    <a href="/blob-tracker" class={`hover:text-white transition ${currentTool === 'blob' ? 'text-[#b6d9fc] font-bold' : ''}`}>
+      Blob Tracker
+    </a>
+    <a href="/ascii-gen" class={`hover:text-white transition ${currentTool === 'ascii' ? 'text-[#b6d9fc] font-bold' : ''}`}>
+      ASCII Matrix
+    </a>
+    <a href="/dither-gen" class={`hover:text-white transition ${currentTool === 'dither' ? 'text-[#b6d9fc] font-bold' : ''}`}>
+      1-Bit Dither
+    </a>
+    <a href="/crt-gen" class={`hover:text-white transition ${currentTool === 'crt' ? 'text-[#b6d9fc] font-bold' : ''}`}>
+      CRT Glitch
+    </a>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center gap-3">
+    <a
+      href="https://github.com/fanzirfan/blob-track"
+      target="_blank"
+      rel="noopener"
+      class="text-xs font-mono text-[#9da7ba] hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#bad6f7]/15 hover:border-[#bad6f7]/30 transition"
+      title="GitHub Source"
+    >
+      <i class="ri-github-line text-sm"></i>
+      <span class="hidden sm:inline">GitHub</span>
+    </a>
+    <a
+      href="/#tools"
+      class="text-xs font-mono px-3.5 py-1.5 rounded bg-[#663af3] hover:bg-[#784dfc] text-white font-medium flex items-center gap-1.5 shadow-[0_0_15px_rgba(102,58,243,0.35)] transition"
+    >
+      <span>Launch Tools</span>
+      <i class="ri-arrow-right-line"></i>
+    </a>
+  </div>
+</nav>

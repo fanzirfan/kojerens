@@ -119,19 +119,23 @@ Sintesis tabung sinar katoda (CRT) fisik dan prosesor analog video glitch langsu
 
 ---
 
-## Menjalankan Secara Lokal
+## Menjalankan Secara Lokal & Build
 
-Karena dibangun dengan web standar tanpa dependensi bundler atau npm, Anda dapat langsung membukanya di browser atau menggunakan server lokal sederhana:
+Workspace ini ditenagai oleh **Astro** dan **Bun**:
 
 ```bash
-# Menggunakan Python 3
-python -m http.server 3000
+# Instalasi dependensi
+bun install
 
-# Atau menggunakan Node.js npx serve
-npx serve .
+# Menjalankan development server
+bun run dev
+
+# Membangun output statis untuk Cloudflare Pages
+bun run build
+# Direktori deploy Cloudflare Pages: dist/
 ```
 
-Buka peramban di `http://localhost:3000`.
+Buka peramban di `http://localhost:4321`.
 
 ---
 

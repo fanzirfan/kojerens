@@ -1,3 +1,8 @@
+---
+import '../styles/global.css';
+import '../styles/landing.css';
+---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,16 +19,15 @@
   <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker, ASCII Matrix Generator, 1-Bit Dither Matrix & Analog CRT Synthesizer." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://manji.eu.org" />
-  <meta property="og:image" content="assets/brand/logo.png" />
+  <meta property="og:image" content="/assets/brand/logo.png" />
 
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16x16.png" />
-  <link rel="icon" type="image/png" sizes="48x48" href="assets/brand/favicon-48x48.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/apple-icon.png" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48x48.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/brand/apple-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#05060f" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
-  <link rel="stylesheet" href="landing.css" />
 </head>
 <body>
 
@@ -31,7 +35,7 @@
   <nav class="navbar" aria-label="Main Navigation">
     <div class="nav-brand">
       <a href="index.html" style="display:flex; align-items:center; gap:10px;">
-        <img src="assets/brand/navbar.png" alt="KOJERENS" class="nav-logo" width="28" height="28" />
+        <img src="/assets/brand/navbar.png" alt="KOJERENS" class="nav-logo" width="28" height="28" />
         <span class="nav-title">KOJERENS</span>
       </a>
       <span class="nav-badge">STUDIO LAB</span>
@@ -129,7 +133,7 @@
 
           <div class="tool-cta-row">
             <span class="tool-spec-badge">4 Engines · 60/120fps GPU</span>
-            <a href="blob-tracker/index.html" class="btn-cta">
+            <a href="/blob-tracker/" class="btn-cta">
               Open Blob Tracker <i class="ri-arrow-right-line"></i>
             </a>
           </div>
@@ -161,7 +165,7 @@
 
           <div class="tool-cta-row">
             <span class="tool-spec-badge">Webcam · Video · Text Export</span>
-            <a href="ascii-gen/index.html" class="btn-cta">
+            <a href="/ascii-gen/" class="btn-cta">
               Open ASCII Matrix <i class="ri-arrow-right-line"></i>
             </a>
           </div>
@@ -193,7 +197,7 @@
 
           <div class="tool-cta-row">
             <span class="tool-spec-badge">15 Engines · SVG &amp; PNG</span>
-            <a href="dither-gen/index.html" class="btn-cta">
+            <a href="/dither-gen/" class="btn-cta">
               Open 1-Bit Dither <i class="ri-arrow-right-line"></i>
             </a>
           </div>
@@ -225,7 +229,7 @@
 
           <div class="tool-cta-row">
             <span class="tool-spec-badge">8 Presets · Broadcast OSD</span>
-            <a href="crt-gen/index.html" class="btn-cta">
+            <a href="/crt-gen/" class="btn-cta">
               Open CRT Synthesizer <i class="ri-arrow-right-line"></i>
             </a>
           </div>
@@ -337,17 +341,17 @@
       <div class="footer-top">
         <div class="footer-brand">
           <a href="index.html" class="footer-brand-link">
-            <img src="assets/brand/footer.png" alt="KOJERENS" width="24" height="24" />
+            <img src="/assets/brand/footer.png" alt="KOJERENS" width="24" height="24" />
             <span class="footer-brand-title">KOJERENS</span>
           </a>
           <span class="footer-tagline">Computational Visual Studio · 100% In-Browser</span>
         </div>
 
         <nav class="footer-links" aria-label="Footer Navigation">
-          <a href="blob-tracker/index.html">Blob Tracker</a>
-          <a href="ascii-gen/index.html">ASCII Matrix</a>
-          <a href="dither-gen/index.html">1-Bit Dither</a>
-          <a href="crt-gen/index.html">CRT Synthesizer</a>
+          <a href="/blob-tracker/">Blob Tracker</a>
+          <a href="/ascii-gen/">ASCII Matrix</a>
+          <a href="/dither-gen/">1-Bit Dither</a>
+          <a href="/crt-gen/">CRT Synthesizer</a>
           <a href="https://github.com/fanzirfan/blob-track" target="_blank" rel="noopener">GitHub</a>
           <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org</a>
         </nav>
@@ -366,7 +370,7 @@
   </footer>
 
   <!-- Interactive Visual Simulation Script -->
-  <script>
+  <script is:inline>
     (function () {
       // 1. Hero HUD Canvas Simulation
       var heroCanvas = document.getElementById('heroHudCanvas');
