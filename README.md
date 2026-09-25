@@ -130,7 +130,7 @@ Sintesis tabung sinar katoda (CRT) fisik dan prosesor analog video glitch langsu
 ### Struktur Proyek
 
 ```
-blob-tracker/
+kojerens/
 ├── src/
 │   ├── pages/           # Route Astro (/, /blob-tracker, /ascii-gen, /dither-gen, /crt-gen)
 │   └── styles/          # Tailwind CSS v4 global.css & tool-specific stylesheets
