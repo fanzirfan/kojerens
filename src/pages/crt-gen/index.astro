@@ -1,6 +1,7 @@
 ---
 import '../../styles/global.css';
 import '../../styles/crt-gen.css';
+import { APP_VERSIONS } from '../../config/versions';
 ---
 
 <!DOCTYPE html>
@@ -33,6 +34,10 @@ import '../../styles/crt-gen.css';
         <span class="topbar-brand-title">KOJERENS</span>
       </a>
       <span class="topbar-subtool-badge">CRT BEAM &amp; GLITCH</span>
+      <span class="topbar-version-badge" title={`CRT Synthesizer ${APP_VERSIONS.crtGen.version} (${APP_VERSIONS.crtGen.releaseDate}) - ${APP_VERSIONS.crtGen.changelog}`}>
+        <span class="version-dot"></span>
+        {APP_VERSIONS.crtGen.version}
+      </span>
     </div>
 
     <!-- ACTIONS ON RIGHT -->

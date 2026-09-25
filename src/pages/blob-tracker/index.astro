@@ -1,6 +1,7 @@
 ---
 import '../../styles/global.css';
 import '../../styles/blob-tracker.css';
+import { APP_VERSIONS } from '../../config/versions';
 ---
 
 <!DOCTYPE html>
@@ -30,6 +31,10 @@ import '../../styles/blob-tracker.css';
         <span class="topbar-brand-title">KOJERENS</span>
       </a>
       <span class="topbar-subtool-badge">TRACKER</span>
+      <span class="topbar-version-badge" title={`Blob Tracker ${APP_VERSIONS.blobTracker.version} (${APP_VERSIONS.blobTracker.releaseDate}) - ${APP_VERSIONS.blobTracker.changelog}`}>
+        <span class="version-dot"></span>
+        {APP_VERSIONS.blobTracker.version}
+      </span>
     </div>
     <div class="topbar-actions">
       <a href="/ascii-gen/" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">

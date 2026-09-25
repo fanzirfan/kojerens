@@ -1,6 +1,7 @@
 ---
 import '../../styles/global.css';
 import '../../styles/ascii-gen.css';
+import { APP_VERSIONS } from '../../config/versions';
 ---
 
 <!DOCTYPE html>
@@ -34,6 +35,10 @@ import '../../styles/ascii-gen.css';
         <span class="topbar-brand-title">KOJERENS</span>
       </a>
       <span class="topbar-subtool-badge">ASCII MATRIX</span>
+      <span class="topbar-version-badge" title={`ASCII Matrix ${APP_VERSIONS.asciiGen.version} (${APP_VERSIONS.asciiGen.releaseDate}) - ${APP_VERSIONS.asciiGen.changelog}`}>
+        <span class="version-dot"></span>
+        {APP_VERSIONS.asciiGen.version}
+      </span>
     </div>
     <div class="topbar-telemetry">
       <span class="telemetry-pill"><i class="ri-terminal-box-line"></i> UNICODE GPU SYNTHESIZER</span>

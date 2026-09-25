@@ -15,6 +15,7 @@ KOJERENS is a high-performance generative visual and design laboratory built wit
 
 ## Architecture & Project Structure
 
+- `src/config/`: Centralized configurations, including `versions.ts` (single source of truth for tool versions).
 - `src/pages/`: Astro static routes (`/`, `/blob-tracker`, `/ascii-gen`, `/dither-gen`, `/crt-gen`).
 - `src/styles/`: Tailwind CSS v4 `global.css` with `@theme` HUD tokens and tool-specific stylesheets.
 - `public/`: Client-side visual scripts, web workers, demo assets, and static media (served directly to `dist/`).
@@ -46,6 +47,15 @@ KOJERENS is a high-performance generative visual and design laboratory built wit
 4. **Security & Sandbox Isolation**:
    - Do not auto-load local image assets with relative paths on startup that could taint the canvas under the `file:///` origin security model.
    - Keep the clean empty state on startup until an image is explicitly imported or dragged by the user.
+
+5. **Page & Engine Versioning System**:
+   - **Single Source of Truth**: All page and tool versions are managed centrally in `src/config/versions.ts` (`APP_VERSIONS`).
+   - **Never Hardcode Versions**: Never hardcode version strings in `.astro` or HTML files. Always import and read from `src/config/versions.ts`.
+   - **Independent SemVer (`vMAJOR.MINOR.PATCH`)**:
+     - `MAJOR`: Generational architecture leaps, new visual sub-engines, or breaking workflow changes.
+     - `MINOR`: New algorithms, visual filters, palettes, presets, or export formats.
+     - `PATCH`: Performance tuning, 60/120fps optimizations, bug fixes, mobile layout hotfixes.
+   - **Agent Update Protocol**: Whenever an agent modifies, enhances, or fixes a tool or page, the agent MUST update `version`, `releaseDate`, and `changelog` for that specific tool in `src/config/versions.ts`. The topbar version badge and landing page showcase card will automatically reflect the updated version upon build.
 
 ---
 

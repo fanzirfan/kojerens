@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/landing.css';
+import { APP_VERSIONS } from '../config/versions';
 ---
 
 <!DOCTYPE html>
@@ -39,6 +40,10 @@ import '../styles/landing.css';
         <span class="nav-title">KOJERENS</span>
       </a>
       <span class="nav-badge">STUDIO LAB</span>
+      <span class="topbar-version-badge" title={`KOJERENS Studio Hub ${APP_VERSIONS.hub.version} (${APP_VERSIONS.hub.releaseDate}) - ${APP_VERSIONS.hub.changelog}`}>
+        <span class="version-dot"></span>
+        {APP_VERSIONS.hub.version}
+      </span>
     </div>
 
     <div class="nav-links">
@@ -112,7 +117,13 @@ import '../styles/landing.css';
           <span class="tool-card-corner-bracket">[01]</span>
           
           <div class="tool-header">
-            <span class="tool-index">VECTOR TELEMETRY & CENTROID TRACKER</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <span class="tool-index">VECTOR TELEMETRY &amp; CENTROID TRACKER</span>
+              <span class="topbar-version-badge" title={`Blob Tracker ${APP_VERSIONS.blobTracker.version} (${APP_VERSIONS.blobTracker.releaseDate})`}>
+                <span class="version-dot"></span>
+                {APP_VERSIONS.blobTracker.version}
+              </span>
+            </div>
             <h3 class="tool-title">Blob Tracker</h3>
             <p class="tool-description">
               Upload any image to analyze high-contrast feature centroids. Generate sci-fi HUD telemetry, topographic geodetic contour lines, constellations, and minimalist editorial framing.
@@ -132,7 +143,7 @@ import '../styles/landing.css';
           </div>
 
           <div class="tool-cta-row">
-            <span class="tool-spec-badge">4 Engines · 60/120fps GPU</span>
+            <span class="tool-spec-badge">{APP_VERSIONS.blobTracker.version} · 4 Engines · 60/120fps GPU</span>
             <a href="/blob-tracker/" class="btn-cta">
               Open Blob Tracker <i class="ri-arrow-right-line"></i>
             </a>
@@ -144,7 +155,13 @@ import '../styles/landing.css';
           <span class="tool-card-corner-bracket">[02]</span>
           
           <div class="tool-header">
-            <span class="tool-index">UNICODE GLYPH SYNTHESIZER</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <span class="tool-index">UNICODE GLYPH SYNTHESIZER</span>
+              <span class="topbar-version-badge" title={`ASCII Matrix ${APP_VERSIONS.asciiGen.version} (${APP_VERSIONS.asciiGen.releaseDate})`}>
+                <span class="version-dot"></span>
+                {APP_VERSIONS.asciiGen.version}
+              </span>
+            </div>
             <h3 class="tool-title">ASCII Matrix</h3>
             <p class="tool-description">
               Transform high-resolution imagery into rich multi-language Unicode character art and terminal glyph matrices. Features multi-pass bloom, photographic exposure, and text export.
@@ -164,7 +181,7 @@ import '../styles/landing.css';
           </div>
 
           <div class="tool-cta-row">
-            <span class="tool-spec-badge">Images · Unicode · Text Export</span>
+            <span class="tool-spec-badge">{APP_VERSIONS.asciiGen.version} · Images · Unicode · Text Export</span>
             <a href="/ascii-gen/" class="btn-cta">
               Open ASCII Matrix <i class="ri-arrow-right-line"></i>
             </a>
@@ -176,7 +193,13 @@ import '../styles/landing.css';
           <span class="tool-card-corner-bracket">[03]</span>
           
           <div class="tool-header">
-            <span class="tool-index">1-BIT ERROR DIFFUSION &amp; ORDERED DITHERING</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <span class="tool-index">1-BIT ERROR DIFFUSION &amp; ORDERED DITHERING</span>
+              <span class="topbar-version-badge" title={`1-Bit Dither ${APP_VERSIONS.ditherGen.version} (${APP_VERSIONS.ditherGen.releaseDate})`}>
+                <span class="version-dot"></span>
+                {APP_VERSIONS.ditherGen.version}
+              </span>
+            </div>
             <h3 class="tool-title">1-Bit Dither</h3>
             <p class="tool-description">
               Synthesize photographs into high-contrast retro bitmap graphics using 15 dithering algorithms. Atkinson, Floyd-Steinberg, Bayer matrices, halftone screens, retro palettes, and vector SVG export.
@@ -196,7 +219,7 @@ import '../styles/landing.css';
           </div>
 
           <div class="tool-cta-row">
-            <span class="tool-spec-badge">15 Engines · SVG &amp; PNG</span>
+            <span class="tool-spec-badge">{APP_VERSIONS.ditherGen.version} · 15 Engines · SVG &amp; PNG</span>
             <a href="/dither-gen/" class="btn-cta">
               Open 1-Bit Dither <i class="ri-arrow-right-line"></i>
             </a>
@@ -208,7 +231,13 @@ import '../styles/landing.css';
           <span class="tool-card-corner-bracket">[04]</span>
           
           <div class="tool-header">
-            <span class="tool-index">ANALOG BEAM DYNAMICS &amp; GLITCH</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <span class="tool-index">ANALOG BEAM DYNAMICS &amp; GLITCH</span>
+              <span class="topbar-version-badge" title={`CRT Synthesizer ${APP_VERSIONS.crtGen.version} (${APP_VERSIONS.crtGen.releaseDate})`}>
+                <span class="version-dot"></span>
+                {APP_VERSIONS.crtGen.version}
+              </span>
+            </div>
             <h3 class="tool-title">CRT Synthesizer</h3>
             <p class="tool-description">
               Simulate cathode ray tube physics, Trinitron aperture grilles, triad shadow masks, electron beam bloom, chromatic aberration, NTSC composite color bleed, and VHS tracking jitter.
@@ -228,7 +257,7 @@ import '../styles/landing.css';
           </div>
 
           <div class="tool-cta-row">
-            <span class="tool-spec-badge">8 Presets · Broadcast OSD</span>
+            <span class="tool-spec-badge">{APP_VERSIONS.crtGen.version} · 8 Presets · Broadcast OSD</span>
             <a href="/crt-gen/" class="btn-cta">
               Open CRT Synthesizer <i class="ri-arrow-right-line"></i>
             </a>
@@ -363,7 +392,7 @@ import '../styles/landing.css';
         </div>
         <div class="footer-status">
           <span class="status-indicator"></span>
-          <span>SYSTEM ONLINE · ZERO SERVER DEPENDENCY</span>
+          <span>SYSTEM ONLINE · STUDIO {APP_VERSIONS.hub.version} · ZERO SERVER DEPENDENCY</span>
         </div>
       </div>
     </div>

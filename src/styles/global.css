@@ -53,3 +53,49 @@ body {
   -webkit-user-select: none !important;
 }
 
+/* ==========================================================================
+   PAGE & TOOL VERSION BADGES (TELEMETRY HUD)
+   ========================================================================== */
+.topbar-version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-dotdigital);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-blueprint-blue);
+  background: rgba(182, 217, 252, 0.08);
+  border: 1px solid rgba(182, 217, 252, 0.22);
+  padding: 1px 6px;
+  border-radius: 3px;
+  line-height: 1.3;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: help;
+  vertical-align: middle;
+}
+
+.topbar-version-badge:hover {
+  background: rgba(182, 217, 252, 0.14);
+  border-color: rgba(182, 217, 252, 0.45);
+  box-shadow: 0 0 10px rgba(182, 217, 252, 0.15);
+}
+
+.topbar-version-badge .version-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #38ef7d;
+  box-shadow: 0 0 6px #38ef7d;
+  display: inline-block;
+}
+
+@media (max-width: 640px) {
+  .topbar-version-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+}
+
+
