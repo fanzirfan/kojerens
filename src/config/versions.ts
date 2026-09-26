@@ -27,10 +27,10 @@ export const APP_VERSIONS = {
   hub: {
     id: 'hub',
     name: 'KOJERENS Studio Hub',
-    version: 'v2.1.1',
+    version: 'v2.3.1',
     releaseDate: '2026-09-26',
     badgeLabel: 'BROADSIDE LAB',
-    changelog: 'Gothic broadside editorial redesign with warm monochrome palette, dual-state Dark/Light mode switcher with localStorage persistence, Fraunces serifs, domain migration to kojerens.manji.eu.org, and mobile workstation advisory.',
+    changelog: 'Refined landing page with procedural 3D astrolabe & gyroscope, viewfinder HUD framing, antislop R-02 em dash purge, and clean native cursor experience.',
     status: 'ONLINE'
   },
 

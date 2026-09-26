@@ -420,17 +420,32 @@ button {
 .halftone-plate {
   position: relative;
   background-color: var(--color-paper);
-  border: 1px solid var(--color-border-dominant);
-  border-radius: 0; /* Square corners per brief */
+  border: none; /* Borderless design per user request */
+  border-radius: 0;
   aspect-ratio: 1 / 1;
   width: 100%;
   max-width: 480px;
   margin-left: auto;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.25s ease, border-color 0.25s ease;
+  transition: background-color 0.25s ease;
+}
+
+/* Subtle, ultra-clean hairline outer boundary guide (dashed with negative space) */
+.halftone-plate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px dashed var(--color-hairline);
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.25s ease, border-color 0.25s ease;
+}
+
+.halftone-plate:hover::before {
+  opacity: 0.85;
 }
 
 @media (max-width: 960px) {
@@ -446,48 +461,158 @@ button {
   display: block;
 }
 
+/* Precision Technical L-Brackets at the 4 Corners */
+.reticle-bracket {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  z-index: 2;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.reticle-tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--color-headline-ink);
+  border-left: 2px solid var(--color-headline-ink);
+}
+
+.reticle-tr {
+  top: -1px;
+  right: -1px;
+  border-top: 2px solid var(--color-headline-ink);
+  border-right: 2px solid var(--color-headline-ink);
+}
+
+.reticle-bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 2px solid var(--color-headline-ink);
+  border-left: 2px solid var(--color-headline-ink);
+}
+
+.reticle-br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--color-headline-ink);
+  border-right: 2px solid var(--color-headline-ink);
+}
+
+/* Interactive Expansion on Hover */
+.halftone-plate:hover .reticle-tl {
+  transform: translate(-3px, -3px);
+}
+.halftone-plate:hover .reticle-tr {
+  transform: translate(3px, -3px);
+}
+.halftone-plate:hover .reticle-bl {
+  transform: translate(-3px, 3px);
+}
+.halftone-plate:hover .reticle-br {
+  transform: translate(3px, 3px);
+}
+
+/* Edge Center Calibration Notches (Crosshair Ticks) */
+.reticle-notch {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  background-color: var(--color-headline-ink);
+  transition: opacity 0.2s ease;
+}
+
+.reticle-notch-t {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 10px;
+}
+
+.reticle-notch-b {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 10px;
+}
+
+.reticle-notch-l {
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 1px;
+}
+
+.reticle-notch-r {
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 1px;
+}
+
+/* Specimen Metadata Corner Tags */
 .plate-corner-tl {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 10px;
+  left: 12px;
   font-family: var(--font-mono);
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-headline-ink);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 .plate-corner-tr {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 10px;
+  right: 12px;
   font-family: var(--font-mono);
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-headline-ink);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 .plate-corner-bl {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
+  bottom: 10px;
+  left: 12px;
   font-family: var(--font-mono);
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-headline-ink);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 .plate-corner-br {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  bottom: 10px;
+  right: 12px;
   font-family: var(--font-mono);
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-headline-ink);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 /* ============================================================================
@@ -1138,3 +1263,4 @@ button {
 .colophon-coords {
   color: var(--color-inverted-text);
 }
+
