@@ -637,13 +637,15 @@ function setDefaultValues(contentWidth = null) {
     customCharsContainer.style.display = 'flex';
     customCharsInput.disabled = false;
     customCharsHelpButton.disabled = false;
-    customTextColor.value = '#00FF00';
-    customBackgroundColor.value = '#000000';
+    var isDarkTheme = (typeof localStorage !== 'undefined' && localStorage.getItem('kojerens-theme') === 'dark') ||
+                      (typeof document !== 'undefined' && (document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark'));
+    customTextColor.value = isDarkTheme ? '#fafafa' : '#2a2722';
+    customBackgroundColor.value = isDarkTheme ? '#141312' : '#fafafa';
     
     if (!window.savedCustomColors) {
         window.savedCustomColors = {
-            text: '#00FF00',
-            background: '#000000'
+            text: isDarkTheme ? '#fafafa' : '#2a2722',
+            background: isDarkTheme ? '#141312' : '#fafafa'
         };
     }
     gridSizeDisplay.textContent = '-';
@@ -973,28 +975,28 @@ function syncCustomColorsWithPreset(scheme) {
     
     switch (scheme) {
         case 'color1':
-            customTextColor.value = '#00FF00';
-            customBackgroundColor.value = '#000000';
+            customTextColor.value = '#2a2722';
+            customBackgroundColor.value = '#fafafa';
             break;
         case 'color2':
-            customTextColor.value = '#FFFFFF';
-            customBackgroundColor.value = '#000000';
+            customTextColor.value = '#fafafa';
+            customBackgroundColor.value = '#141312';
             break;
         case 'color3':
-            customTextColor.value = '#14ee5e';
-            customBackgroundColor.value = '#c80a60';
+            customTextColor.value = '#3e3b36';
+            customBackgroundColor.value = '#f3f0ea';
             break;
         case 'custom':
             if (window.savedCustomColors) {
-                customTextColor.value = window.savedCustomColors.text || '#00FF00';
-                customBackgroundColor.value = window.savedCustomColors.background || '#000000';
+                customTextColor.value = window.savedCustomColors.text || '#2a2722';
+                customBackgroundColor.value = window.savedCustomColors.background || '#fafafa';
             }
             break;
         case 'source':
             break;
         default:
-            customTextColor.value = '#00FF00';
-            customBackgroundColor.value = '#000000';
+            customTextColor.value = '#2a2722';
+            customBackgroundColor.value = '#fafafa';
     }
     if (gradientMapContainer && customColorsContainer) {
         if (scheme === 'gradient') {
@@ -4203,6 +4205,21 @@ window.addEventListener('paste', function(e) {
                 handleImageUpload(blob);
                 break;
             }
+        }
+    }
+});
+
+window.addEventListener('themechange', function(e) {
+    const isDark = e.detail && e.detail.isDark;
+    if (colorSchemeSelect && colorSchemeSelect.value === 'color1') {
+        customTextColor.value = isDark ? '#fafafa' : '#2a2722';
+        customBackgroundColor.value = isDark ? '#141312' : '#fafafa';
+        if (window.savedCustomColors) {
+            window.savedCustomColors.text = customTextColor.value;
+            window.savedCustomColors.background = customBackgroundColor.value;
+        }
+        if (typeof scheduleAsciiProcess === 'function') {
+            scheduleAsciiProcess();
         }
     }
 });

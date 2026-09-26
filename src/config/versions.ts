@@ -27,10 +27,10 @@ export const APP_VERSIONS = {
   hub: {
     id: 'hub',
     name: 'KOJERENS Studio Hub',
-    version: 'v1.4.0',
-    releaseDate: '2026-09-25',
-    badgeLabel: 'STUDIO LAB',
-    changelog: 'Multi-tool pipeline routing, live HUD telemetry canvas, and unified engine showcase.',
+    version: 'v2.1.1',
+    releaseDate: '2026-09-26',
+    badgeLabel: 'BROADSIDE LAB',
+    changelog: 'Gothic broadside editorial redesign with warm monochrome palette, dual-state Dark/Light mode switcher with localStorage persistence, Fraunces serifs, domain migration to kojerens.manji.eu.org, and mobile workstation advisory.',
     status: 'ONLINE'
   },
 
@@ -38,10 +38,10 @@ export const APP_VERSIONS = {
   blobTracker: {
     id: 'blob-tracker',
     name: 'Blob Tracker',
-    version: 'v2.4.0',
-    releaseDate: '2026-09-24',
+    version: 'v2.5.2',
+    releaseDate: '2026-09-26',
     badgeLabel: 'TRACKER',
-    changelog: '4 generative visual engines (Sensor, Telemetry, Topography, Viewfinder) & 40 GRD gradient maps.',
+    changelog: 'Harmonized 100% warm monochrome broadside layout across stage and sidebars, fixed empty-state text contrast, unified 100vh viewport, bidirectional dark/light mode toggle with themechange events, and mobile-only desktop advisory toast.',
     status: 'STABLE'
   },
 
@@ -49,10 +49,10 @@ export const APP_VERSIONS = {
   asciiGen: {
     id: 'ascii-gen',
     name: 'ASCII Matrix',
-    version: 'v1.3.0',
-    releaseDate: '2026-09-24',
+    version: 'v1.4.2',
+    releaseDate: '2026-09-26',
     badgeLabel: 'ASCII MATRIX',
-    changelog: 'Multi-pass electron bloom, Unicode ramp synthesizer, and pure text/PNG export.',
+    changelog: 'Harmonized broadside split workspace and inspector panel backgrounds, unified light/dark color variables, removed cramped mastheads, live theme synchronization, and mobile-only desktop advisory toast.',
     status: 'STABLE'
   },
 
@@ -60,10 +60,10 @@ export const APP_VERSIONS = {
   ditherGen: {
     id: 'dither-gen',
     name: '1-Bit Dither Matrix',
-    version: 'v1.2.0',
-    releaseDate: '2026-09-24',
+    version: 'v1.3.2',
+    releaseDate: '2026-09-26',
     badgeLabel: '1-BIT DITHER',
-    changelog: '15 error-diffusion & ordered dithering algorithms, 12 retro palettes, and vector SVG export.',
+    changelog: 'Harmonized stage, sidebar, and presets styling to match Broadside editorial paper ground with live theme synchronization and mobile-only desktop advisory toast.',
     status: 'STABLE'
   },
 
@@ -71,11 +71,11 @@ export const APP_VERSIONS = {
   crtGen: {
     id: 'crt-gen',
     name: 'Analog CRT Synthesizer',
-    version: 'v1.0.0',
-    releaseDate: '2026-09-24',
+    version: 'v1.1.2',
+    releaseDate: '2026-09-26',
     badgeLabel: 'CRT BEAM & GLITCH',
-    changelog: 'Trinitron aperture grilles, triad phosphor masks, NTSC chroma bleed, and VHS tracking jitter.',
-    status: 'NEW'
+    changelog: 'Harmonized stage, presets, and empty-state styling with shadowless Broadside architecture, themechange listeners, and mobile-only desktop advisory toast.',
+    status: 'STABLE'
   }
 } as const;
 

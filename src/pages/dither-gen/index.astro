@@ -2,6 +2,7 @@
 import '../../styles/global.css';
 import '../../styles/dither-gen.css';
 import { APP_VERSIONS } from '../../config/versions';
+import MobileAdvisory from '../../components/MobileAdvisory.astro';
 ---
 
 <!DOCTYPE html>
@@ -9,54 +10,85 @@ import { APP_VERSIONS } from '../../config/versions';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1-Bit Dither Matrix : KOJERENS</title>
+  <title>KOJERENS — 1-Bit Dither Matrix</title>
+  <link rel="canonical" href="https://kojerens.manji.eu.org/dither-gen/" />
   <meta name="description" content="KOJERENS 1-Bit Dither Matrix: High-performance browser-native dithering synthesizer featuring Atkinson, Floyd-Steinberg, Bayer ordered, and Halftone raster engines." />
   <meta name="author" content="Fanz Irfan" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/png" sizes="32x32" href="/dither-gen/assets/brand/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/dither-gen/assets/brand/favicon-16x16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/dither-gen/assets/brand/apple-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#05060f" />
+  <meta name="theme-color" content="#141312" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
+  <!-- Anti-FOUC Theme Script -->
+  <script is:inline>
+    (function () {
+      var saved = localStorage.getItem('kojerens-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
 </head>
-<body class="theme-midnight">
+<body>
 <div class="app">
 
-  <!-- TOPBAR (Clean Header: Brand on left, Navigation & Actions on right) -->
+  <!-- TOP TICKER BANNER (ANNOUNCEMENT STRIP) -->
+  <aside class="top-ticker" aria-label="Laboratory Announcement">
+    <div class="top-ticker-content">
+      <span class="top-ticker-flag">
+        <span class="top-ticker-dot"></span>
+        1-BIT DITHER // PROCEDURAL QUANTIZATION LAB
+      </span>
+      <span>—</span>
+      <span>100% IN-BROWSER PROCESSING</span>
+      <span>—</span>
+      <span>ZERO CLOUD DATA TRANSMISSION</span>
+    </div>
+    <div class="top-ticker-content" style="font-family: var(--font-mono); font-size: 10px;">
+      <span>KOJERENS.MANJI.EU.ORG // {APP_VERSIONS.ditherGen.version}</span>
+    </div>
+  </aside>
+
+  <!-- EDITORIAL TOPBAR -->
   <header class="topbar">
     <div class="topbar-brand">
       <a href="/" class="topbar-brand-link" title="Back to KOJERENS Studio">
-        <img src="/dither-gen/assets/brand/navbar.png" alt="KOJERENS" class="topbar-logo" width="26" height="26" />
-        <span class="topbar-brand-title">KOJERENS</span>
+        <span class="topbar-brand-star">✷</span>
+        <span>KOJERENS</span>
       </a>
       <span class="topbar-subtool-badge">1-BIT DITHER</span>
-      <span class="topbar-version-badge" title={`1-Bit Dither ${APP_VERSIONS.ditherGen.version} (${APP_VERSIONS.ditherGen.releaseDate}) - ${APP_VERSIONS.ditherGen.changelog}`}>
+      <span class="topbar-version-badge" title={`1-Bit Dither ${APP_VERSIONS.ditherGen.version} (${APP_VERSIONS.ditherGen.releaseDate})`}>
         <span class="version-dot"></span>
         {APP_VERSIONS.ditherGen.version}
       </span>
     </div>
 
+    <!-- ENGINE NAVIGATION LINKS -->
+    <nav class="topbar-tools-nav" aria-label="Engine Navigation">
+      <a href="/blob-tracker/" class="topbar-tool-switch" title="Switch to Blob Tracker">Blob Tracker</a>
+      <a href="/ascii-gen/" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">ASCII Matrix</a>
+      <a href="/dither-gen/" class="topbar-tool-switch active" title="1-Bit Dither Matrix Engine">1-Bit Dither</a>
+      <a href="/crt-gen/" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">CRT Gen</a>
+    </nav>
+
     <!-- ACTIONS ON RIGHT -->
     <div class="topbar-actions">
-      <a href="/blob-tracker/" class="topbar-tool-switch" title="Switch to Blob Tracker">
-        <i class="ri-radar-line"></i>
-        <span>Blob Tracker</span>
-      </a>
-      <a href="/ascii-gen/" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">
-        <i class="ri-terminal-line"></i>
-        <span>ASCII Gen</span>
-      </a>
-      <a href="/crt-gen/" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">
-        <i class="ri-tv-line"></i>
-        <span>CRT Gen</span>
-      </a>
+      <button class="topbar-btn" id="themeToggleBtn" title="Toggle Dark / Light Theme">
+        <span class="theme-toggle-icon">◑</span>
+        <span id="themeToggleText">DARK</span>
+      </button>
       <button class="topbar-btn" id="topbarRandomBtn" title="Randomize style and settings">
-        <i class="ri-dice-line"></i>
-        <span class="btn-text">Random</span>
+        Random
       </button>
       <button class="topbar-cta" id="topbarDownloadBtn">Export PNG</button>
     </div>
@@ -65,43 +97,34 @@ import { APP_VERSIONS } from '../../config/versions';
   <!-- WORKSPACE -->
   <div class="workspace">
 
-    <!-- ICON RAIL (FAR LEFT) -->
+    <!-- TYPOGRAPHIC BROADSIDE RAIL (FAR LEFT) -->
     <nav class="rail" aria-label="Panel navigation">
       <button class="rail-btn active" data-panel="presets" title="Dither Presets" aria-pressed="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
         <span class="rail-label">Style</span>
       </button>
       <button class="rail-btn" data-panel="file" title="Source File &amp; Crop" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         <span class="rail-label">File</span>
       </button>
       <button class="rail-btn" data-panel="engine" title="Dither Algorithm" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
         <span class="rail-label">Engine</span>
       </button>
       <button class="rail-btn" data-panel="palette" title="Color Palette" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="14" cy="7" r="1.5" fill="currentColor"/><circle cx="16" cy="13" r="1.5" fill="currentColor"/><circle cx="10" cy="16" r="1.5" fill="currentColor"/></svg>
         <span class="rail-label">Palette</span>
       </button>
       <button class="rail-btn" data-panel="scale" title="Pixel Scale &amp; Crunch" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         <span class="rail-label">Scale</span>
       </button>
       <button class="rail-btn" data-panel="levels" title="Image Levels &amp; Tone" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
         <span class="rail-label">Levels</span>
       </button>
       <div class="rail-sep"></div>
       <button class="rail-btn" data-panel="size" title="Canvas Format" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
         <span class="rail-label">Size</span>
       </button>
       <button class="rail-btn" data-panel="frame" title="Telemetry Typography" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
         <span class="rail-label">Text</span>
       </button>
       <button class="rail-btn" data-panel="export" title="Production Export" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span class="rail-label">Export</span>
       </button>
     </nav>
@@ -253,15 +276,15 @@ import { APP_VERSIONS } from '../../config/versions';
               <div class="color-picker-item">
                 <label>BACKGROUND INK</label>
                 <div class="color-input-wrap">
-                  <input type="color" id="customBgColor" value="#05060f" />
-                  <span class="color-hex-val" id="customBgVal">#05060f</span>
+                  <input type="color" id="customBgColor" value="#fafafa" />
+                  <span class="color-hex-val" id="customBgVal">#fafafa</span>
                 </div>
               </div>
               <div class="color-picker-item">
                 <label>FOREGROUND INK</label>
                 <div class="color-input-wrap">
-                  <input type="color" id="customFgColor" value="#ffffff" />
-                  <span class="color-hex-val" id="customFgVal">#ffffff</span>
+                  <input type="color" id="customFgColor" value="#2a2722" />
+                  <span class="color-hex-val" id="customFgVal">#2a2722</span>
                 </div>
               </div>
             </div>
@@ -478,7 +501,7 @@ import { APP_VERSIONS } from '../../config/versions';
         <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
       </div>
 
-      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
+      <div class="stage-attribution"><strong>Fanz Irfan</strong> / kojerens.manji.eu.org</div>
     </main>
 
     <!-- PRESETS SIDEBAR (RIGHT) -->
@@ -590,11 +613,42 @@ import { APP_VERSIONS } from '../../config/versions';
 <script is:inline src="/assets/demo/demo-assets.js"></script>
 <script is:inline src="/dither-gen/script.js"></script>
 <script is:inline>
+  (function () {
+    var btn = document.getElementById('themeToggleBtn');
+    var txt = document.getElementById('themeToggleText');
+    function updateText() {
+      var isDark = document.documentElement.classList.contains('dark') ||
+                   document.documentElement.getAttribute('data-theme') === 'dark';
+      if (txt) txt.textContent = isDark ? 'LIGHT' : 'DARK';
+    }
+    updateText();
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var isDark = document.documentElement.classList.contains('dark') ||
+                     document.documentElement.getAttribute('data-theme') === 'dark';
+        var nextDark = !isDark;
+        if (nextDark) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('kojerens-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('kojerens-theme', 'light');
+        }
+        updateText();
+        window.dispatchEvent(new CustomEvent('themechange', { detail: { isDark: nextDark } }));
+      });
+    }
+  })();
+</script>
+<script is:inline>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('../sw.js').catch(function () {});
     });
   }
 </script>
+<MobileAdvisory />
 </body>
 </html>

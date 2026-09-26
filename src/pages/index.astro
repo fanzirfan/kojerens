@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import '../styles/landing.css';
 import { APP_VERSIONS } from '../config/versions';
+import MobileAdvisory from '../components/MobileAdvisory.astro';
 ---
 
 <!DOCTYPE html>
@@ -9,17 +10,18 @@ import { APP_VERSIONS } from '../config/versions';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KOJERENS | Generative Visual & Computational Design Studio</title>
-  <meta name="description" content="KOJERENS: A browser-native generative visual laboratory featuring high-performance contrast centroid tracking, HUD telemetry, Unicode ASCII art, 1-bit error-diffusion dithering, and analog CRT beam glitch synthesis." />
-  <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, dither, 1-bit, crt synthesizer, scanlines, trinitron, analog glitch, creative coding, browser-native" />
+  <title>KOJERENS — Generative Visual & Computational Design Studio</title>
+  <meta name="description" content="KOJERENS is a browser-native generative visual laboratory engineered for luminance contrast centroid tracking, technical vector telemetry, real-time Unicode ASCII art synthesis, 1-bit error-diffusion dithering, and analog CRT beam simulation." />
+  <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, dither, 1-bit, crt synthesizer, scanlines, creative coding, browser-native, broadside, dark mode" />
   <meta name="author" content="Fanz Irfan" />
   <meta name="robots" content="index,follow" />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="KOJERENS | Generative Visual & Design Studio" />
-  <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker, ASCII Matrix Generator, 1-Bit Dither Matrix & Analog CRT Synthesizer." />
+  <!-- Canonical & Open Graph -->
+  <link rel="canonical" href="https://kojerens.manji.eu.org/" />
+  <meta property="og:title" content="KOJERENS — Generative Visual & Computational Design Studio" />
+  <meta property="og:description" content="Explore client-side generative visual engines: Blob Tracker, ASCII Matrix, 1-Bit Dither Matrix & Analog CRT Synthesizer." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://manji.eu.org" />
+  <meta property="og:url" content="https://kojerens.manji.eu.org/" />
   <meta property="og:image" content="/assets/brand/logo.png" />
 
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png" />
@@ -27,566 +29,804 @@ import { APP_VERSIONS } from '../config/versions';
   <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48x48.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/brand/apple-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#05060f" />
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+  <meta name="theme-color" content="#141312" />
+
+  <!-- Anti-FOUC Theme Initialization Script (Default to Warm Cream Paper Broadside) -->
+  <script is:inline>
+    (function () {
+      var saved = localStorage.getItem('kojerens-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
 </head>
 <body>
 
-  <!-- NAVIGATION -->
-  <nav class="navbar" aria-label="Main Navigation">
-    <div class="nav-brand">
-      <a href="index.html" style="display:flex; align-items:center; gap:10px;">
-        <img src="/assets/brand/navbar.png" alt="KOJERENS" class="nav-logo" width="28" height="28" />
-        <span class="nav-title">KOJERENS</span>
-      </a>
-      <span class="nav-badge">STUDIO LAB</span>
-      <span class="topbar-version-badge" title={`KOJERENS Studio Hub ${APP_VERSIONS.hub.version} (${APP_VERSIONS.hub.releaseDate}) - ${APP_VERSIONS.hub.changelog}`}>
-        <span class="version-dot"></span>
-        {APP_VERSIONS.hub.version}
+  <!-- TOP TICKER BANNER (ANNOUNCEMENT STRIP) -->
+  <aside class="top-ticker" aria-label="Laboratory Announcement">
+    <div class="top-ticker-content">
+      <span class="top-ticker-flag">
+        <span class="top-ticker-dot"></span>
+        COMPUTATIONAL VISUAL STUDIO
       </span>
+      <span>—</span>
+      <span>100% IN-BROWSER PROCESSING</span>
+      <span>—</span>
+      <span>ZERO CLOUD DATA TRANSMISSION</span>
     </div>
-
-    <div class="nav-links">
-      <a href="#tools" class="nav-link">Studio Engines</a>
-      <a href="#features" class="nav-link">Architecture</a>
-      <a href="#about" class="nav-link">Manifesto</a>
+    <div class="top-ticker-content" style="font-family: var(--font-mono); font-size: 10px;">
+      <span>KOJERENS.MANJI.EU.ORG // {APP_VERSIONS.hub.version}</span>
     </div>
+  </aside>
 
-    <div class="nav-actions">
-      <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener" class="btn-ghost" title="GitHub Repository">
-        <i class="ri-github-line"></i> GitHub
-      </a>
-      <a href="#tools" class="btn-cta">
-        Launch Tools <i class="ri-arrow-right-line"></i>
-      </a>
-    </div>
-  </nav>
-
-  <!-- HERO SECTION -->
-  <header class="hero-section">
-    <div class="hero-eyebrow">
-      <span class="eyebrow-dot"></span>
-      <span>COMPUTATIONAL VISUAL STUDIO : 100% IN-BROWSER</span>
-    </div>
-
-    <h1 class="hero-title">
-      Generative Systems for Modern Visual Engineers.
-    </h1>
-
-    <p class="hero-description">
-      KOJERENS is a browser-native generative laboratory engineered for luminance contrast centroid tracking, technical vector telemetry, real-time Unicode ASCII art synthesis, and 1-bit error-diffusion dithering.
-    </p>
-
-    <div class="hero-buttons">
-      <a href="#tools" class="btn-cta btn-large">
-        <i class="ri-compass-3-line"></i> Explore Creative Engines
-      </a>
-      <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener" class="btn-ghost btn-large">
-        <i class="ri-code-s-slash-line"></i> View Source Code
-      </a>
-    </div>
-
-    <!-- Live Telemetry Simulator Strip -->
-    <div class="hero-telemetry-strip" aria-label="Live Laboratory Simulation">
-      <div class="telemetry-grid-header">
-        <div class="telemetry-status-tag">
-          <i class="ri-pulse-line" style="color: var(--color-void-violet);"></i>
-          <span>LIVE HARDWARE ACCELERATED RENDER PIPELINE</span>
-        </div>
-        <div>MANJI.EU.ORG // 2026</div>
+  <!-- EDITORIAL NAVIGATION -->
+  <header>
+    <nav class="page-nav" aria-label="Main Navigation">
+      <div class="nav-brand-group">
+        <a href="/" class="nav-brand">
+          <span class="nav-brand-star">✷</span>
+          <span>ver. {APP_VERSIONS.hub.version.replace('v', '')}</span>
+        </a>
+        <p class="nav-tagline">(the Computational Design &amp; Visual Synthesis Studio of <strong>Fanz Irfan</strong>)</p>
       </div>
-      <canvas id="heroHudCanvas" class="hud-preview-canvas" width="960" height="240"></canvas>
-    </div>
+
+      <div class="nav-right-group">
+        <ul class="nav-links" role="list">
+          <li><a href="#engines" class="nav-link">Engines</a></li>
+          <li><a href="#manifesto" class="nav-link">Manifesto</a></li>
+          <li><a href="#architecture" class="nav-link">Architecture</a></li>
+          <li>
+            <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener" class="nav-link">
+              GitHub ↗
+            </a>
+          </li>
+        </ul>
+
+        <!-- Broadside Theme Toggle Button -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark and Light Mode" title="Toggle theme">
+          <span class="theme-toggle-icon">◑</span>
+          <span id="themeToggleText">DARK</span>
+        </button>
+      </div>
+    </nav>
   </header>
 
-  <!-- STUDIO TOOLS SECTION (#tools) -->
   <main>
-    <section class="section-container" id="tools">
-      <div class="section-header">
-        <div class="section-eyebrow">// PRODUCTION ENGINES</div>
-        <h2 class="section-title">Generative Online Tools</h2>
-        <p class="section-subtitle">
-          Engineered for visual researchers, art directors, and creative technologists. Zero installations, zero tracking, pure client-side computing.
-        </p>
-      </div>
-
-      <div class="tools-grid">
-        
-        <!-- TOOL 1: BLOB TRACKER -->
-        <article class="tool-card">
-          <span class="tool-card-corner-bracket">[01]</span>
+    <!-- HERO SECTION -->
+    <section class="home-hero">
+      <div class="container">
+        <div class="hero-grid">
           
-          <div class="tool-header">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
-              <span class="tool-index">VECTOR TELEMETRY &amp; CENTROID TRACKER</span>
-              <span class="topbar-version-badge" title={`Blob Tracker ${APP_VERSIONS.blobTracker.version} (${APP_VERSIONS.blobTracker.releaseDate})`}>
-                <span class="version-dot"></span>
-                {APP_VERSIONS.blobTracker.version}
+          <!-- Left Hero Copy -->
+          <div class="hero-copy">
+            <div>
+              <div class="hero-eyebrow">
+                <span>✷ KOJERENS LABORATORY</span>
+                <span>/</span>
+                <span>AUTONOMOUS GRAPHICS ENGINE</span>
+              </div>
+
+              <h1 class="hero-title">
+                <span class="segment">Generative Systems</span>
+                <span class="segment segment--italic">of the</span>
+                <span class="segment">Visual Laboratory</span>
+              </h1>
+
+              <p class="hero-description">
+                The personal generative visual laboratory of Denver and Jakarta-based creative technologist and designer Fanz Irfan. Engineered for luminance contrast centroid tracking, technical vector telemetry, real-time Unicode ASCII art synthesis, 1-bit error-diffusion dithering, and analog cathode ray tube simulation.
+              </p>
+
+              <span class="hero-warning">
+                (Scroll with curiosity and intention · All procedural algorithms execute locally on client hardware)
               </span>
             </div>
-            <h3 class="tool-title">Blob Tracker</h3>
-            <p class="tool-description">
-              Upload any image to analyze high-contrast feature centroids. Generate sci-fi HUD telemetry, topographic geodetic contour lines, constellations, and minimalist editorial framing.
-            </p>
-          </div>
 
-          <div class="tool-preview-box">
-            <canvas id="blobPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
-          </div>
-
-          <div class="tool-tags">
-            <span class="tool-tag">Sensor Constellation</span>
-            <span class="tool-tag">Sci-Fi Telemetry</span>
-            <span class="tool-tag">Marching Squares Topo</span>
-            <span class="tool-tag">40 GRD Gradient Maps</span>
-            <span class="tool-tag">Transparent PNG Export</span>
-          </div>
-
-          <div class="tool-cta-row">
-            <span class="tool-spec-badge">{APP_VERSIONS.blobTracker.version} · 4 Engines · 60/120fps GPU</span>
-            <a href="/blob-tracker/" class="btn-cta">
-              Open Blob Tracker <i class="ri-arrow-right-line"></i>
-            </a>
-          </div>
-        </article>
-
-        <!-- TOOL 2: ASCII MATRIX GENERATOR -->
-        <article class="tool-card">
-          <span class="tool-card-corner-bracket">[02]</span>
-          
-          <div class="tool-header">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
-              <span class="tool-index">UNICODE GLYPH SYNTHESIZER</span>
-              <span class="topbar-version-badge" title={`ASCII Matrix ${APP_VERSIONS.asciiGen.version} (${APP_VERSIONS.asciiGen.releaseDate})`}>
-                <span class="version-dot"></span>
-                {APP_VERSIONS.asciiGen.version}
-              </span>
+            <div class="hero-actions">
+              <a href="#engines" class="btn-broadside">
+                Explore Creative Engines ↓
+              </a>
+              <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener" class="btn-broadside-ghost">
+                Source Code on GitHub ↗
+              </a>
             </div>
-            <h3 class="tool-title">ASCII Matrix</h3>
-            <p class="tool-description">
-              Transform high-resolution imagery into rich multi-language Unicode character art and terminal glyph matrices. Features multi-pass bloom, photographic exposure, and text export.
-            </p>
           </div>
 
-          <div class="tool-preview-box">
-            <canvas id="asciiPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
-          </div>
-
-          <div class="tool-tags">
-            <span class="tool-tag">Unicode Character Ramps</span>
-            <span class="tool-tag">Multi-Pass Bloom</span>
-            <span class="tool-tag">Photographic Exposure</span>
-            <span class="tool-tag">Custom Character Sets</span>
-            <span class="tool-tag">Pure Text Download</span>
-          </div>
-
-          <div class="tool-cta-row">
-            <span class="tool-spec-badge">{APP_VERSIONS.asciiGen.version} · Images · Unicode · Text Export</span>
-            <a href="/ascii-gen/" class="btn-cta">
-              Open ASCII Matrix <i class="ri-arrow-right-line"></i>
-            </a>
-          </div>
-        </article>
-
-        <!-- TOOL 3: 1-BIT DITHER MATRIX -->
-        <article class="tool-card">
-          <span class="tool-card-corner-bracket">[03]</span>
-          
-          <div class="tool-header">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
-              <span class="tool-index">1-BIT ERROR DIFFUSION &amp; ORDERED DITHERING</span>
-              <span class="topbar-version-badge" title={`1-Bit Dither ${APP_VERSIONS.ditherGen.version} (${APP_VERSIONS.ditherGen.releaseDate})`}>
-                <span class="version-dot"></span>
-                {APP_VERSIONS.ditherGen.version}
-              </span>
+          <!-- Right Hero Halftone Plate -->
+          <div class="hero-plate-container">
+            <div class="halftone-plate" aria-label="1-Bit Generative Halftone Plate">
+              <span class="plate-corner-tl">Design &amp; Strategy</span>
+              <span class="plate-corner-tr">Fanz Irfan</span>
+              <span class="plate-corner-bl">kojerens.manji.eu.org</span>
+              <span class="plate-corner-br">Indonesia</span>
+              <canvas id="halftoneHeroCanvas" class="plate-canvas" width="480" height="480"></canvas>
             </div>
-            <h3 class="tool-title">1-Bit Dither</h3>
-            <p class="tool-description">
-              Synthesize photographs into high-contrast retro bitmap graphics using 15 dithering algorithms. Atkinson, Floyd-Steinberg, Bayer matrices, halftone screens, retro palettes, and vector SVG export.
-            </p>
           </div>
 
-          <div class="tool-preview-box">
-            <canvas id="ditherPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
-          </div>
-
-          <div class="tool-tags">
-            <span class="tool-tag">15 Dither Engines</span>
-            <span class="tool-tag">Bayer 8x8 &amp; Halftone</span>
-            <span class="tool-tag">12 Retro Palettes</span>
-            <span class="tool-tag">Scalable SVG Export</span>
-            <span class="tool-tag">Integer Pixel Scale</span>
-          </div>
-
-          <div class="tool-cta-row">
-            <span class="tool-spec-badge">{APP_VERSIONS.ditherGen.version} · 15 Engines · SVG &amp; PNG</span>
-            <a href="/dither-gen/" class="btn-cta">
-              Open 1-Bit Dither <i class="ri-arrow-right-line"></i>
-            </a>
-          </div>
-        </article>
-
-        <!-- TOOL 4: ANALOG CRT BEAM & GLITCH SYNTHESIZER -->
-        <article class="tool-card">
-          <span class="tool-card-corner-bracket">[04]</span>
-          
-          <div class="tool-header">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
-              <span class="tool-index">ANALOG BEAM DYNAMICS &amp; GLITCH</span>
-              <span class="topbar-version-badge" title={`CRT Synthesizer ${APP_VERSIONS.crtGen.version} (${APP_VERSIONS.crtGen.releaseDate})`}>
-                <span class="version-dot"></span>
-                {APP_VERSIONS.crtGen.version}
-              </span>
-            </div>
-            <h3 class="tool-title">CRT Synthesizer</h3>
-            <p class="tool-description">
-              Simulate cathode ray tube physics, Trinitron aperture grilles, triad shadow masks, electron beam bloom, chromatic aberration, NTSC composite color bleed, and VHS tracking jitter.
-            </p>
-          </div>
-
-          <div class="tool-preview-box">
-            <canvas id="crtPreviewCanvas" class="preview-interactive-canvas" width="480" height="200"></canvas>
-          </div>
-
-          <div class="tool-tags">
-            <span class="tool-tag">Trinitron Aperture Grille</span>
-            <span class="tool-tag">Triad Shadow Mask</span>
-            <span class="tool-tag">Barrel Tube Curvature</span>
-            <span class="tool-tag">VHS Sync Jitter</span>
-            <span class="tool-tag">Transparent Overlay Export</span>
-          </div>
-
-          <div class="tool-cta-row">
-            <span class="tool-spec-badge">{APP_VERSIONS.crtGen.version} · 8 Presets · Broadcast OSD</span>
-            <a href="/crt-gen/" class="btn-cta">
-              Open CRT Synthesizer <i class="ri-arrow-right-line"></i>
-            </a>
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-    <!-- ARCHITECTURE & CAPABILITIES (#features) -->
-    <section class="section-container" id="features">
-      <div class="section-header">
-        <div class="section-eyebrow">// CORE ARCHITECTURE</div>
-        <h2 class="section-title">Built for Precision & Privacy</h2>
-        <p class="section-subtitle">
-          Traditional online design tools send your private imagery to remote servers. KOJERENS executes all computer vision algorithms locally within your browser context.
-        </p>
-      </div>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <i class="ri-shield-check-line"></i>
-          </div>
-          <h4 class="feature-title">Zero Server Footprint</h4>
-          <p class="feature-text">
-            100% client-side execution. Your photos and visual media remain in local memory and never touch an external cloud server.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <i class="ri-cpu-line"></i>
-          </div>
-          <h4 class="feature-title">Hardware Accelerated</h4>
-          <p class="feature-text">
-            Offscreen canvas buffers paired with requestAnimationFrame scheduling deliver fluid 60fps to 120fps slider response times even at 4K resolution.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <i class="ri-layout-grid-line"></i>
-          </div>
-          <h4 class="feature-title">Dynamic Workspaces</h4>
-          <p class="feature-text">
-            Adaptive icon rails and sliding panel drawers maximize your visual canvas area, keeping complex generative parameter controls accessible yet uncluttered.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <i class="ri-download-cloud-line"></i>
-          </div>
-          <h4 class="feature-title">Production Exports</h4>
-          <p class="feature-text">
-            Export transparent PNG overlays, full resolution branded posters, animated frame sequences in ZIP archives, and raw ASCII plaintext ready for production.
-          </p>
         </div>
       </div>
     </section>
 
-    <!-- MANIFESTO & ABOUT (#about) -->
-    <section class="section-container" id="about">
-      <div class="manifesto-card">
-        <div>
-          <h2 class="manifesto-title">The KOJERENS Creative Manifesto</h2>
-          <p class="manifesto-p">
-            In an era of generic AI templates and bloated subscriptions, KOJERENS returns control to procedural rules, mathematical aesthetics, and direct pixel manipulation.
+    <!-- CONTINUOUS COORDINATE MARQUEE -->
+    <section class="coordinate-marquee" aria-label="Live Telemetry Marquee">
+      <div class="marquee-track">
+        <div class="marquee-item">
+          <span>● LIVE CLIENT-SIDE PIPELINE</span>
+          <span class="marquee-sep">—</span>
+          <span>KOJERENS.MANJI.EU.ORG</span>
+          <span class="marquee-sep">—</span>
+          <span>S 06° 12' 52" E 106° 50' 42" (JAKARTA, INDONESIA)</span>
+          <span class="marquee-sep">—</span>
+          <span id="marqueeClock">12:00:00 AM WIB</span>
+          <span class="marquee-sep">—</span>
+          <span>FANZ IRFAN</span>
+          <span class="marquee-sep">—</span>
+          <span>ZERO EXTERNAL SERVER DEPENDENCY</span>
+          <span class="marquee-sep">—</span>
+          <span>60/120 FPS GPU ACCELERATED</span>
+          <span class="marquee-sep">—</span>
+        </div>
+        <!-- Duplicated track for continuous seamless scroll -->
+        <div class="marquee-item" aria-hidden="true">
+          <span>● LIVE CLIENT-SIDE PIPELINE</span>
+          <span class="marquee-sep">—</span>
+          <span>KOJERENS.MANJI.EU.ORG</span>
+          <span class="marquee-sep">—</span>
+          <span>S 06° 12' 52" E 106° 50' 42" (JAKARTA, INDONESIA)</span>
+          <span class="marquee-sep">—</span>
+          <span id="marqueeClockDup">12:00:00 AM WIB</span>
+          <span class="marquee-sep">—</span>
+          <span>FANZ IRFAN</span>
+          <span class="marquee-sep">—</span>
+          <span>ZERO EXTERNAL SERVER DEPENDENCY</span>
+          <span class="marquee-sep">—</span>
+          <span>60/120 FPS GPU ACCELERATED</span>
+          <span class="marquee-sep">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVERTED EDITORIAL LETTER -->
+    <section class="editorial-letter" aria-label="A Brief Letter From The Laboratory">
+      <div class="letter-container">
+        <p class="letter-eyebrow">A Brief Letter From The Laboratory</p>
+
+        <div class="letter-prose">
+          <p>dear visitor <i>(and fellow visual engineer)</i>,</p>
+          <p>
+            this laboratory represents a deliberate return to procedural mechanics, mathematical aesthetics, and direct pixel manipulation — an antidote to black-box generative models and disposable cloud templates.
           </p>
-          <p class="manifesto-p">
-            Whether generating sci-fi interface assets for film, topographic geodetic charts for editorial prints, or retro-futuristic ASCII motion clips, each tool in this suite is purpose-built to inspire new visual languages.
+          <p>
+            here, every contrast centroid is calculated locally; every ASCII character ramp is synthesized in memory; every 1-bit bitmap is diffused through integer math; and every analog beam blooms directly inside your browser.
           </p>
-          <div style="margin-top: 24px;">
-            <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener" class="btn-ghost">
-              <i class="ri-star-line"></i> Star on GitHub
-            </a>
-          </div>
+          <p>
+            tread deliberately, for the ground is alive with mathematics.
+          </p>
         </div>
 
-        <div class="manifesto-aside">
-          <div class="aside-row">
-            <span>Project</span>
-            <span class="aside-val">KOJERENS Visual Lab</span>
+        <p class="letter-signoff">
+          with respect,<br />
+          fanz irfan <i>(from kojerens)</i>
+        </p>
+
+        <div class="letter-bottom-rule"></div>
+        <p class="letter-colophon-tag">KOJERENS COMPUTATIONAL DESIGN ARCHITECTURE // MMXXVI</p>
+      </div>
+    </section>
+
+    <!-- STAMPED SECTION HEADER -->
+    <section class="stamped-masthead" aria-label="Section Header: Selected Engines">
+      <div class="stamped-header-row">
+        <h2 class="stamped-title">SELECTED ENGINES</h2>
+        <div class="stamped-trailing-rule"></div>
+      </div>
+    </section>
+
+    <!-- ENGINES SHOWCASE -->
+    <section class="engines-section" id="engines">
+      <div class="container">
+        <div class="section-intro-row">
+          <div class="section-intro-left">
+            <p class="section-eyebrow">// PRODUCTION SUITE</p>
+            <h3 class="section-display-title">Browser-Native Creative Tools</h3>
           </div>
-          <div class="aside-row">
-            <span>Engineering & Design</span>
-            <span class="aside-val">Fanz Irfan</span>
+          <p class="section-intro-right">
+            Engineered for visual researchers, art directors, and creative coders. 100% client-side computing with scalable exports.
+          </p>
+        </div>
+
+        <div class="engines-grid">
+          
+          <!-- ENGINE 1: BLOB TRACKER -->
+          <article class="engine-card">
+            <div class="engine-card-left">
+              <div>
+                <div class="engine-meta-row">
+                  <span class="engine-index">[01]</span>
+                  <span class="engine-category">Vector Telemetry &amp; Feature Centroid Engine</span>
+                </div>
+
+                <div class="engine-title-group">
+                  <h4 class="engine-title">Blob Tracker</h4>
+                </div>
+
+                <p class="engine-description">
+                  Upload any image to analyze high-contrast luminance centroids. Generates sci-fi HUD telemetry, topographic geodetic elevation curves via Marching Squares, constellation coordinate grids, and minimalist editorial framing.
+                </p>
+
+                <div class="engine-tags">
+                  <span class="engine-tag">Sensor Constellation</span>
+                  <span class="engine-tag">Sci-Fi Telemetry</span>
+                  <span class="engine-tag">Marching Squares Topo</span>
+                  <span class="engine-tag">40 GRD Gradient Maps</span>
+                  <span class="engine-tag">Transparent PNG Export</span>
+                </div>
+              </div>
+
+              <div class="engine-action-row">
+                <span class="engine-version-spec">{APP_VERSIONS.blobTracker.version} · 4 Sub-Engines · 60/120fps GPU</span>
+                <a href="/blob-tracker/" class="btn-engine-launch">
+                  Launch Blob Tracker →
+                </a>
+              </div>
+            </div>
+
+            <div class="engine-preview-wrap">
+              <canvas id="blobPreviewCanvas" class="engine-canvas" width="480" height="300"></canvas>
+            </div>
+          </article>
+
+          <!-- ENGINE 2: ASCII MATRIX -->
+          <article class="engine-card">
+            <div class="engine-card-left">
+              <div>
+                <div class="engine-meta-row">
+                  <span class="engine-index">[02]</span>
+                  <span class="engine-category">Unicode Glyph Art Synthesizer</span>
+                </div>
+
+                <div class="engine-title-group">
+                  <h4 class="engine-title">ASCII Matrix</h4>
+                </div>
+
+                <p class="engine-description">
+                  Transforms high-resolution photography into rich multi-language Unicode character art and terminal glyph matrices. Features multi-pass bloom, photographic exposure control, color quantization, and pure plaintext/image export.
+                </p>
+
+                <div class="engine-tags">
+                  <span class="engine-tag">Unicode Character Ramps</span>
+                  <span class="engine-tag">Multi-Pass Bloom</span>
+                  <span class="engine-tag">Photographic Exposure</span>
+                  <span class="engine-tag">Custom Character Sets</span>
+                  <span class="engine-tag">Pure Text Download</span>
+                </div>
+              </div>
+
+              <div class="engine-action-row">
+                <span class="engine-version-spec">{APP_VERSIONS.asciiGen.version} · Unicode Synthesizer · Text &amp; PNG</span>
+                <a href="/ascii-gen/" class="btn-engine-launch">
+                  Launch ASCII Matrix →
+                </a>
+              </div>
+            </div>
+
+            <div class="engine-preview-wrap">
+              <canvas id="asciiPreviewCanvas" class="engine-canvas" width="480" height="300"></canvas>
+            </div>
+          </article>
+
+          <!-- ENGINE 3: 1-BIT DITHER MATRIX -->
+          <article class="engine-card">
+            <div class="engine-card-left">
+              <div>
+                <div class="engine-meta-row">
+                  <span class="engine-index">[03]</span>
+                  <span class="engine-category">1-Bit Error Diffusion &amp; Ordered Dither</span>
+                </div>
+
+                <div class="engine-title-group">
+                  <h4 class="engine-title">1-Bit Dither</h4>
+                </div>
+
+                <p class="engine-description">
+                  Synthesizes photographs into high-contrast retro bitmap graphics across 15 mathematical dithering algorithms: Atkinson, Floyd-Steinberg, Bayer 8x8/4x4/2x2 matrices, Halftone Dot/Line, Sierra-3, Stucki, and scalable vector SVG export.
+                </p>
+
+                <div class="engine-tags">
+                  <span class="engine-tag">15 Dither Engines</span>
+                  <span class="engine-tag">Bayer 8x8 &amp; Halftone</span>
+                  <span class="engine-tag">12 Retro Palettes</span>
+                  <span class="engine-tag">Scalable SVG Export</span>
+                  <span class="engine-tag">Integer Pixel Scale</span>
+                </div>
+              </div>
+
+              <div class="engine-action-row">
+                <span class="engine-version-spec">{APP_VERSIONS.ditherGen.version} · 15 Algorithms · Vector SVG &amp; PNG</span>
+                <a href="/dither-gen/" class="btn-engine-launch">
+                  Launch 1-Bit Dither →
+                </a>
+              </div>
+            </div>
+
+            <div class="engine-preview-wrap">
+              <canvas id="ditherPreviewCanvas" class="engine-canvas" width="480" height="300"></canvas>
+            </div>
+          </article>
+
+          <!-- ENGINE 4: ANALOG CRT SYNTHESIZER -->
+          <article class="engine-card">
+            <div class="engine-card-left">
+              <div>
+                <div class="engine-meta-row">
+                  <span class="engine-index">[04]</span>
+                  <span class="engine-category">Analog Beam Dynamics &amp; Glitch Laboratory</span>
+                </div>
+
+                <div class="engine-title-group">
+                  <h4 class="engine-title">CRT Synthesizer</h4>
+                </div>
+
+                <p class="engine-description">
+                  Accurately simulates cathode ray tube electron physics, Trinitron aperture grilles, triad phosphor shadow masks, electron beam bloom, chromatic aberration, NTSC composite color bleed, and VHS tracking jitter.
+                </p>
+
+                <div class="engine-tags">
+                  <span class="engine-tag">Trinitron Aperture Grille</span>
+                  <span class="engine-tag">Triad Shadow Mask</span>
+                  <span class="engine-tag">Barrel Tube Curvature</span>
+                  <span class="engine-tag">VHS Sync Jitter</span>
+                  <span class="engine-tag">Transparent Overlay Export</span>
+                </div>
+              </div>
+
+              <div class="engine-action-row">
+                <span class="engine-version-spec">{APP_VERSIONS.crtGen.version} · 8 Presets · Broadcast OSD · Video Sync</span>
+                <a href="/crt-gen/" class="btn-engine-launch">
+                  Launch CRT Synthesizer →
+                </a>
+              </div>
+            </div>
+
+            <div class="engine-preview-wrap">
+              <canvas id="crtPreviewCanvas" class="engine-canvas" width="480" height="300"></canvas>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- INVERTED BRAND TICKER BAND -->
+    <section class="ticker-strip-dark" aria-label="Engine Keywords Strip">
+      <div class="ticker-strip-track">
+        <span>BLOB TRACKER</span>
+        <span class="ticker-badge-pill">60/120 FPS</span>
+        <span>ASCII MATRIX</span>
+        <span class="ticker-badge-pill">UNICODE</span>
+        <span>1-BIT DITHER</span>
+        <span class="ticker-badge-pill">ATKINSON</span>
+        <span>CRT SYNTHESIZER</span>
+        <span class="ticker-badge-pill">TRINITRON</span>
+        <span>CENTROID TELEMETRY</span>
+        <span class="ticker-badge-pill">CLIENT-SIDE</span>
+        <span>MARCHING SQUARES</span>
+        <span class="ticker-badge-pill">ZERO SERVER</span>
+        <span>ERROR DIFFUSION</span>
+        <span class="ticker-badge-pill">OPEN SOURCE</span>
+      </div>
+    </section>
+
+    <!-- MANIFESTO & ARCHITECTURE SECTION -->
+    <section class="manifesto-section" id="manifesto">
+      <div class="container">
+        <div class="manifesto-grid">
+          
+          <div>
+            <p class="section-eyebrow">// LABORATORY PHILOSOPHY</p>
+            <h3 class="manifesto-heading">Built for Precision, Privacy &amp; Procedural Aesthetics</h3>
+
+            <p class="manifesto-paragraph">
+              Traditional online graphic utilities silently upload your high-resolution photographs to remote computing clusters for server-side processing. <strong>KOJERENS operates on an uncompromising 100% client-side execution philosophy</strong>.
+            </p>
+
+            <p class="manifesto-paragraph">
+              All pixel rasterization, error-diffusion arrays, luminance tracking, and cathode ray tube simulations execute entirely within your browser context utilizing offscreen canvas buffers and GPU-accelerated requestAnimationFrame scheduling.
+            </p>
+
+            <p class="manifesto-paragraph">
+              No telemetry pixels, no external database dependencies, no paywalls. Pure algorithmic tools designed for visual engineers, researchers, and typographers.
+            </p>
+
+            <div style="margin-top: 36px;">
+              <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener" class="btn-broadside">
+                Inspect Source Code on GitHub ↗
+              </a>
+            </div>
           </div>
-          <div class="aside-row">
-            <span>Primary Host Domain</span>
-            <span class="aside-val">manji.eu.org</span>
+
+          <div id="architecture">
+            <div class="spec-table-container">
+              <div class="spec-table-header">
+                System Specification &amp; Colophon
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Project</span>
+                <span class="spec-value">KOJERENS Visual Lab</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Author &amp; Engineering</span>
+                <span class="spec-value">Fanz Irfan</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Primary Domain</span>
+                <span class="spec-value">kojerens.manji.eu.org</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Architecture Stack</span>
+                <span class="spec-value">Astro v5 · Tailwind v4 · Bun · Canvas2D</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Execution Pipeline</span>
+                <span class="spec-value">100% Client-Side In-Browser</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Attribution Standard</span>
+                <span class="spec-value">4-Corner Technical Broadside</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Origin Location</span>
+                <span class="spec-value">Indonesia</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">License</span>
+                <span class="spec-value">Open Source (MIT)</span>
+              </div>
+            </div>
           </div>
-          <div class="aside-row">
-            <span>Technology Stack</span>
-            <span class="aside-val">Astro · Tailwind CSS v4 · Canvas2D · Bun</span>
-          </div>
-          <div class="aside-row">
-            <span>License</span>
-            <span class="aside-val">Open Source (MIT)</span>
-          </div>
+
         </div>
       </div>
     </section>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-top">
-        <div class="footer-brand">
-          <a href="index.html" class="footer-brand-link">
-            <img src="/assets/brand/footer.png" alt="KOJERENS" width="24" height="24" />
-            <span class="footer-brand-title">KOJERENS</span>
-          </a>
-          <span class="footer-tagline">Computational Visual Studio · 100% In-Browser</span>
+  <!-- EDITORIAL COLOPHON FOOTER -->
+  <footer class="editorial-footer">
+    <div class="container">
+      <div class="footer-nav-grid">
+        
+        <!-- Col 1: Brand & Tagline -->
+        <div class="footer-col-brand">
+          <h4 class="footer-brand-title">KOJERENS</h4>
+          <p class="footer-brand-subtitle">
+            Generative Visual &amp; Computational Design Studio. Engineered for high-performance procedural imagery in the browser.
+          </p>
+          <div>
+            <span class="footer-domain-badge">HOST: kojerens.manji.eu.org</span>
+          </div>
         </div>
 
-        <nav class="footer-links" aria-label="Footer Navigation">
-          <a href="/blob-tracker/">Blob Tracker</a>
-          <a href="/ascii-gen/">ASCII Matrix</a>
-          <a href="/dither-gen/">1-Bit Dither</a>
-          <a href="/crt-gen/">CRT Synthesizer</a>
-          <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org</a>
-        </nav>
+        <!-- Col 2: Production Engines -->
+        <div>
+          <h5 class="footer-col-title">Generative Engines</h5>
+          <ul class="footer-link-list">
+            <li class="footer-link-item">
+              <a href="/blob-tracker/">Blob Tracker</a>
+              <span class="footer-link-desc">Luminance &amp; centroid tracking</span>
+            </li>
+            <li class="footer-link-item">
+              <a href="/ascii-gen/">ASCII Matrix</a>
+              <span class="footer-link-desc">Unicode glyph synthesizer</span>
+            </li>
+            <li class="footer-link-item">
+              <a href="/dither-gen/">1-Bit Dither</a>
+              <span class="footer-link-desc">15 Error diffusion engines</span>
+            </li>
+            <li class="footer-link-item">
+              <a href="/crt-gen/">CRT Synthesizer</a>
+              <span class="footer-link-desc">Analog Trinitron &amp; glitch</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Architecture -->
+        <div>
+          <h5 class="footer-col-title">Architecture</h5>
+          <ul class="footer-link-list">
+            <li class="footer-link-item">
+              <a href="#manifesto">Laboratory Manifesto</a>
+              <span class="footer-link-desc">Zero cloud footprint philosophy</span>
+            </li>
+            <li class="footer-link-item">
+              <a href="#architecture">Technical Stack</a>
+              <span class="footer-link-desc">Astro v5, Bun, Tailwind v4</span>
+            </li>
+            <li class="footer-link-item">
+              <a href="/manifest.json">Web App Manifest</a>
+              <span class="footer-link-desc">PWA offline execution spec</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Identity & Elsewhere -->
+        <div>
+          <h5 class="footer-col-title">Identity &amp; Elsewhere</h5>
+          <ul class="footer-link-list">
+            <li class="footer-link-item">
+              <a href="https://github.com/fanzirfan/kojerens" target="_blank" rel="noopener">GitHub ↗</a>
+              <span class="footer-link-desc">Repository &amp; open source code</span>
+            </li>
+            <li class="footer-link-item">
+              <a href="https://kojerens.manji.eu.org" target="_blank" rel="noopener">kojerens.manji.eu.org ↗</a>
+              <span class="footer-link-desc">Primary production laboratory host</span>
+            </li>
+            <li class="footer-link-item">
+              <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org ↗</a>
+              <span class="footer-link-desc">Author portfolio &amp; network</span>
+            </li>
+          </ul>
+        </div>
+
       </div>
 
-      <div class="footer-bottom">
-        <div class="footer-attribution">
-          Crafted by <strong>Fanz Irfan</strong> · <a href="https://manji.eu.org" target="_blank" rel="noopener">manji.eu.org</a> · 2026
+      <!-- Colophon Bottom Readout -->
+      <div class="footer-colophon-bottom">
+        <div class="colophon-left">
+          <span>° S 06° 12' 52" E 106° 50' 42" (JAKARTA, INDONESIA)</span>
+          <span>—</span>
+          <span class="colophon-coords">FANZ IRFAN</span>
+          <span>—</span>
+          <span>Design &amp; Strategy</span>
         </div>
-        <div class="footer-status">
-          <span class="status-indicator"></span>
-          <span>SYSTEM ONLINE · STUDIO {APP_VERSIONS.hub.version} · ZERO SERVER DEPENDENCY</span>
+        <div class="colophon-right">
+          <span>© 2026 Fanz Irfan · kojerens.manji.eu.org · All generative math runs in-browser</span>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- Interactive Visual Simulation Script -->
+  <!-- CLIENT-SIDE VISUAL PROCEDURAL SCRIPT -->
   <script is:inline>
     (function () {
-      // 1. Hero HUD Canvas Simulation
-      var heroCanvas = document.getElementById('heroHudCanvas');
-      if (heroCanvas) {
-        var hctx = heroCanvas.getContext('2d');
-        var width, height;
-        var nodes = [];
-        var numNodes = 24;
-
-        function resizeHero() {
-          var rect = heroCanvas.getBoundingClientRect();
-          heroCanvas.width = rect.width;
-          heroCanvas.height = 240;
-          width = heroCanvas.width;
-          height = heroCanvas.height;
-
-          nodes = [];
-          for (var i = 0; i < numNodes; i++) {
-            nodes.push({
-              x: Math.random() * width,
-              y: Math.random() * height,
-              vx: (Math.random() - 0.5) * 0.8,
-              vy: (Math.random() - 0.5) * 0.8,
-              r: Math.random() * 2.5 + 1.5,
-              id: 'TRK-' + (100 + i)
-            });
-          }
-        }
-        resizeHero();
-        window.addEventListener('resize', resizeHero);
-
-        var angle = 0;
-        function renderHero() {
-          if (!hctx || !width) return;
-          hctx.clearRect(0, 0, width, height);
-
-          // Technical perspective grid lines
-          hctx.strokeStyle = 'rgba(186, 215, 247, 0.05)';
-          hctx.lineWidth = 1;
-          var step = 40;
-          for (var x = 0; x < width; x += step) {
-            hctx.beginPath();
-            hctx.moveTo(x, 0);
-            hctx.lineTo(x, height);
-            hctx.stroke();
-          }
-          for (var y = 0; y < height; y += step) {
-            hctx.beginPath();
-            hctx.moveTo(0, y);
-            hctx.lineTo(width, y);
-            hctx.stroke();
-          }
-
-          // Rotating radar circle in center
-          var cx = width / 2;
-          var cy = height / 2;
-          var radarRadius = Math.min(width, height) * 0.42;
-
-          hctx.strokeStyle = 'rgba(102, 58, 243, 0.25)';
-          hctx.beginPath();
-          hctx.arc(cx, cy, radarRadius, 0, Math.PI * 2);
-          hctx.stroke();
-
-          hctx.strokeStyle = 'rgba(186, 215, 247, 0.15)';
-          hctx.beginPath();
-          hctx.arc(cx, cy, radarRadius * 0.5, 0, Math.PI * 2);
-          hctx.stroke();
-
-          // Radar sweep line
-          angle += 0.015;
-          hctx.save();
-          hctx.translate(cx, cy);
-          hctx.rotate(angle);
-          hctx.strokeStyle = 'rgba(216, 236, 248, 0.5)';
-          hctx.beginPath();
-          hctx.moveTo(0, 0);
-          hctx.lineTo(radarRadius, 0);
-          hctx.stroke();
-          hctx.restore();
-
-          // Constellation lines & nodes
-          for (var i = 0; i < nodes.length; i++) {
-            var n1 = nodes[i];
-            n1.x += n1.vx;
-            n1.y += n1.vy;
-            if (n1.x < 0 || n1.x > width) n1.vx *= -1;
-            if (n1.y < 0 || n1.y > height) n1.vy *= -1;
-
-            for (var j = i + 1; j < nodes.length; j++) {
-              var n2 = nodes[j];
-              var dx = n2.x - n1.x;
-              var dy = n2.y - n1.y;
-              var dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist < 110) {
-                hctx.strokeStyle = 'rgba(102, 58, 243, ' + (0.35 * (1 - dist / 110)) + ')';
-                hctx.lineWidth = 1;
-                hctx.beginPath();
-                hctx.moveTo(n1.x, n1.y);
-                hctx.lineTo(n2.x, n2.y);
-                hctx.stroke();
-              }
-            }
-
-            // Draw node dot
-            hctx.fillStyle = '#d1e4fa';
-            hctx.beginPath();
-            hctx.arc(n1.x, n1.y, n1.r, 0, Math.PI * 2);
-            hctx.fill();
-
-            // Label coordinate
-            if (i % 3 === 0) {
-              hctx.font = '9px "JetBrains Mono", monospace';
-              hctx.fillStyle = 'rgba(186, 215, 247, 0.5)';
-              hctx.fillText(Math.round(n1.x) + ',' + Math.round(n1.y), n1.x + 6, n1.y - 4);
-            }
-          }
-
-          requestAnimationFrame(renderHero);
-        }
-        renderHero();
+      // 1. Theme Helper Function
+      function isDark() {
+        return document.documentElement.classList.contains('dark') ||
+               document.documentElement.getAttribute('data-theme') === 'dark';
       }
 
-      // 2. Blob Tracker Preview Canvas Simulation
+      // 2. Theme Toggle Controller
+      var toggleBtn = document.getElementById('themeToggleBtn');
+      var toggleText = document.getElementById('themeToggleText');
+
+      function syncToggleState() {
+        var currentIsDark = isDark();
+        if (toggleText) {
+          toggleText.textContent = currentIsDark ? 'DARK' : 'LIGHT';
+        }
+      }
+      syncToggleState();
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+          var willBeDark = !isDark();
+          if (willBeDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('kojerens-theme', 'dark');
+          } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('kojerens-theme', 'light');
+          }
+          syncToggleState();
+        });
+      }
+
+      // 3. Live WIB Time Synchronizer for Marquees
+      function updateClocks() {
+        var now = new Date();
+        var options = {
+          timeZone: 'Asia/Jakarta',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        };
+        var timeStr = now.toLocaleTimeString('en-US', options) + ' WIB';
+        var c1 = document.getElementById('marqueeClock');
+        var c2 = document.getElementById('marqueeClockDup');
+        if (c1) c1.textContent = timeStr;
+        if (c2) c2.textContent = timeStr;
+      }
+      setInterval(updateClocks, 1000);
+      updateClocks();
+
+      // 4. Hero 1-Bit Halftone Plate Canvas (Procedural High-Contrast Graphic)
+      var heroPlateCanvas = document.getElementById('halftoneHeroCanvas');
+      if (heroPlateCanvas) {
+        var pctx = heroPlateCanvas.getContext('2d');
+        var pw = heroPlateCanvas.width;
+        var ph = heroPlateCanvas.height;
+        var pt = 0;
+
+        function renderHalftonePlate() {
+          pt += 0.015;
+          var dark = isDark();
+          var bg = dark ? '#141312' : '#fafafa';
+          var ink = dark ? '#fafafa' : '#2a2722';
+          var grid = dark ? '#24211e' : '#eeeeee';
+          var metaText = dark ? '#9c958d' : '#666666';
+
+          pctx.fillStyle = bg;
+          pctx.fillRect(0, 0, pw, ph);
+
+          var cx = pw / 2;
+          var cy = ph / 2;
+
+          // Technical grid rules
+          pctx.strokeStyle = grid;
+          pctx.lineWidth = 1;
+          for (var x = 40; x < pw; x += 40) {
+            pctx.beginPath();
+            pctx.moveTo(x, 0);
+            pctx.lineTo(x, ph);
+            pctx.stroke();
+          }
+          for (var y = 40; y < ph; y += 40) {
+            pctx.beginPath();
+            pctx.moveTo(0, y);
+            pctx.lineTo(pw, y);
+            pctx.stroke();
+          }
+
+          // Center crosshair
+          pctx.strokeStyle = ink;
+          pctx.lineWidth = 1;
+          pctx.beginPath();
+          pctx.moveTo(cx - 30, cy);
+          pctx.lineTo(cx + 30, cy);
+          pctx.moveTo(cx, cy - 30);
+          pctx.lineTo(cx, cy + 30);
+          pctx.stroke();
+
+          // Concentric geometric halftone rings
+          var ringCount = 14;
+          for (var r = 1; r <= ringCount; r++) {
+            var rad = r * 14;
+            var numDots = Math.floor(r * 8.5);
+            var dotBaseSize = (r % 2 === 0) ? 2.5 : 1.5;
+
+            for (var d = 0; d < numDots; d++) {
+              var angle = (d / numDots) * Math.PI * 2 + (r % 2 === 0 ? pt : -pt * 0.7);
+              var pulse = Math.sin(angle * 6 + pt * 2) * 1.5;
+              var px = cx + Math.cos(angle) * (rad + pulse);
+              var py = cy + Math.sin(angle) * (rad + pulse);
+
+              var dSize = Math.max(0.8, dotBaseSize + Math.cos(angle * 4 + pt) * 1.2);
+              pctx.fillStyle = ink;
+              pctx.beginPath();
+              pctx.arc(px, py, dSize, 0, Math.PI * 2);
+              pctx.fill();
+            }
+          }
+
+          // Central technical polygon
+          pctx.save();
+          pctx.translate(cx, cy);
+          pctx.rotate(pt * 0.5);
+          pctx.strokeStyle = ink;
+          pctx.lineWidth = 1.5;
+          pctx.beginPath();
+          for (var p = 0; p < 8; p++) {
+            var pAng = (p / 8) * Math.PI * 2;
+            var pr = (p % 2 === 0) ? 44 : 26;
+            var polyX = Math.cos(pAng) * pr;
+            var polyY = Math.sin(pAng) * pr;
+            if (p === 0) pctx.moveTo(polyX, polyY); else pctx.lineTo(polyX, polyY);
+          }
+          pctx.closePath();
+          pctx.stroke();
+          pctx.restore();
+
+          // Technical readout in corner
+          pctx.font = '10px "JetBrains Mono", monospace';
+          pctx.fillStyle = metaText;
+          pctx.fillText('HALFI-TONE PLATE [1-BIT PROC]', 16, ph - 24);
+          pctx.fillText('RADIAL CENTROIDS // 0.88 L-RATIO', 16, ph - 12);
+
+          requestAnimationFrame(renderHalftonePlate);
+        }
+        renderHalftonePlate();
+      }
+
+      // 5. Engine 1: Blob Tracker Canvas Simulation (Theme Aware)
       var blobCanvas = document.getElementById('blobPreviewCanvas');
       if (blobCanvas) {
         var bctx = blobCanvas.getContext('2d');
         var bw = blobCanvas.width;
         var bh = blobCanvas.height;
-        var t = 0;
+        var bt = 0;
 
-        function renderBlobPreview() {
-          t += 0.02;
-          bctx.clearRect(0, 0, bw, bh);
+        function renderBlob() {
+          bt += 0.02;
+          var dark = isDark();
+          var bg = dark ? '#141312' : '#fafafa';
+          var ink = dark ? '#fafafa' : '#2a2722';
+          var grid = dark ? '#24211e' : '#eeeeee';
+          var contour = dark ? '#66615b' : '#9f9f9f';
+          var wire = dark ? '#d9d3cb' : '#3e3b36';
 
-          // Draw concentric topographic & HUD circles
+          bctx.fillStyle = bg;
+          bctx.fillRect(0, 0, bw, bh);
+
           var cx = bw / 2;
           var cy = bh / 2;
 
-          for (var r = 25; r <= 85; r += 20) {
-            bctx.strokeStyle = 'rgba(186, 215, 247, 0.15)';
+          // Technical hairline crosshairs
+          bctx.strokeStyle = grid;
+          bctx.lineWidth = 1;
+          bctx.beginPath();
+          bctx.moveTo(0, cy);
+          bctx.lineTo(bw, cy);
+          bctx.moveTo(cx, 0);
+          bctx.lineTo(cx, bh);
+          bctx.stroke();
+
+          // Concentric geodetic contours
+          for (var r = 30; r <= 110; r += 24) {
+            bctx.strokeStyle = contour;
             bctx.lineWidth = 1;
-            bctx.setLineDash([4, 4]);
+            bctx.setLineDash([3, 4]);
             bctx.beginPath();
-            bctx.arc(cx, cy, r + Math.sin(t + r * 0.1) * 3, 0, Math.PI * 2);
+            bctx.arc(cx, cy, r + Math.sin(bt + r * 0.1) * 4, 0, Math.PI * 2);
             bctx.stroke();
           }
           bctx.setLineDash([]);
 
-          // Crosshairs
-          bctx.strokeStyle = 'rgba(102, 58, 243, 0.5)';
-          bctx.beginPath();
-          bctx.moveTo(cx - 90, cy);
-          bctx.lineTo(cx + 90, cy);
-          bctx.moveTo(cx, cy - 70);
-          bctx.lineTo(cx, cy + 70);
-          bctx.stroke();
-
-          // Centroid blobs
-          var points = [
-            { x: cx + Math.cos(t) * 45, y: cy + Math.sin(t * 1.3) * 35, r: 6 },
-            { x: cx - Math.cos(t * 0.8) * 55, y: cy - Math.sin(t) * 40, r: 8 },
-            { x: cx + Math.sin(t * 1.2) * 60, y: cy - Math.cos(t * 0.9) * 45, r: 5 }
+          // Tracking points
+          var pts = [
+            { x: cx + Math.cos(bt) * 60, y: cy + Math.sin(bt * 1.2) * 45, r: 6, label: 'CENTROID-01' },
+            { x: cx - Math.cos(bt * 0.7) * 75, y: cy - Math.sin(bt) * 50, r: 8, label: 'CENTROID-02' },
+            { x: cx + Math.sin(bt * 1.1) * 80, y: cy - Math.cos(bt * 0.8) * 60, r: 5, label: 'CENTROID-03' }
           ];
 
-          points.forEach(function (p, idx) {
-            bctx.strokeStyle = '#663af3';
-            bctx.lineWidth = 1.5;
-            bctx.beginPath();
-            bctx.arc(p.x, p.y, p.r + 5, 0, Math.PI * 2);
-            bctx.stroke();
+          // Constellation lines
+          bctx.strokeStyle = wire;
+          bctx.lineWidth = 1;
+          bctx.beginPath();
+          bctx.moveTo(pts[0].x, pts[0].y);
+          bctx.lineTo(pts[1].x, pts[1].y);
+          bctx.lineTo(pts[2].x, pts[2].y);
+          bctx.closePath();
+          bctx.stroke();
 
-            bctx.fillStyle = '#ffffff';
+          pts.forEach(function (p) {
+            bctx.fillStyle = ink;
             bctx.beginPath();
-            bctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+            bctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
             bctx.fill();
 
+            bctx.strokeStyle = ink;
+            bctx.lineWidth = 1;
+            bctx.beginPath();
+            bctx.arc(p.x, p.y, p.r + 6, 0, Math.PI * 2);
+            bctx.stroke();
+
             bctx.font = '9px "JetBrains Mono", monospace';
-            bctx.fillStyle = '#d1e4fa';
-            bctx.fillText('ID-' + (idx + 1) + ' [' + Math.round(p.x) + ',' + Math.round(p.y) + ']', p.x + 10, p.y + 3);
+            bctx.fillStyle = ink;
+            bctx.fillText(p.label + ' [' + Math.round(p.x) + ',' + Math.round(p.y) + ']', p.x + 10, p.y + 3);
           });
 
-          requestAnimationFrame(renderBlobPreview);
+          requestAnimationFrame(renderBlob);
         }
-        renderBlobPreview();
+        renderBlob();
       }
 
-      // 3. ASCII Matrix Preview Simulation
+      // 6. Engine 2: ASCII Matrix Simulation (Theme Aware)
       var asciiCanvas = document.getElementById('asciiPreviewCanvas');
       if (asciiCanvas) {
         var actx = asciiCanvas.getContext('2d');
@@ -595,43 +835,50 @@ import { APP_VERSIONS } from '../config/versions';
         var glyphs = ['0', '1', '.', ':', '-', '=', '+', '*', '#', '%', '@', '█', '░', '▒', '●'];
         var at = 0;
 
-        function renderAsciiPreview() {
+        function renderAscii() {
           at += 0.03;
-          actx.clearRect(0, 0, aw, ah);
+          var dark = isDark();
+          var bg = dark ? '#141312' : '#fafafa';
+          var high = dark ? '#fafafa' : '#2a2722';
+          var mid = dark ? '#9c958d' : '#666666';
+          var low = dark ? '#5c5650' : '#b3b3b3';
+
+          actx.fillStyle = bg;
+          actx.fillRect(0, 0, aw, ah);
 
           actx.font = '11px "JetBrains Mono", monospace';
           actx.textAlign = 'center';
           actx.textBaseline = 'middle';
 
-          var cols = 28;
-          var rows = 12;
+          var cols = 30;
+          var rows = 14;
           var cellW = aw / cols;
           var cellH = ah / rows;
 
           for (var r = 0; r < rows; r++) {
             for (var c = 0; c < cols; c++) {
-              var wave = Math.sin(c * 0.3 + at) * Math.cos(r * 0.4 + at);
+              var wave = Math.sin(c * 0.28 + at) * Math.cos(r * 0.35 + at);
               var glyphIdx = Math.floor(((wave + 1) / 2) * (glyphs.length - 1));
               var glyph = glyphs[glyphIdx] || ' ';
 
-              if (wave > 0.4) {
-                actx.fillStyle = '#ffffff';
+              if (wave > 0.3) {
+                actx.fillStyle = high;
               } else if (wave > -0.1) {
-                actx.fillStyle = '#663af3';
+                actx.fillStyle = mid;
               } else {
-                actx.fillStyle = 'rgba(186, 215, 247, 0.25)';
+                actx.fillStyle = low;
               }
 
               actx.fillText(glyph, c * cellW + cellW / 2, r * cellH + cellH / 2);
             }
           }
 
-          requestAnimationFrame(renderAsciiPreview);
+          requestAnimationFrame(renderAscii);
         }
-        renderAsciiPreview();
+        renderAscii();
       }
 
-      // 4. 1-Bit Dither Preview Simulation
+      // 7. Engine 3: 1-Bit Dither Matrix Simulation (Theme Aware)
       var ditherCanvas = document.getElementById('ditherPreviewCanvas');
       if (ditherCanvas) {
         var dctx = ditherCanvas.getContext('2d');
@@ -645,46 +892,47 @@ import { APP_VERSIONS } from '../config/versions';
           [15,  7, 13,  5]
         ];
 
-        function renderDitherPreview() {
+        function renderDither() {
           dt += 0.03;
-          dctx.clearRect(0, 0, dw, dh);
+          var dark = isDark();
+          var bg = dark ? '#141312' : '#fafafa';
+          var ink = dark ? '#fafafa' : '#2a2722';
+
+          dctx.fillStyle = bg;
+          dctx.fillRect(0, 0, dw, dh);
 
           var pixelSize = 6;
           var cols = Math.floor(dw / pixelSize);
           var rows = Math.floor(dh / pixelSize);
           var cx = cols / 2;
           var cy = rows / 2;
-          var radius = Math.min(cols, rows) * 0.42;
 
           for (var y = 0; y < rows; y++) {
             for (var x = 0; x < cols; x++) {
               var dx = x - cx;
               var dy = y - cy;
               var dist = Math.sqrt(dx * dx + dy * dy);
-              var lum = 0.5 + 0.45 * Math.sin(dist * 0.25 - dt) * Math.cos(x * 0.08 + dt * 0.5);
+              var lum = 0.5 + 0.45 * Math.sin(dist * 0.22 - dt) * Math.cos(x * 0.07 + dt * 0.4);
               lum = Math.max(0, Math.min(1, lum));
 
               var threshold = (bayer4[y % 4][x % 4] + 0.5) / 16;
               if (lum > threshold) {
-                dctx.fillStyle = (dist < radius * 0.6) ? '#ffffff' : '#885dfc';
-                dctx.fillRect(x * pixelSize, y * pixelSize, pixelSize - 1, pixelSize - 1);
-              } else {
-                dctx.fillStyle = '#0a0d1d';
+                dctx.fillStyle = ink;
                 dctx.fillRect(x * pixelSize, y * pixelSize, pixelSize - 1, pixelSize - 1);
               }
             }
           }
 
           dctx.font = '9px "JetBrains Mono", monospace';
-          dctx.fillStyle = '#a6b2c8';
-          dctx.fillText('1-BIT // BAYER 4x4 // 80x33 CELLS', 10, dh - 10);
+          dctx.fillStyle = ink;
+          dctx.fillText('1-BIT BAYER 4x4 // 80x50 CELLS // SVG VECTOR', 14, dh - 14);
 
-          requestAnimationFrame(renderDitherPreview);
+          requestAnimationFrame(renderDither);
         }
-        renderDitherPreview();
+        renderDither();
       }
 
-      // 5. CRT Synthesizer Preview Simulation
+      // 8. Engine 4: CRT Synthesizer Simulation (Theme Aware)
       var crtCanvas = document.getElementById('crtPreviewCanvas');
       if (crtCanvas) {
         var cctx = crtCanvas.getContext('2d');
@@ -692,77 +940,52 @@ import { APP_VERSIONS } from '../config/versions';
         var ch = crtCanvas.height;
         var ct = 0;
 
-        function renderCrtPreview() {
+        function renderCrt() {
           ct += 0.04;
-          cctx.clearRect(0, 0, cw, ch);
+          var dark = isDark();
+          var bg = dark ? '#0d0c0b' : '#2a2722';
+          var beam = '#fafafa';
+          var beamEcho = dark ? '#66615b' : '#9f9f9f';
 
-          // Dark CRT tube backdrop
-          cctx.fillStyle = '#03050c';
+          cctx.fillStyle = bg;
           cctx.fillRect(0, 0, cw, ch);
 
-          // Glowing oscilloscope / radar wave
-          var cx = cw / 2;
           var cy = ch / 2;
 
-          // Waveform
-          cctx.lineWidth = 2.5;
-          // Red channel split
-          cctx.strokeStyle = 'rgba(255, 50, 50, 0.7)';
+          // Scanline raster
+          cctx.fillStyle = 'rgba(250, 250, 250, 0.04)';
+          for (var sl = 0; sl < ch; sl += 4) {
+            cctx.fillRect(0, sl, cw, 2);
+          }
+
+          // Primary electron beam
+          cctx.lineWidth = 2;
+          cctx.strokeStyle = beam;
           cctx.beginPath();
           for (var x = 0; x < cw; x += 4) {
-            var yR = cy + Math.sin(x * 0.04 + ct) * 35 + Math.cos(x * 0.02 - ct * 1.5) * 18;
-            if (x === 0) cctx.moveTo(x - 3, yR); else cctx.lineTo(x - 3, yR);
+            var y = cy + Math.sin(x * 0.04 + ct) * 35 + Math.cos(x * 0.02 - ct * 1.5) * 18;
+            if (x === 0) cctx.moveTo(x, y); else cctx.lineTo(x, y);
           }
           cctx.stroke();
 
-          // Blue channel split
-          cctx.strokeStyle = 'rgba(50, 150, 255, 0.7)';
+          // Beam echo line (shadow)
+          cctx.lineWidth = 1;
+          cctx.strokeStyle = beamEcho;
           cctx.beginPath();
           for (var bx = 0; bx < cw; bx += 4) {
-            var yB = cy + Math.sin(bx * 0.04 + ct) * 35 + Math.cos(bx * 0.02 - ct * 1.5) * 18;
-            if (bx === 0) cctx.moveTo(bx + 3, yB); else cctx.lineTo(bx + 3, yB);
+            var by = cy + Math.sin(bx * 0.04 + ct) * 35 + Math.cos(bx * 0.02 - ct * 1.5) * 18 + 4;
+            if (bx === 0) cctx.moveTo(bx, by); else cctx.lineTo(bx, by);
           }
           cctx.stroke();
-
-          // Green primary beam
-          cctx.strokeStyle = '#33ff66';
-          cctx.beginPath();
-          for (var gx = 0; gx < cw; gx += 4) {
-            var yG = cy + Math.sin(gx * 0.04 + ct) * 35 + Math.cos(gx * 0.02 - ct * 1.5) * 18;
-            if (gx === 0) cctx.moveTo(gx, yG); else cctx.lineTo(gx, yG);
-          }
-          cctx.stroke();
-
-          // Scanlines
-          cctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-          for (var sl = 0; sl < ch; sl += 4) {
-            cctx.fillRect(0, sl + 2, cw, 2);
-          }
-
-          // Subtle aperture grille stripes
-          cctx.fillStyle = 'rgba(182, 217, 252, 0.04)';
-          for (var ag = 0; ag < cw; ag += 6) {
-            cctx.fillRect(ag, 0, 2, ch);
-          }
 
           // OSD Text
           cctx.font = 'bold 10px "JetBrains Mono", monospace';
-          cctx.fillStyle = '#33ff66';
-          cctx.shadowColor = '#33ff66';
-          cctx.shadowBlur = 6;
-          cctx.fillText('CH 03 [NTSC] · 15.75 kHz', 14, 22);
-          cctx.shadowBlur = 0;
+          cctx.fillStyle = '#fafafa';
+          cctx.fillText('NTSC COMPOSITE CH-01 · 15.75 kHz · MONOCHROME', 16, 26);
 
-          // Corner vignette
-          var vig = cctx.createRadialGradient(cx, cy, ch * 0.35, cx, cy, ch * 0.85);
-          vig.addColorStop(0, 'rgba(0,0,0,0)');
-          vig.addColorStop(1, 'rgba(0,0,0,0.75)');
-          cctx.fillStyle = vig;
-          cctx.fillRect(0, 0, cw, ch);
-
-          requestAnimationFrame(renderCrtPreview);
+          requestAnimationFrame(renderCrt);
         }
-        renderCrtPreview();
+        renderCrt();
       }
     })();
 
@@ -775,5 +998,6 @@ import { APP_VERSIONS } from '../config/versions';
       });
     }
   </script>
+<MobileAdvisory />
 </body>
 </html>

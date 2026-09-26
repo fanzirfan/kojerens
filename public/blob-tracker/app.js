@@ -235,13 +235,19 @@
     frameTextOn: false,
     frameTextTL: 'Design & Strategy',
     frameTextTR: 'Fanz Irfan',
-    frameTextBL: 'manji.eu.org',
+    frameTextBL: 'kojerens.manji.eu.org',
     frameTextBR: 'Indonesia',
     chainOn: true,
     chainIntersections: true,
     detectionMode: 'contrast',
     shape: 'circle',
-    palette: { bg: '#0a0a0a', color: '#ffffff', stroke: '#ffffff', name: 'White / Dark' },
+    palette: (function() {
+      var isDark = (typeof localStorage !== 'undefined' && localStorage.getItem('kojerens-theme') === 'dark') ||
+                   (typeof document !== 'undefined' && (document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark'));
+      return isDark ?
+        { bg: '#141312', color: '#fafafa', stroke: '#fafafa', name: 'Paper / Ink' } :
+        { bg: '#fafafa', color: '#2a2722', stroke: '#2a2722', name: 'Ink / Paper' };
+    })(),
     customTexture: null,
     noiseCanvas: null,
     noisePattern: null,
@@ -1584,7 +1590,7 @@
         var mWidth = tCtx.measureText(elevText).width + 6;
         var mHeight = Math.max(9, minDim * 0.009);
 
-        tCtx.fillStyle = palette.bg || '#05060f';
+        tCtx.fillStyle = palette.bg || '#fafafa';
         tCtx.globalAlpha = 0.85 * op;
         tCtx.fillRect(labelCandidate.x - mWidth / 2, labelCandidate.y - mHeight / 2, mWidth, mHeight);
 
@@ -1616,7 +1622,7 @@
         tCtx.closePath();
         tCtx.fill();
 
-        tCtx.fillStyle = palette.bg || '#05060f';
+        tCtx.fillStyle = palette.bg || '#fafafa';
         tCtx.beginPath();
         tCtx.arc(peak.x, peak.y, Math.max(1, triSize * 0.25), 0, Math.PI * 2);
         tCtx.fill();
@@ -1658,7 +1664,7 @@
       var legY = tH - neatlineMargin - legH - 14;
 
       tCtx.save();
-      tCtx.fillStyle = palette.bg || '#05060f';
+      tCtx.fillStyle = palette.bg || '#fafafa';
       tCtx.globalAlpha = 0.85 * op;
       tCtx.fillRect(legX, legY, legW, legH);
 
@@ -2731,6 +2737,15 @@
   if (customHeightInput) {
     customHeightInput.addEventListener('change', handleCustomDimensionChange);
   }
+
+  window.addEventListener('themechange', function (e) {
+    var isDark = e.detail && e.detail.isDark;
+    state.palette = isDark ?
+      { bg: '#141312', color: '#fafafa', stroke: '#fafafa', name: 'Paper / Ink' } :
+      { bg: '#fafafa', color: '#2a2722', stroke: '#2a2722', name: 'Ink / Paper' };
+    updateStatusFooter();
+    scheduleUpdate(1);
+  });
 
   // Dynamic Sidebar Panels + Rail Filter
   function updateDynamicSidebarPanels(currentMode) {

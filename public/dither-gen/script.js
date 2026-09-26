@@ -13,9 +13,13 @@
     image: null,
     rawImage: null, // Preserves source image for crop resets
     engine: 'atkinson',
-    palette: 'mac',
-    customBg: '#05060f',
-    customFg: '#ffffff',
+    palette: (function() {
+      var isDark = (typeof localStorage !== 'undefined' && localStorage.getItem('kojerens-theme') === 'dark') ||
+                   (typeof document !== 'undefined' && (document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark'));
+      return isDark ? 'broadsideDark' : 'broadside';
+    })(),
+    customBg: '#fafafa',
+    customFg: '#2a2722',
     invertPalette: false,
     pixelScale: 1,
     brightness: 0,
@@ -33,7 +37,7 @@
     frameText: false,
     frameTL: 'Design & Strategy',
     frameTR: 'Fanz Irfan',
-    frameBL: 'manji.eu.org',
+    frameBL: 'kojerens.manji.eu.org',
     frameBR: 'Indonesia',
     frameTextSize: 12
   };
@@ -49,15 +53,16 @@
   };
 
   var PALETTES = {
+    broadside: { name: 'Broadside Paper', bg: '#fafafa', fg: '#2a2722' },
+    broadsideDark: { name: 'Broadside Ink', bg: '#141312', fg: '#fafafa' },
+    newsprint: { name: 'Newsprint', bg: '#f2ebdb', fg: '#181818' },
     mac: { name: 'Mac 1984', bg: '#000000', fg: '#ffffff' },
     gameboy: { name: 'Game Boy', bg: '#0f380f', fg: '#8bac0f' },
     phosphor: { name: 'Phosphor', bg: '#030c03', fg: '#00ff41' },
     amber: { name: 'Amber CRT', bg: '#0d0700', fg: '#ffb000' },
-    cyberpunk: { name: 'Cyberpunk', bg: '#05060f', fg: '#8b5cf6' },
     blueprint: { name: 'Blueprint', bg: '#03162b', fg: '#64d2ff' },
     solarized: { name: 'Solarized', bg: '#073642', fg: '#eee8d5' },
     tokyo: { name: 'Tokyo Neon', bg: '#0b0314', fg: '#ff2a85' },
-    newsprint: { name: 'Newsprint', bg: '#181818', fg: '#f2ebdb' },
     thermal: { name: 'Thermal', bg: '#1c000d', fg: '#ff3b30' },
     commodore: { name: 'C64 Indigo', bg: '#352879', fg: '#86b5e5' },
     spectrum: { name: 'ZX Cyan', bg: '#000000', fg: '#00e5ff' }
@@ -2083,5 +2088,13 @@
       pipelineImg.src = dataUrl;
     });
   }
+
+  window.addEventListener('themechange', function (e) {
+    var isDark = e.detail && e.detail.isDark;
+    state.palette = isDark ? 'broadsideDark' : 'broadside';
+    initPaletteGrid();
+    updateStatusFooter();
+    render();
+  });
 
 })();

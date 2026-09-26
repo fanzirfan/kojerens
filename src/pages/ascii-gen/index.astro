@@ -2,6 +2,7 @@
 import '../../styles/global.css';
 import '../../styles/ascii-gen.css';
 import { APP_VERSIONS } from '../../config/versions';
+import MobileAdvisory from '../../components/MobileAdvisory.astro';
 ---
 
 <!DOCTYPE html>
@@ -9,13 +10,14 @@ import { APP_VERSIONS } from '../../config/versions';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KOJERENS | ASCII Matrix Generator (Image to ASCII Art)</title>
+  <title>KOJERENS — ASCII Matrix Generator</title>
+  <link rel="canonical" href="https://kojerens.manji.eu.org/ascii-gen/">
   <meta name="description" content="KOJERENS ASCII Matrix: Generative client-side tool to convert images into ASCII and Unicode glyph art directly in your browser.">
   <meta name="keywords" content="kojerens, ascii art, text art, image to ascii, character art, terminal art, glyph, in-browser, generative art">
   <meta name="robots" content="index,follow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <meta property="og:title" content="KOJERENS | ASCII Matrix Generator">
   <meta property="og:description" content="Transform images into ASCII glyph art locally in your browser.">
   <meta property="og:type" content="website">
@@ -23,41 +25,71 @@ import { APP_VERSIONS } from '../../config/versions';
   <link rel="icon" type="image/png" sizes="16x16" href="/ascii-gen/assets/brand/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/ascii-gen/assets/brand/apple-icon.png">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#05060f">
+  <meta name="theme-color" content="#141312">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
+  <!-- Anti-FOUC Theme Script -->
+  <script is:inline>
+    (function () {
+      var saved = localStorage.getItem('kojerens-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
 </head>
 <body>
-  <!-- TOPBAR (KOJERENS Studio Header) -->
+  <!-- TOP TICKER BANNER (ANNOUNCEMENT STRIP) -->
+  <aside class="top-ticker" aria-label="Laboratory Announcement">
+    <div class="top-ticker-content">
+      <span class="top-ticker-flag">
+        <span class="top-ticker-dot"></span>
+        ASCII MATRIX // PROCEDURAL GLYPH LAB
+      </span>
+      <span>—</span>
+      <span>100% IN-BROWSER PROCESSING</span>
+      <span>—</span>
+      <span>ZERO CLOUD DATA TRANSMISSION</span>
+    </div>
+    <div class="top-ticker-content" style="font-family: var(--font-mono); font-size: 10px;">
+      <span>KOJERENS.MANJI.EU.ORG // {APP_VERSIONS.asciiGen.version}</span>
+    </div>
+  </aside>
+
+  <!-- EDITORIAL TOPBAR -->
   <header class="topbar">
     <div class="topbar-brand">
       <a href="/" class="topbar-brand-link" title="Back to KOJERENS Studio">
-        <img src="/ascii-gen/assets/brand/navbar.png" alt="KOJERENS" class="topbar-logo" width="26" height="26" />
-        <span class="topbar-brand-title">KOJERENS</span>
+        <span class="topbar-brand-star">✷</span>
+        <span>KOJERENS</span>
       </a>
       <span class="topbar-subtool-badge">ASCII MATRIX</span>
-      <span class="topbar-version-badge" title={`ASCII Matrix ${APP_VERSIONS.asciiGen.version} (${APP_VERSIONS.asciiGen.releaseDate}) - ${APP_VERSIONS.asciiGen.changelog}`}>
+      <span class="topbar-version-badge" title={`ASCII Matrix ${APP_VERSIONS.asciiGen.version} (${APP_VERSIONS.asciiGen.releaseDate})`}>
         <span class="version-dot"></span>
         {APP_VERSIONS.asciiGen.version}
       </span>
     </div>
-    <div class="topbar-telemetry">
-      <span class="telemetry-pill"><i class="ri-terminal-box-line"></i> UNICODE GPU SYNTHESIZER</span>
-    </div>
+
+    <!-- ENGINE NAVIGATION LINKS -->
+    <nav class="topbar-tools-nav" aria-label="Engine Navigation">
+      <a href="/blob-tracker/" class="topbar-tool-switch" title="Switch to Blob Tracker">Blob Tracker</a>
+      <a href="/ascii-gen/" class="topbar-tool-switch active" title="ASCII Matrix Engine">ASCII Matrix</a>
+      <a href="/dither-gen/" class="topbar-tool-switch" title="Switch to 1-Bit Dither Matrix">1-Bit Dither</a>
+      <a href="/crt-gen/" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">CRT Gen</a>
+    </nav>
+
+    <!-- TOPBAR ACTIONS -->
     <div class="topbar-actions">
-      <a href="/blob-tracker/" class="topbar-tool-switch" title="Switch to Blob Tracker">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-        <span>Blob Tracker</span>
-      </a>
-      <a href="/dither-gen/" class="topbar-tool-switch" title="Switch to 1-Bit Dither Matrix">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        <span>1-Bit Dither</span>
-      </a>
-      <a href="/crt-gen/" class="topbar-tool-switch" title="Switch to Analog CRT Synthesizer">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        <span>CRT Gen</span>
-      </a>
+      <button class="topbar-btn" id="themeToggleBtn" title="Toggle Dark / Light Theme">
+        <span class="theme-toggle-icon">◑</span>
+        <span id="themeToggleText">DARK</span>
+      </button>
       <button class="topbar-btn" onclick="toggleFullscreen()" id="topbarFullscreenBtn" title="Toggle Fullscreen">
-        <i class="ri-fullscreen-line"></i> Fullscreen
+        Fullscreen
       </button>
       <button class="topbar-cta" onclick="downloadPng()" title="Export ASCII Image">Export PNG</button>
     </div>
@@ -84,37 +116,34 @@ import { APP_VERSIONS } from '../../config/versions';
     <div class="container" id="mainContainer">
       <div class="input-column" id="inputColumn">
         <div class="column-header">
-          <h2><i class="ri-image-line"></i> Input Source</h2>
+          <h2>Input Source</h2>
         </div>
         <div class="input-area">
           <input type="file" id="imageUpload" accept="image/*">
           <div class="upload-zone" id="uploadZone">
-            <div class="upload-icon-ring">
-              <i class="ri-upload-cloud-2-line" id="uploadIcon"></i>
-            </div>
             <div class="upload-spinner" id="uploadSpinner"></div>
             <div class="upload-heading-group" id="uploadText">
-              <h3 class="upload-primary-text">Drop Image or Choose Source</h3>
+              <h3 class="upload-primary-text">Drop image plate or choose source</h3>
               <p class="upload-secondary-text">Client-side synthesis · Supports JPG, PNG, WEBP, SVG, GIF, AVIF</p>
             </div>
             <div class="example-buttons-container" id="exampleButtonsContainer">
               <button class="btn-base btn-action upload-main-button upload-btn-primary" onclick="document.getElementById('imageUpload').click()">
-                <i class="ri-folder-open-line"></i> Select Image File
+                Select Image File
               </button>
               <div class="preset-buttons-row">
                 <button class="btn-base btn-preset" id="cropInputBtn" onclick="openCropModal()">
-                  <i class="ri-crop-line"></i> Crop Image
+                  Crop Image
                 </button>
                 <button class="btn-base btn-preset" id="demoPickerBtn" onclick="toggleDemoPicker()">
-                  <i class="ri-gallery-line"></i> Demo Library
+                  Demo Library
                 </button>
               </div>
-              <div id="demoPickerPanel" style="display:none; background: rgba(5,6,15,0.9); border: 1px solid var(--color-glass-edge); border-radius: 6px; padding: 8px; margin: 8px 0;">
+              <div id="demoPickerPanel" style="display:none; background: var(--color-paper); border: 1px solid var(--color-glass-edge); border-radius: 12px; padding: 10px; margin: 8px 0;">
                 <span style="display:block; margin-bottom: 6px; color: var(--color-moon-mist); font-size:10px; font-family: monospace;">SELECT DEMO PHOTO:</span>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <button class="btn-demo-item" onclick="loadDemoPhoto('street')">1. Cyber Street (Tokyo Night)</button>
-                  <button class="btn-demo-item" onclick="loadDemoPhoto('arch')">2. Architecture (Brutalist Form)</button>
-                  <button class="btn-demo-item" onclick="loadDemoPhoto('portrait')">3. Studio Portrait (High Contrast)</button>
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('street')">1. Street Plate (Tokyo)</button>
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('arch')">2. Architectural Form</button>
+                  <button class="btn-demo-item" onclick="loadDemoPhoto('portrait')">3. Editorial Portrait</button>
                 </div>
               </div>
             </div>
@@ -335,10 +364,10 @@ import { APP_VERSIONS } from '../../config/versions';
               <div class="select-group">
                 <button class="btn-base select-arrow-btn" id="prevColorSchemeButton">&lt;</button>
                 <select id="colorSchemeSelect">
-                  <option value="source">Source</option>
-                  <option value="color1" selected>Color 1</option>
-                  <option value="color2">Color 2</option>
-                  <option value="color3">Color 3</option>
+                  <option value="color1" selected>Broadside (Ink / Paper)</option>
+                  <option value="color2">Inverted (Paper / Ink)</option>
+                  <option value="color3">Sepia / Sand</option>
+                  <option value="source">Source Color</option>
                   <option value="custom">Color Custom</option>
                   <option value="gradient">Gradient Map</option>
                 </select>
@@ -362,9 +391,9 @@ import { APP_VERSIONS } from '../../config/versions';
 
             <div class="control-container control-group" id="customColorsContainer">
               <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                <input type="color" id="customTextColor" value="#00FF00" style="width: 44px; height: 30px; padding: 0; border: 1px solid var(--color-glass-edge); border-radius: 4px; background: none; cursor: pointer;">
+                <input type="color" id="customTextColor" value="#2a2722" style="width: 44px; height: 30px; padding: 0; border: 1px solid var(--color-glass-edge); border-radius: 4px; background: none; cursor: pointer;">
                 <span id="customBgColorWrapper" style="position: relative; display: inline-flex; width: 44px; height: 30px; border: 1px solid var(--color-glass-edge); border-radius: 4px; overflow: hidden;">
-                  <input type="color" id="customBackgroundColor" value="#000000" style="width: 100%; height: 100%; padding: 0; border: none; background: none; cursor: pointer;">
+                  <input type="color" id="customBackgroundColor" value="#fafafa" style="width: 100%; height: 100%; padding: 0; border: none; background: none; cursor: pointer;">
                   <div id="transparentBgGrid" style="display: none; position: absolute; inset: 0; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; padding: 2px; box-sizing: border-box; background: #222;" title="Transparent background">
                     <span style="background: #cccccc;"></span><span style="background: #ffffff;"></span><span style="background: #cccccc;"></span>
                     <span style="background: #ffffff;"></span><span style="background: #cccccc;"></span><span style="background: #ffffff;"></span>
@@ -588,11 +617,44 @@ import { APP_VERSIONS } from '../../config/versions';
   <script is:inline src="/ascii-gen/assets/example-assets.js"></script>
   <script is:inline src="/ascii-gen/script.js"></script>
   <script is:inline>
+    (function () {
+      var btn = document.getElementById('themeToggleBtn');
+      var txt = document.getElementById('themeToggleText');
+      function updateText() {
+        var isDark = document.documentElement.classList.contains('dark') ||
+                     document.documentElement.getAttribute('data-theme') === 'dark';
+        if (txt) txt.textContent = isDark ? 'LIGHT' : 'DARK';
+      }
+      updateText();
+      if (btn) {
+        btn.addEventListener('click', function () {
+          var isDark = document.documentElement.classList.contains('dark') ||
+                       document.documentElement.getAttribute('data-theme') === 'dark';
+          var nextDark = !isDark;
+          if (nextDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('kojerens-theme', 'dark');
+          } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('kojerens-theme', 'light');
+          }
+          updateText();
+          window.dispatchEvent(new CustomEvent('themechange', { detail: { isDark: nextDark } }));
+        });
+      }
+    })();
+  </script>
+  <script is:inline>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('../sw.js').catch(function () {});
       });
     }
   </script>
+
+  <!-- Mobile Device Workstation Advisory -->
+  <MobileAdvisory />
 </body>
 </html>

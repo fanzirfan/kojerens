@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
 @theme {
+  /* Henry Broadside Monochrome Colors */
+  --color-paper: #fafafa;
+  --color-hairline: #eeeeee;
+  --color-midstone: #9f9f9f;
+  --color-ash: #666666;
+  --color-pebble: #b3b3b3;
+  --color-sepia: #3e3b36;
+  --color-headline-ink: #2a2722;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Fraunces', 'Louize Display', Georgia, serif;
+  --font-condensed: 'Antonio', 'Manuka', impact, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Legacy Sub-tool Theme Colors */
   --color-midnight: #05060f;
   --color-steel: #111422;
   --color-fog: #9da7ba;
@@ -10,38 +26,87 @@
   --color-void-hover: #784dfc;
   --color-blueprint: #b6d9fc;
   --color-gridline: #1c2333;
-
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 }
 
 :root {
-  --color-midnight-canvas: #05060f;
-  --color-steel-plate: #111422;
-  --color-fog-veil: #9da7ba;
-  --color-moon-mist: #c7d3ea;
-  --color-frost-glow: #d1e4fa;
-  --color-pure-white: #ffffff;
-  --color-void-violet: #663af3;
-  --color-void-violet-hover: #784dfc;
-  --color-blueprint-blue: #b6d9fc;
-  --color-gridline-blue: #1c2333;
+  /* Henry Broadside Palette Tokens */
+  --color-paper: #fafafa;
+  --color-hairline: #e8e4dc;
+  --color-midstone: #9f9f9f;
+  --color-ash: #666666;
+  --color-pebble: #b3b3b3;
+  --color-sepia: #3e3b36;
+  --color-headline-ink: #2a2722;
 
-  --color-glass-fill: rgba(186, 214, 247, 0.04);
-  --color-glass-fill-hover: rgba(186, 214, 247, 0.08);
-  --color-glass-edge: rgba(186, 215, 247, 0.12);
-  --color-glass-edge-active: rgba(186, 215, 247, 0.28);
-  --color-luminous-fill: rgba(199, 211, 234, 0.08);
+  /* Typography Tokens */
+  --font-neue-montreal: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-louize-display: 'Fraunces', 'Louize Display', Georgia, serif;
+  --font-louize: 'Fraunces', 'Louize', Georgia, serif;
+  --font-manuka: 'Antonio', 'Manuka', impact, sans-serif;
+  --font-dotdigital: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Broadside Austin Shapes */
+  /* Henry Broadside Austin Shapes */
+  --radius-tags: 12px;
+  --radius-cards: 12px;
+  --radius-buttons: 12px;
+
+  /* Tool Tokens (Light / Paper Default) */
+  --color-midnight-canvas: #f5f3ef;
+  --color-steel-plate: #ffffff;
+  --color-space-cadet: #fafafa;
+  --color-fog-veil: #666666;
+  --color-moon-mist: #3e3b36;
+  --color-frost-glow: #2a2722;
+  --color-pure-white: #2a2722;
+  --color-void-violet: #2a2722;
+  --color-void-violet-hover: #141312;
+  --color-blueprint-blue: #3e3b36;
+  --color-gridline-blue: #e8e4dc;
+
+  --color-glass-fill: #ffffff;
+  --color-glass-fill-hover: #f3f0ea;
+  --color-glass-edge: #e8e4dc;
+  --color-glass-edge-active: #2a2722;
+  --color-luminous-fill: #f5f3ef;
 
   --font-untitled-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-aeonikpro: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-dotdigital: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --font-aeonikpro: 'Fraunces', 'Louize Display', Georgia, serif;
+}
+
+[data-theme="dark"], html.dark {
+  /* Inverted Broadside Tokens for Dark Mode */
+  --color-paper: #141312;
+  --color-hairline: #282420;
+  --color-midstone: #666666;
+  --color-ash: #9f9f9f;
+  --color-pebble: #77726b;
+  --color-sepia: #d9d3cb;
+  --color-headline-ink: #fafafa;
+
+  /* Tool Tokens (Dark / Ink Ground) */
+  --color-midnight-canvas: #11100f;
+  --color-steel-plate: #1a1918;
+  --color-space-cadet: #141312;
+  --color-fog-veil: #9f9f9f;
+  --color-moon-mist: #d9d3cb;
+  --color-frost-glow: #fafafa;
+  --color-pure-white: #fafafa;
+  --color-void-violet: #fafafa;
+  --color-void-violet-hover: #ffffff;
+  --color-blueprint-blue: #d9d3cb;
+  --color-gridline-blue: #282420;
+
+  --color-glass-fill: #1e1c19;
+  --color-glass-fill-hover: #292622;
+  --color-glass-edge: #282420;
+  --color-glass-edge-active: #fafafa;
+  --color-luminous-fill: #22201d;
 }
 
 body {
   background-color: var(--color-midnight-canvas);
-  color: var(--color-moon-mist);
+  color: var(--color-frost-glow);
   font-family: var(--font-untitled-sans);
   overflow-x: hidden;
 }
@@ -64,30 +129,26 @@ body {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--color-blueprint-blue);
-  background: rgba(182, 217, 252, 0.08);
-  border: 1px solid rgba(182, 217, 252, 0.22);
-  padding: 1px 6px;
-  border-radius: 3px;
+  color: var(--color-frost-glow);
+  background: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-edge);
+  padding: 2px 8px;
+  border-radius: 12px;
   line-height: 1.3;
   user-select: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: help;
   vertical-align: middle;
 }
 
 .topbar-version-badge:hover {
-  background: rgba(182, 217, 252, 0.14);
-  border-color: rgba(182, 217, 252, 0.45);
-  box-shadow: 0 0 10px rgba(182, 217, 252, 0.15);
+  border-color: var(--color-glass-edge-active);
 }
 
 .topbar-version-badge .version-dot {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background-color: #38ef7d;
-  box-shadow: 0 0 6px #38ef7d;
+  background-color: var(--color-frost-glow);
   display: inline-block;
 }
 
@@ -96,6 +157,637 @@ body {
     font-size: 9px;
     padding: 1px 4px;
   }
+}
+
+/* ============================================================================
+   BROADSIDE EDITORIAL SYSTEM FOR SUBPAGES (HENRY CODES DESIGN REFERENCE)
+   ============================================================================ */
+
+/* 1. TOP TICKER BANNER */
+.top-ticker {
+  width: 100%;
+  background-color: var(--color-paper);
+  border-bottom: 1px solid var(--color-hairline);
+  padding: 6px clamp(12px, 2vw, 24px);
+  font-family: var(--font-neue-montreal);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-headline-ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.top-ticker-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.top-ticker-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.top-ticker-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-headline-ink);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* 2. BROADSIDE EDITORIAL SUBPAGE TOPBAR */
+.topbar {
+  flex-shrink: 0;
+  min-height: 52px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--color-paper) !important;
+  border-bottom: 1px solid var(--color-hairline) !important;
+  padding: 8px clamp(12px, 2.5vw, 32px) !important;
+  z-index: 30;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--color-headline-ink) !important;
+  font-family: var(--font-louize-display) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.topbar-brand-star {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.topbar-subtool-badge {
+  font-family: var(--font-manuka) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--color-headline-ink) !important;
+  background: transparent !important;
+  border: 1px solid var(--color-hairline) !important;
+  padding: 2px 8px !important;
+  border-radius: 12px !important;
+}
+
+/* Engine Switcher Navigation in Topbar */
+.topbar-tools-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-tool-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--color-ash) !important;
+  text-decoration: none;
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  padding: 5px 10px !important;
+  border-radius: 12px !important;
+  transition: all 0.15s ease;
+}
+
+.topbar-tool-switch:hover {
+  color: var(--color-headline-ink) !important;
+  background: var(--color-glass-fill-hover) !important;
+  border-color: var(--color-hairline) !important;
+}
+
+.topbar-tool-switch.active {
+  color: var(--color-headline-ink) !important;
+  border-color: var(--color-headline-ink) !important;
+}
+
+/* Actions in Topbar */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-btn {
+  background: transparent !important;
+  border: 1px solid var(--color-hairline) !important;
+  color: var(--color-headline-ink) !important;
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  padding: 6px 12px !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: none !important;
+}
+
+.topbar-btn:hover {
+  border-color: var(--color-headline-ink) !important;
+}
+
+.topbar-cta {
+  background: var(--color-headline-ink) !important;
+  border: 1px solid var(--color-headline-ink) !important;
+  color: var(--color-paper) !important;
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  padding: 6px 16px !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  transition: opacity 0.15s ease !important;
+  box-shadow: none !important;
+}
+
+.topbar-cta:hover {
+  opacity: 0.88 !important;
+}
+
+/* 3. BROADSIDE SUBPAGE MASTHEAD (Removed as requested: too big and intrusive) */
+.subpage-masthead {
+  display: none !important;
+}
+
+/* 4. BROADSIDE RAIL (TYPOGRAPHIC, SHADOWLESS, 12PX) */
+.rail {
+  width: 58px !important;
+  background: var(--color-paper) !important;
+  border-right: 1px solid var(--color-hairline) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 8px 4px !important;
+  gap: 4px !important;
+}
+
+.rail-btn {
+  width: 48px !important;
+  min-height: 38px !important;
+  height: auto !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  color: var(--color-ash) !important;
+  padding: 6px 2px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.rail-btn svg {
+  display: none !important; /* Hide iconography to match Henry Codes pure broadside text */
+}
+
+.rail-label {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+  color: inherit !important;
+}
+
+.rail-btn:hover {
+  color: var(--color-headline-ink) !important;
+  background: var(--color-glass-fill-hover) !important;
+  border-color: var(--color-hairline) !important;
+}
+
+.rail-btn.active {
+  color: var(--color-headline-ink) !important;
+  background: var(--color-glass-fill) !important;
+  border-color: var(--color-headline-ink) !important;
+}
+
+.rail-btn.active::before {
+  display: none !important;
+}
+
+/* 5. BROADSIDE SIDEBAR & PANELS */
+.panel-drawer {
+  background: var(--color-paper) !important;
+  border-right: 1px solid var(--color-hairline) !important;
+}
+
+.sidebar {
+  background: var(--color-paper) !important;
+}
+
+.panel {
+  border-bottom: 1px solid var(--color-hairline) !important;
+  padding: 14px 16px !important;
+}
+
+.panel-title {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.panel-dot {
+  background: var(--color-headline-ink) !important;
+}
+
+/* Buttons in sidebar */
+.btn-block,
+.btn-toggle,
+.btn-action,
+.btn-download,
+.btn-download-secondary {
+  border-radius: 12px !important;
+  font-family: var(--font-neue-montreal) !important;
+  box-shadow: none !important;
+}
+
+.btn-block,
+.btn-download {
+  background: var(--color-headline-ink) !important;
+  color: var(--color-paper) !important;
+  border: 1px solid var(--color-headline-ink) !important;
+}
+
+.btn-block-outline,
+.btn-download-secondary,
+.btn-action {
+  background: transparent !important;
+  color: var(--color-headline-ink) !important;
+  border: 1px solid var(--color-hairline) !important;
+}
+
+.btn-block-outline:hover,
+.btn-download-secondary:hover,
+.btn-action:hover {
+  border-color: var(--color-headline-ink) !important;
+  background: var(--color-glass-fill-hover) !important;
+}
+
+/* 6. BROADSIDE EMPTY STATE */
+.empty-state {
+  border: 1px dashed var(--color-midstone) !important;
+  border-radius: 12px !important;
+  background: var(--color-paper) !important;
+  padding: 40px 24px !important;
+}
+
+.empty-icon {
+  display: none !important; /* No radar icons */
+}
+
+.empty-state h2 {
+  font-family: var(--font-louize-display) !important;
+  font-size: 22px !important;
+  font-weight: 400 !important;
+  color: var(--color-headline-ink) !important;
+  margin-bottom: 8px !important;
+}
+
+.empty-state p {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 13px !important;
+  color: var(--color-ash) !important;
+}
+
+.empty-load-btn {
+  background: var(--color-headline-ink) !important;
+  color: var(--color-paper) !important;
+  border: 1px solid var(--color-headline-ink) !important;
+  border-radius: 12px !important;
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  padding: 8px 18px !important;
+  cursor: pointer !important;
+}
+
+/* 7. BROADSIDE STAGE & CANVAS */
+.stage {
+  background-color: var(--color-midnight-canvas) !important;
+  background-image:
+    radial-gradient(ellipse at 50% 50%, rgba(42, 39, 34, 0.03) 0%, transparent 80%),
+    linear-gradient(var(--color-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-hairline) 1px, transparent 1px) !important;
+  background-size: 100% 100%, 48px 48px, 48px 48px !important;
+}
+
+.canvas-wrap {
+  background: transparent !important;
+}
+
+.canvas-wrap canvas,
+.stage canvas,
+#canvas {
+  border: 1px solid var(--color-hairline) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+/* 8. BROADSIDE PRESETS SIDEBAR (RIGHT COLUMN) */
+.presets-sidebar {
+  background: var(--color-paper) !important;
+  border-left: 1px solid var(--color-hairline) !important;
+}
+
+.presets-sidebar-header {
+  border-bottom: 1px solid var(--color-hairline) !important;
+  background: var(--color-paper) !important;
+}
+
+.presets-sidebar-title {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.preset-card-btn {
+  background: var(--color-steel-plate) !important;
+  border: 1px solid var(--color-hairline) !important;
+  border-radius: 12px !important;
+  color: var(--color-headline-ink) !important;
+  padding: 10px 12px !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.preset-card-btn:hover {
+  background: var(--color-glass-fill-hover) !important;
+  border-color: var(--color-headline-ink) !important;
+  transform: none !important;
+}
+
+.preset-card-btn.active {
+  background: var(--color-headline-ink) !important;
+  border-color: var(--color-headline-ink) !important;
+  color: var(--color-paper) !important;
+  box-shadow: none !important;
+}
+
+.preset-card-btn .preset-name {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: inherit !important;
+}
+
+.preset-card-btn .preset-desc {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 10px !important;
+  color: var(--color-ash) !important;
+}
+
+.preset-card-btn.active .preset-desc {
+  color: var(--color-paper) !important;
+  opacity: 0.8 !important;
+}
+
+/* 9. BROADSIDE SPLIT WORKSPACE (ASCII MATRIX) */
+.studio-workspace {
+  background: var(--color-paper) !important;
+}
+
+.container, #mainContainer {
+  background: var(--color-midnight-canvas) !important;
+}
+
+.input-column, .output-column {
+  background: var(--color-midnight-canvas) !important;
+  border-color: var(--color-hairline) !important;
+}
+
+.column-header {
+  background: var(--color-paper) !important;
+  border-bottom: 1px solid var(--color-hairline) !important;
+}
+
+.column-header h2 {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.upload-zone {
+  background: var(--color-paper) !important;
+  border: 1.5px dashed var(--color-midstone) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.upload-primary-text {
+  font-family: var(--font-louize-display) !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.upload-secondary-text {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 12px !important;
+  color: var(--color-ash) !important;
+}
+
+.upload-btn-primary {
+  background: var(--color-headline-ink) !important;
+  color: var(--color-paper) !important;
+  border: 1px solid var(--color-headline-ink) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.upload-btn-secondary {
+  background: transparent !important;
+  color: var(--color-headline-ink) !important;
+  border: 1px solid var(--color-hairline) !important;
+  border-radius: 12px !important;
+}
+
+.upload-btn-secondary:hover {
+  background: var(--color-glass-fill-hover) !important;
+  border-color: var(--color-headline-ink) !important;
+}
+
+.settings-panel-container {
+  background: var(--color-paper) !important;
+  border-left: 1px solid var(--color-hairline) !important;
+}
+
+.settings-panel-section-content {
+  border-bottom: 1px solid var(--color-hairline) !important;
+}
+
+.settings-panel-section-content h2 {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--color-headline-ink) !important;
+}
+
+#outputCanvas {
+  background-color: var(--color-paper) !important;
+  border: 1px solid var(--color-hairline) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.output-placeholder {
+  background: var(--color-paper) !important;
+  border: 1px dashed var(--color-midstone) !important;
+  border-radius: 12px !important;
+}
+
+.placeholder-title {
+  font-family: var(--font-louize-display) !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.placeholder-desc {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 12px !important;
+  color: var(--color-ash) !important;
+}
+
+/* 10. BROADSIDE INPUTS, SLIDERS & CONTROLS */
+.control-header label,
+.color-field-label,
+.color-picker-item label {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.val {
+  font-family: var(--font-dotdigital) !important;
+  font-size: 11px !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.hint {
+  font-family: var(--font-neue-montreal) !important;
+  font-size: 11px !important;
+  color: var(--color-ash) !important;
+}
+
+input[type="range"] {
+  background: var(--color-hairline) !important;
+  height: 4px !important;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background: var(--color-headline-ink) !important;
+  border: 2px solid var(--color-paper) !important;
+  box-shadow: none !important;
+}
+
+input[type="range"]::-moz-range-thumb {
+  background: var(--color-headline-ink) !important;
+  border: 2px solid var(--color-paper) !important;
+  box-shadow: none !important;
+}
+
+.select-wrap select,
+.text-input,
+.input-text {
+  background: var(--color-steel-plate) !important;
+  border: 1px solid var(--color-hairline) !important;
+  border-radius: 12px !important;
+  color: var(--color-headline-ink) !important;
+  font-family: var(--font-neue-montreal) !important;
+  box-shadow: none !important;
+}
+
+.select-wrap select:focus,
+.text-input:focus,
+.input-text:focus {
+  border-color: var(--color-headline-ink) !important;
+  outline: none !important;
+}
+
+/* 11. BROADSIDE STAGE FLOATING TOOLS & ATTRIBUTION */
+.stage-zoom-bar {
+  background: var(--color-paper) !important;
+  border: 1px solid var(--color-hairline) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.zoom-btn {
+  color: var(--color-headline-ink) !important;
+}
+
+.zoom-val {
+  font-family: var(--font-dotdigital) !important;
+  color: var(--color-headline-ink) !important;
+}
+
+.stage-attribution {
+  font-family: var(--font-dotdigital) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.04em !important;
+  color: var(--color-ash) !important;
+}
+
+.stage-attribution strong {
+  color: var(--color-headline-ink) !important;
+  font-weight: 700 !important;
 }
 
 

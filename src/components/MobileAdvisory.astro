@@ -1,0 +1,202 @@
+---
+// MobileAdvisory.astro - Advisory toast for mobile devices requesting PC/Desktop usage
+---
+
+<aside class="mobile-device-advisory" id="mobileDeviceAdvisory" aria-label="Device Compatibility Advisory" role="alert">
+  <div class="mobile-advisory-inner">
+    <div class="mobile-advisory-header">
+      <span class="mobile-advisory-badge">
+        <span class="mobile-advisory-star">✷</span>
+        DESKTOP RECOMMENDED
+      </span>
+      <button class="mobile-advisory-close" id="mobileAdvisoryDismissBtn" aria-label="Dismiss Advisory" title="Dismiss notification">
+        ✕
+      </button>
+    </div>
+    <div class="mobile-advisory-body">
+      <p class="mobile-advisory-title">For the best experience, please use a PC or Laptop.</p>
+      <p class="mobile-advisory-desc">
+        This creative engine utilizes complex GPU rasterization, high-density canvas computations, and precision multi-panel controls that are optimized exclusively for desktop workstations.
+      </p>
+    </div>
+    <div class="mobile-advisory-actions">
+      <button class="mobile-advisory-btn" id="mobileAdvisoryContinueBtn">
+        Continue Anyway
+      </button>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .mobile-device-advisory {
+    display: none; /* Hidden by default on PC / desktop */
+    position: fixed;
+    bottom: 20px;
+    left: 16px;
+    right: 16px;
+    z-index: 99999;
+    pointer-events: none;
+    animation: advisorySlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes advisorySlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .mobile-advisory-inner {
+    pointer-events: auto;
+    background: var(--color-paper, #fafafa);
+    border: 1px solid var(--color-hairline, #e8e4dc);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  :global([data-theme="dark"]) .mobile-advisory-inner,
+  :global(html.dark) .mobile-advisory-inner {
+    background: var(--color-paper, #141312);
+    border-color: var(--color-hairline, #282420);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .mobile-advisory-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .mobile-advisory-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-neue-montreal, -apple-system, sans-serif);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-headline-ink, #2a2722);
+  }
+
+  .mobile-advisory-star {
+    font-size: 11px;
+    color: var(--color-headline-ink, #2a2722);
+  }
+
+  .mobile-advisory-close {
+    background: transparent;
+    border: none;
+    color: var(--color-ash, #666666);
+    font-size: 14px;
+    line-height: 1;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: color 0.15s ease;
+  }
+
+  .mobile-advisory-close:hover {
+    color: var(--color-headline-ink, #2a2722);
+  }
+
+  .mobile-advisory-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-advisory-title {
+    font-family: var(--font-louize-display, Georgia, serif);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--color-headline-ink, #2a2722);
+    margin: 0;
+  }
+
+  .mobile-advisory-desc {
+    font-family: var(--font-neue-montreal, -apple-system, sans-serif);
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--color-ash, #666666);
+    margin: 0;
+  }
+
+  .mobile-advisory-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  .mobile-advisory-btn {
+    background: var(--color-headline-ink, #2a2722);
+    color: var(--color-paper, #fafafa);
+    border: 1px solid var(--color-headline-ink, #2a2722);
+    border-radius: 12px;
+    padding: 7px 16px;
+    font-family: var(--font-neue-montreal, -apple-system, sans-serif);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .mobile-advisory-btn:hover {
+    opacity: 0.9;
+  }
+
+  /* ONLY DISPLAY ON MOBILE VIEWPORTS (<= 860px) */
+  @media (max-width: 860px) {
+    .mobile-device-advisory:not(.dismissed) {
+      display: block;
+    }
+  }
+
+  /* NEVER DISPLAY ON PC / DESKTOP (> 860px) */
+  @media (min-width: 861px) {
+    .mobile-device-advisory {
+      display: none !important;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var STORAGE_KEY = 'kojerens_mobile_advisory_dismissed';
+    var advisory = document.getElementById('mobileDeviceAdvisory');
+    var dismissBtn = document.getElementById('mobileAdvisoryDismissBtn');
+    var continueBtn = document.getElementById('mobileAdvisoryContinueBtn');
+
+    if (!advisory) return;
+
+    // Check if dismissed previously in this session
+    if (sessionStorage.getItem(STORAGE_KEY) === 'true') {
+      advisory.classList.add('dismissed');
+      advisory.style.display = 'none';
+      return;
+    }
+
+    function dismissAdvisory() {
+      advisory.classList.add('dismissed');
+      advisory.style.display = 'none';
+      sessionStorage.setItem(STORAGE_KEY, 'true');
+    }
+
+    if (dismissBtn) dismissBtn.addEventListener('click', dismissAdvisory);
+    if (continueBtn) continueBtn.addEventListener('click', dismissAdvisory);
+  })();
+</script>

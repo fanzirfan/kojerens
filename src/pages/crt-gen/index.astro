@@ -2,6 +2,7 @@
 import '../../styles/global.css';
 import '../../styles/crt-gen.css';
 import { APP_VERSIONS } from '../../config/versions';
+import MobileAdvisory from '../../components/MobileAdvisory.astro';
 ---
 
 <!DOCTYPE html>
@@ -9,54 +10,85 @@ import { APP_VERSIONS } from '../../config/versions';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Analog CRT Beam &amp; Glitch Synthesizer : KOJERENS</title>
+  <title>KOJERENS — Analog CRT Synthesizer</title>
+  <link rel="canonical" href="https://kojerens.manji.eu.org/crt-gen/" />
   <meta name="description" content="KOJERENS Analog CRT Beam &amp; Glitch Synthesizer: High-performance browser-native cathode ray tube simulator featuring Trinitron aperture grille, shadow mask phosphors, scanlines, chromatic aberration, NTSC chroma bleed, and VHS tracking jitter." />
   <meta name="author" content="Fanz Irfan" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/png" sizes="32x32" href="/crt-gen/assets/brand/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/crt-gen/assets/brand/favicon-16x16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/crt-gen/assets/brand/apple-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#05060f" />
+  <meta name="theme-color" content="#141312" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
+  <!-- Anti-FOUC Theme Script -->
+  <script is:inline>
+    (function () {
+      var saved = localStorage.getItem('kojerens-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
 </head>
-<body class="theme-midnight">
+<body>
 <div class="app">
 
-  <!-- TOPBAR (Clean Header: Brand on left, Navigation & Actions on right) -->
+  <!-- TOP TICKER BANNER (ANNOUNCEMENT STRIP) -->
+  <aside class="top-ticker" aria-label="Laboratory Announcement">
+    <div class="top-ticker-content">
+      <span class="top-ticker-flag">
+        <span class="top-ticker-dot"></span>
+        CRT SYNTHESIZER // ANALOG BEAM LAB
+      </span>
+      <span>—</span>
+      <span>100% IN-BROWSER PROCESSING</span>
+      <span>—</span>
+      <span>ZERO CLOUD DATA TRANSMISSION</span>
+    </div>
+    <div class="top-ticker-content" style="font-family: var(--font-mono); font-size: 10px;">
+      <span>KOJERENS.MANJI.EU.ORG // {APP_VERSIONS.crtGen.version}</span>
+    </div>
+  </aside>
+
+  <!-- EDITORIAL TOPBAR -->
   <header class="topbar">
     <div class="topbar-brand">
       <a href="/" class="topbar-brand-link" title="Back to KOJERENS Studio">
-        <img src="/crt-gen/assets/brand/navbar.png" alt="KOJERENS" class="topbar-logo" width="26" height="26" />
-        <span class="topbar-brand-title">KOJERENS</span>
+        <span class="topbar-brand-star">✷</span>
+        <span>KOJERENS</span>
       </a>
-      <span class="topbar-subtool-badge">CRT BEAM &amp; GLITCH</span>
-      <span class="topbar-version-badge" title={`CRT Synthesizer ${APP_VERSIONS.crtGen.version} (${APP_VERSIONS.crtGen.releaseDate}) - ${APP_VERSIONS.crtGen.changelog}`}>
+      <span class="topbar-subtool-badge">CRT SYNTHESIZER</span>
+      <span class="topbar-version-badge" title={`CRT Synthesizer ${APP_VERSIONS.crtGen.version} (${APP_VERSIONS.crtGen.releaseDate})`}>
         <span class="version-dot"></span>
         {APP_VERSIONS.crtGen.version}
       </span>
     </div>
 
+    <!-- ENGINE NAVIGATION LINKS -->
+    <nav class="topbar-tools-nav" aria-label="Engine Navigation">
+      <a href="/blob-tracker/" class="topbar-tool-switch" title="Switch to Blob Tracker">Blob Tracker</a>
+      <a href="/ascii-gen/" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">ASCII Matrix</a>
+      <a href="/dither-gen/" class="topbar-tool-switch" title="Switch to 1-Bit Dither Matrix">1-Bit Dither</a>
+      <a href="/crt-gen/" class="topbar-tool-switch active" title="Analog CRT Synthesizer Engine">CRT Gen</a>
+    </nav>
+
     <!-- ACTIONS ON RIGHT -->
     <div class="topbar-actions">
-      <a href="/blob-tracker/" class="topbar-tool-switch" title="Switch to Blob Tracker">
-        <i class="ri-radar-line"></i>
-        <span>Blob Tracker</span>
-      </a>
-      <a href="/ascii-gen/" class="topbar-tool-switch" title="Switch to ASCII Matrix Generator">
-        <i class="ri-terminal-line"></i>
-        <span>ASCII Gen</span>
-      </a>
-      <a href="/dither-gen/" class="topbar-tool-switch" title="Switch to 1-Bit Dither Matrix">
-        <i class="ri-grid-fill"></i>
-        <span>1-Bit Dither</span>
-      </a>
+      <button class="topbar-btn" id="themeToggleBtn" title="Toggle Dark / Light Theme">
+        <span class="theme-toggle-icon">◑</span>
+        <span id="themeToggleText">DARK</span>
+      </button>
       <button class="topbar-btn" id="topbarRandomBtn" title="Randomize CRT parameters">
-        <i class="ri-dice-line"></i>
-        <span class="btn-text">Random</span>
+        Random
       </button>
       <button class="topbar-cta" id="topbarDownloadBtn">Export PNG</button>
     </div>
@@ -65,47 +97,37 @@ import { APP_VERSIONS } from '../../config/versions';
   <!-- WORKSPACE -->
   <div class="workspace">
 
-    <!-- ICON RAIL (FAR LEFT) -->
+    <!-- TYPOGRAPHIC BROADSIDE RAIL (FAR LEFT) -->
     <nav class="rail" aria-label="Panel navigation">
       <button class="rail-btn active" data-panel="presets" title="CRT Style Presets" aria-pressed="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1.5"/></svg>
         <span class="rail-label">Style</span>
       </button>
       <button class="rail-btn" data-panel="file" title="Source File &amp; Crop" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         <span class="rail-label">File</span>
       </button>
       <button class="rail-btn" data-panel="tube" title="Tube Geometry &amp; Curve" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="4"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         <span class="rail-label">Tube</span>
       </button>
       <button class="rail-btn" data-panel="beam" title="Scanlines &amp; Electron Beam" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         <span class="rail-label">Beam</span>
       </button>
       <button class="rail-btn" data-panel="mask" title="Phosphor Mask Grid" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
         <span class="rail-label">Mask</span>
       </button>
       <button class="rail-btn" data-panel="glitch" title="Analog Glitch &amp; Jitter" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         <span class="rail-label">Glitch</span>
       </button>
       <button class="rail-btn" data-panel="tone" title="Phosphor &amp; Color Tone" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z"/></svg>
         <span class="rail-label">Tone</span>
       </button>
       <div class="rail-sep"></div>
       <button class="rail-btn" data-panel="size" title="Canvas Format" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
         <span class="rail-label">Size</span>
       </button>
       <button class="rail-btn" data-panel="osd" title="Telemetry &amp; OSD" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
         <span class="rail-label">OSD</span>
       </button>
       <button class="rail-btn" data-panel="export" title="Production Export" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span class="rail-label">Export</span>
       </button>
     </nav>
@@ -156,7 +178,7 @@ import { APP_VERSIONS } from '../../config/versions';
             </div>
 
             <!-- Demo Library Dropdown / Buttons -->
-            <div id="demoPickerPanel" style="display:none; background: rgba(5,6,15,0.7); border: 1px solid var(--color-glass-edge); border-radius: 6px; padding: 8px; margin-bottom: 10px;">
+            <div id="demoPickerPanel" style="display:none; background: var(--color-paper); border: 1px solid var(--color-glass-edge); border-radius: 12px; padding: 10px; margin-bottom: 10px;">
               <span class="field-sublabel" style="display:block; margin-bottom: 6px; color: var(--color-moon-mist); font-size:9.5px;">SELECT DEMO PHOTO:</span>
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <button class="btn-demo-item" data-demo="street">1. Cyber Street (Tokyo Night)</button>
@@ -577,7 +599,7 @@ import { APP_VERSIONS } from '../../config/versions';
         <button class="zoom-btn zoom-fit" id="zoomFitBtn" title="Fit to Screen">Fit</button>
       </div>
 
-      <div class="stage-attribution"><strong>Fanz Irfan</strong> / manji.eu.org</div>
+      <div class="stage-attribution"><strong>Fanz Irfan</strong> / kojerens.manji.eu.org</div>
     </main>
 
     <!-- PRESETS SIDEBAR (RIGHT) -->
@@ -665,11 +687,42 @@ import { APP_VERSIONS } from '../../config/versions';
 <script is:inline src="/assets/demo/demo-assets.js"></script>
 <script is:inline src="/crt-gen/script.js"></script>
 <script is:inline>
+  (function () {
+    var btn = document.getElementById('themeToggleBtn');
+    var txt = document.getElementById('themeToggleText');
+    function updateText() {
+      var isDark = document.documentElement.classList.contains('dark') ||
+                   document.documentElement.getAttribute('data-theme') === 'dark';
+      if (txt) txt.textContent = isDark ? 'LIGHT' : 'DARK';
+    }
+    updateText();
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var isDark = document.documentElement.classList.contains('dark') ||
+                     document.documentElement.getAttribute('data-theme') === 'dark';
+        var nextDark = !isDark;
+        if (nextDark) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('kojerens-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('kojerens-theme', 'light');
+        }
+        updateText();
+        window.dispatchEvent(new CustomEvent('themechange', { detail: { isDark: nextDark } }));
+      });
+    }
+  })();
+</script>
+<script is:inline>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('../sw.js').catch(function () {});
     });
   }
 </script>
+<MobileAdvisory />
 </body>
 </html>

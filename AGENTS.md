@@ -31,7 +31,7 @@ KOJERENS is a high-performance generative visual and design laboratory built wit
    - Default 4-corner frame texts:
      - Top Left: `Design & Strategy`
      - Top Right: `Fanz Irfan`
-     - Bottom Left: `manji.eu.org`
+     - Bottom Left: `kojerens.manji.eu.org`
      - Bottom Right: `Indonesia`
 
 2. **File Export Conventions**:

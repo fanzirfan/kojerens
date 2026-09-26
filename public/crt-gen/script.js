@@ -55,7 +55,7 @@
     showFrameText: false,
     frameTL: 'Design & Strategy',
     frameTR: 'Fanz Irfan',
-    frameBL: 'manji.eu.org',
+    frameBL: 'kojerens.manji.eu.org',
     frameBR: 'Indonesia'
   };
 
