@@ -9,7 +9,7 @@ import MobileAdvisory from '../components/MobileAdvisory.astro';
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>KOJERENS : Generative Visual & Computational Design Studio</title>
   <meta name="description" content="KOJERENS is a browser-native generative visual laboratory engineered for luminance contrast centroid tracking, technical vector telemetry, real-time Unicode ASCII art synthesis, 1-bit error-diffusion dithering, and analog CRT beam simulation." />
   <meta name="keywords" content="kojerens, generative design, visual engineering, blob tracker, ascii art, dither, 1-bit, crt synthesizer, scanlines, creative coding, browser-native, broadside, dark mode" />
@@ -29,18 +29,21 @@ import MobileAdvisory from '../components/MobileAdvisory.astro';
   <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48x48.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/brand/apple-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#141312" />
+  <meta name="theme-color" content="#141312" id="metaThemeColor" />
 
   <!-- Anti-FOUC Theme Initialization Script (Default to Warm Cream Paper Broadside) -->
   <script is:inline>
     (function () {
       var saved = localStorage.getItem('kojerens-theme');
+      var metaTheme = document.getElementById('metaThemeColor');
       if (saved === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         document.documentElement.classList.add('dark');
+        if (metaTheme) metaTheme.setAttribute('content', '#141312');
       } else {
         document.documentElement.setAttribute('data-theme', 'light');
         document.documentElement.classList.remove('dark');
+        if (metaTheme) metaTheme.setAttribute('content', '#fafafa');
       }
     })();
   </script>
@@ -626,14 +629,17 @@ import MobileAdvisory from '../components/MobileAdvisory.astro';
       if (toggleBtn) {
         toggleBtn.addEventListener('click', function () {
           var willBeDark = !isDark();
+          var metaTheme = document.getElementById('metaThemeColor');
           if (willBeDark) {
             document.documentElement.setAttribute('data-theme', 'dark');
             document.documentElement.classList.add('dark');
             localStorage.setItem('kojerens-theme', 'dark');
+            if (metaTheme) metaTheme.setAttribute('content', '#141312');
           } else {
             document.documentElement.setAttribute('data-theme', 'light');
             document.documentElement.classList.remove('dark');
             localStorage.setItem('kojerens-theme', 'light');
+            if (metaTheme) metaTheme.setAttribute('content', '#fafafa');
           }
           syncToggleState();
         });
