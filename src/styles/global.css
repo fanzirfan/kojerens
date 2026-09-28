@@ -601,7 +601,7 @@ body {
   background: var(--color-paper) !important;
 }
 
-.container, #mainContainer {
+.studio-workspace #mainContainer {
   background: var(--color-midnight-canvas) !important;
 }
 
