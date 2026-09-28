@@ -27,10 +27,10 @@ export const APP_VERSIONS = {
   hub: {
     id: 'hub',
     name: 'KOJERENS Studio Hub',
-    version: 'v2.3.4',
+    version: 'v2.3.5',
     releaseDate: '2026-09-29',
     badgeLabel: 'BROADSIDE LAB',
-    changelog: 'Fixed critical container CSS collision leaking workspace background into editorial footer and causing anomalous background strip in light mode.',
+    changelog: 'Streamlined editorial footer: removed redundant Generative Engines and Architecture link columns, migrated to clean 2-column studio identity layout.',
     status: 'ONLINE'
   },
 
