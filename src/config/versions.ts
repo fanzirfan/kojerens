@@ -27,10 +27,10 @@ export const APP_VERSIONS = {
   hub: {
     id: 'hub',
     name: 'KOJERENS Studio Hub',
-    version: 'v2.3.1',
-    releaseDate: '2026-09-26',
+    version: 'v2.3.2',
+    releaseDate: '2026-09-28',
     badgeLabel: 'BROADSIDE LAB',
-    changelog: 'Refined landing page with procedural 3D astrolabe & gyroscope, viewfinder HUD framing, antislop R-02 em dash purge, and clean native cursor experience.',
+    changelog: 'Resolved mobile responsive layout: optimized editorial navigation grid, tightened hero typography clamps, enabled flex-wrapping for coordinate readouts and spec tables, and enforced horizontal overflow guards.',
     status: 'ONLINE'
   },
 

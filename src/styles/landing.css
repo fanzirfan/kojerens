@@ -90,6 +90,8 @@ html {
   color: var(--color-headline-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100%;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -101,6 +103,7 @@ body {
   line-height: 1.5;
   letter-spacing: -0.01em;
   overflow-x: hidden;
+  max-width: 100%;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -152,6 +155,22 @@ button {
   align-items: center;
   gap: 16px;
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .top-ticker {
+    padding: 6px 16px;
+    font-size: 10px;
+    gap: 8px;
+  }
+  .top-ticker-content {
+    gap: 8px;
+    overflow-x: hidden;
+  }
+  .top-ticker-secondary,
+  .ticker-hide-mobile {
+    display: none;
+  }
 }
 
 .top-ticker-flag {
@@ -276,6 +295,59 @@ button {
   line-height: 1;
 }
 
+@media (max-width: 768px) {
+  .page-nav {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand theme"
+      "links links";
+    gap: 12px 8px;
+    align-items: center;
+    padding: 12px 16px;
+  }
+
+  .nav-brand-group {
+    grid-area: brand;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .nav-tagline {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .nav-right-group {
+    display: contents;
+  }
+
+  .theme-toggle-btn {
+    grid-area: theme;
+    align-self: start;
+    padding: 5px 10px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .nav-links {
+    grid-area: links;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px dashed var(--color-hairline);
+    width: 100%;
+  }
+
+  .nav-link {
+    font-size: 11px;
+    padding: 2px 0;
+  }
+}
+
 /* ============================================================================
    5. HERO SECTION (.home-hero)
    ============================================================================ */
@@ -314,17 +386,20 @@ button {
   margin-bottom: 24px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .hero-title {
   font-family: var(--font-louize-display);
-  font-size: clamp(44px, 6.2vw, 96px);
+  font-size: clamp(34px, 6.2vw, 96px);
   font-weight: 400;
-  line-height: 0.88;
+  line-height: 0.9;
   letter-spacing: -0.02em;
   color: var(--color-headline-ink);
   margin-bottom: 32px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .hero-title .segment {
@@ -773,7 +848,7 @@ button {
 
 .stamped-title {
   font-family: var(--font-manuka);
-  font-size: clamp(64px, 14vw, 240px);
+  font-size: clamp(34px, 12vw, 240px);
   font-weight: 700;
   line-height: 0.75;
   text-transform: uppercase;
@@ -865,6 +940,8 @@ button {
 @media (max-width: 900px) {
   .engine-card {
     grid-template-columns: 1fr;
+    padding: 24px 16px;
+    gap: 28px;
   }
 }
 
@@ -907,11 +984,13 @@ button {
 
 .engine-title {
   font-family: var(--font-louize-display);
-  font-size: clamp(34px, 4vw, 56px);
+  font-size: clamp(28px, 4vw, 56px);
   font-weight: 400;
   line-height: 1;
   color: var(--color-headline-ink);
   transition: opacity 0.2s ease;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .engine-description {
@@ -949,6 +1028,20 @@ button {
   gap: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--color-hairline);
+}
+
+@media (max-width: 540px) {
+  .engine-action-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .btn-engine-launch {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .engine-version-spec {
@@ -1115,6 +1208,20 @@ button {
   gap: 16px;
 }
 
+@media (max-width: 540px) {
+  .spec-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 14px;
+  }
+
+  .spec-value {
+    text-align: left;
+    word-break: break-all;
+  }
+}
+
 .spec-row:last-child {
   border-bottom: none;
 }
@@ -1253,11 +1360,24 @@ button {
 .colophon-left {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .colophon-right {
   text-align: right;
+}
+
+@media (max-width: 768px) {
+  .footer-colophon-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .colophon-right {
+    text-align: left;
+  }
 }
 
 .colophon-coords {

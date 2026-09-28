@@ -104,11 +104,17 @@
   --color-luminous-fill: #22201d;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   background-color: var(--color-midnight-canvas);
   color: var(--color-frost-glow);
   font-family: var(--font-untitled-sans);
   overflow-x: hidden;
+  max-width: 100%;
 }
 
 #cropCanvas,
